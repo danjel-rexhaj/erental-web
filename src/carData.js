@@ -1,0 +1,48 @@
+export const OTHER_BRAND = "Tjeter";
+export const OTHER_MODEL = "Tjeter";
+
+export const CAR_BRANDS = {
+  "Volkswagen": ["Golf", "Polo", "Passat", "Tiguan", "Touran", "Jetta", "Arteon", "T-Roc", "T-Cross", "Up!"],
+  "Toyota": ["Corolla", "Yaris", "Camry", "RAV4", "C-HR", "Auris", "Aygo", "Land Cruiser", "Hilux", "Prius"],
+  "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "GLA", "GLC", "GLE", "CLA", "Vito", "Sprinter"],
+  "BMW": ["Seria 1", "Seria 2", "Seria 3", "Seria 4", "Seria 5", "Seria 7", "X1", "X3", "X5", "X6"],
+  "Audi": ["A1", "A3", "A4", "A5", "A6", "A8", "Q2", "Q3", "Q5", "Q7"],
+  "Skoda": ["Fabia", "Octavia", "Superb", "Kamiq", "Karoq", "Kodiaq", "Rapid", "Scala"],
+  "Opel": ["Corsa", "Astra", "Insignia", "Mokka", "Crossland", "Grandland", "Zafira", "Vivaro"],
+  "Renault": ["Clio", "Megane", "Talisman", "Captur", "Kadjar", "Koleos", "Scenic", "Twingo"],
+  "Peugeot": ["208", "308", "508", "2008", "3008", "5008", "Partner"],
+  "Fiat": ["500", "Panda", "Tipo", "Punto", "500X", "Doblo", "Ducato"],
+  "Ford": ["Fiesta", "Focus", "Mondeo", "Kuga", "Puma", "EcoSport", "Transit", "S-Max"],
+  "Hyundai": ["i10", "i20", "i30", "Elantra", "Tucson", "Santa Fe", "Kona"],
+  "Kia": ["Picanto", "Rio", "Ceed", "Sportage", "Sorento", "Niro", "Stonic"],
+  "Nissan": ["Micra", "Juke", "Qashqai", "X-Trail", "Leaf", "Navara"],
+  "Honda": ["Civic", "Accord", "CR-V", "HR-V", "Jazz"],
+  "Mazda": ["Mazda2", "Mazda3", "Mazda6", "CX-3", "CX-5", "CX-30"],
+  "Citroen": ["C3", "C4", "C5", "Berlingo", "C3 Aircross"],
+  "Dacia": ["Sandero", "Logan", "Duster", "Dokker", "Spring"],
+  "Seat": ["Ibiza", "Leon", "Arona", "Ateca", "Tarraco"],
+  "Volvo": ["S60", "S90", "V40", "V60", "XC40", "XC60", "XC90"],
+  "Jeep": ["Renegade", "Compass", "Cherokee", "Grand Cherokee", "Wrangler"],
+  "Land Rover": ["Discovery", "Discovery Sport", "Range Rover", "Range Rover Evoque", "Range Rover Sport", "Defender"],
+  "Mini": ["Cooper", "Countryman", "Clubman"],
+  "Porsche": ["911", "Cayenne", "Macan", "Panamera", "Taycan"],
+  "Lexus": ["IS", "ES", "RX", "NX", "UX"],
+  "Mitsubishi": ["Space Star", "ASX", "Outlander", "L200", "Eclipse Cross"],
+  "Suzuki": ["Swift", "Vitara", "S-Cross", "Jimny", "Baleno"],
+  "Chevrolet": ["Spark", "Aveo", "Cruze", "Captiva", "Trax"],
+  "Alfa Romeo": ["Giulietta", "Giulia", "Stelvio", "MiTo"],
+  "Jaguar": ["XE", "XF", "F-Pace", "E-Pace"],
+  "Chrysler": ["300C", "Voyager", "Pacifica"],
+  "Smart": ["Fortwo", "Forfour"],
+  [OTHER_BRAND]: [],
+};
+
+export const PHOTO_SLOTS = [
+  { key: "front", label: "Para" },
+  { key: "back", label: "Mbrapa" },
+  { key: "left", label: "Anash (e majte)" },
+  { key: "right", label: "Anash (e djathte)" },
+  { key: "interior_front", label: "Brenda - vendet para" },
+  { key: "interior_back", label: "Brenda - vendet mbrapa" },
+  { key: "trunk", label: "Bagazhi" },
+];
