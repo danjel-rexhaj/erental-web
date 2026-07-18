@@ -16,7 +16,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
 
   return (
     <div>
-      <div className="relative -mx-6 sm:-mx-6 rounded-b-3xl sm:rounded-3xl overflow-hidden min-h-[560px] sm:min-h-[520px]">
+      <div className="relative rounded-3xl overflow-hidden min-h-[560px] sm:min-h-[520px]">
         <img
           src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1600&auto=format&fit=crop"
           alt="Makine ne rruge"
