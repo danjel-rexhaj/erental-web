@@ -395,8 +395,12 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
             </div>
           )}
           {loggedIn && (
-            <button onClick={() => { setView("auth"); setMenuOpen(false); }} className="hidden sm:flex w-8 h-8 rounded-full bg-emerald-700 items-center justify-center text-white text-xs font-bold">
-              {user?.emri?.[0]?.toUpperCase() || "?"}
+            <button onClick={() => { setView("auth"); setMenuOpen(false); }} className="hidden sm:flex w-8 h-8 rounded-full bg-emerald-700 items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
+              {user?.fotoProfili ? (
+                <img src={user.fotoProfili} alt="" className="w-full h-full object-cover" />
+              ) : (
+                user?.emri?.[0]?.toUpperCase() || "?"
+              )}
             </button>
           )}
           {loggedIn ? (
