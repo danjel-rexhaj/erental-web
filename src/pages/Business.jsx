@@ -4,6 +4,7 @@ import { apiFetch, toWhatsappNumber } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill } from "../components";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
+import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
 
 export default function Business({ token, showError, showOk, isAdmin, tab, setTab, highlightBookingId, refreshKey }) {
   const [company, setCompany] = useState(undefined);
@@ -29,7 +30,13 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
   const tabs = [
     { key: "dashboard", label: "Biznesi im" },
     { key: "bookings", label: "Rezervimet" },
-    ...(isAdmin ? [{ key: "admin", label: "Verifikime" }, { key: "whatsapp", label: "WhatsApp" }] : []),
+    ...(company ? [{ key: "analytics", label: "Statistikat" }] : []),
+    ...(isAdmin ? [
+      { key: "admin", label: "Verifikime" },
+      { key: "whatsapp", label: "WhatsApp" },
+      { key: "admin-analytics", label: "Statistikat e platformes" },
+      { key: "admin-logins", label: "Logs hyrjesh" },
+    ] : []),
   ];
 
   return (
@@ -43,6 +50,9 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       </div>
       {tab === "admin" && <AdminPending token={token} showError={showError} showOk={showOk} />}
       {tab === "whatsapp" && <AdminWhatsapp token={token} showError={showError} showOk={showOk} />}
+      {tab === "admin-analytics" && <AdminAnalytics token={token} showError={showError} />}
+      {tab === "admin-logins" && <AdminLogins token={token} showError={showError} />}
+      {tab === "analytics" && <BusinessAnalytics token={token} showError={showError} />}
       {tab === "bookings" && <CompanyBookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} companyName={company?.emri} refreshKey={refreshKey} />}
       {tab === "dashboard" && (
         company === null
