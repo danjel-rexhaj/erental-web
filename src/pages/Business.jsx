@@ -10,6 +10,8 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
   const [company, setCompany] = useState(undefined);
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [localRefresh, setLocalRefresh] = useState(0);
+  const analyticsRefreshKey = refreshKey + localRefresh;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -50,10 +52,20 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       </div>
       {tab === "admin" && <AdminPending token={token} showError={showError} showOk={showOk} />}
       {tab === "whatsapp" && <AdminWhatsapp token={token} showError={showError} showOk={showOk} />}
-      {tab === "admin-analytics" && <AdminAnalytics token={token} showError={showError} />}
-      {tab === "admin-logins" && <AdminLogins token={token} showError={showError} />}
-      {tab === "analytics" && <BusinessAnalytics token={token} showError={showError} />}
-      {tab === "bookings" && <CompanyBookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} companyName={company?.emri} refreshKey={refreshKey} />}
+      {tab === "admin-analytics" && <AdminAnalytics token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
+      {tab === "admin-logins" && <AdminLogins token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
+      {tab === "analytics" && <BusinessAnalytics token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
+      {tab === "bookings" && (
+        <CompanyBookings
+          token={token}
+          showError={showError}
+          showOk={showOk}
+          highlightBookingId={highlightBookingId}
+          companyName={company?.emri}
+          refreshKey={refreshKey}
+          onChanged={() => setLocalRefresh((k) => k + 1)}
+        />
+      )}
       {tab === "dashboard" && (
         company === null
           ? <RegisterCompanyForm token={token} onDone={load} showError={showError} showOk={showOk} />
@@ -63,7 +75,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
   );
 }
 
-function CompanyBookings({ token, showError, showOk, highlightBookingId, companyName, refreshKey }) {
+function CompanyBookings({ token, showError, showOk, highlightBookingId, companyName, refreshKey, onChanged }) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState(null);
@@ -84,12 +96,12 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 
   async function confirm(id) {
     setActingId(id);
-    try { await apiFetch(`/Bookings/${id}/confirm`, token, { method: "PUT" }); showOk("Rezervimi u miratua."); load(); }
+    try { await apiFetch(`/Bookings/${id}/confirm`, token, { method: "PUT" }); showOk("Rezervimi u miratua."); load(); onChanged && onChanged(); }
     catch (e) { showError(e); } finally { setActingId(null); }
   }
   async function reject(id) {
     setActingId(id);
-    try { await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT" }); showOk("Rezervimi u refuzua."); load(); }
+    try { await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT" }); showOk("Rezervimi u refuzua."); load(); onChanged && onChanged(); }
     catch (e) { showError(e); } finally { setActingId(null); }
   }
 

@@ -20,16 +20,17 @@ function StatCard({ icon: Icon, label, value }) {
   );
 }
 
-export function BusinessAnalytics({ token, showError }) {
+export function BusinessAnalytics({ token, showError, refreshKey }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     apiFetch("/Analytics/business", token)
       .then(setData)
       .catch((e) => showError && showError(e))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, refreshKey]);
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (!data) return null;
@@ -83,16 +84,17 @@ export function BusinessAnalytics({ token, showError }) {
   );
 }
 
-export function AdminAnalytics({ token, showError }) {
+export function AdminAnalytics({ token, showError, refreshKey }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     apiFetch("/Analytics/admin", token)
       .then(setData)
       .catch((e) => showError && showError(e))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, refreshKey]);
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (!data) return null;
@@ -146,7 +148,7 @@ export function AdminAnalytics({ token, showError }) {
   );
 }
 
-export function AdminLogins({ token, showError }) {
+export function AdminLogins({ token, showError, refreshKey }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -157,7 +159,7 @@ export function AdminLogins({ token, showError }) {
       .then(setData)
       .catch((e) => showError && showError(e))
       .finally(() => setLoading(false));
-  }, [token, page]);
+  }, [token, page, refreshKey]);
 
   if (loading && !data) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (!data) return null;
