@@ -160,7 +160,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
             )}
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-2"><MapPin size={13} /> {company.adresa ? `${company.adresa}, ` : ""}{company.qyteti}</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{company.telefoni} · {company.email}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
         </div>
         <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
           <Building2 size={22} className="text-emerald-700 dark:text-emerald-400" />

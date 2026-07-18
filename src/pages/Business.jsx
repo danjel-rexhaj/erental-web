@@ -81,6 +81,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   const [actingId, setActingId] = useState(null);
   const [rejectingId, setRejectingId] = useState(null);
   const [reason, setReason] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -112,6 +113,11 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
       load();
       onChanged && onChanged();
     } catch (e) { showError(e); } finally { setActingId(null); }
+  }
+  async function removeBooking(id) {
+    setActingId(id);
+    try { await apiFetch(`/Bookings/${id}`, token, { method: "DELETE" }); showOk("Rezervimi u fshi."); setDeletingId(null); load(); }
+    catch (e) { showError(e); } finally { setActingId(null); }
   }
 
   const days = (b) => Math.max(1, Math.round((new Date(b.dataPerfundimit) - new Date(b.dataFillimit)) / 86400000));
@@ -220,6 +226,20 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
                     <span className="font-semibold">Arsyeja:</span> {b.arsyejaRefuzimit}
                   </p>
+                )}
+                {b.statusi === "cancelled" && (
+                  deletingId === b.bookingId ? (
+                    <div className="flex items-center gap-2 mt-3">
+                      <button onClick={() => removeBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
+                        {actingId === b.bookingId ? "Duke fshire..." : "Po, fshije"}
+                      </button>
+                      <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">Anulo</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setDeletingId(b.bookingId)} className="text-xs text-slate-400 dark:text-slate-500 underline mt-3">
+                      Fshi
+                    </button>
+                  )
                 )}
               </div>
             ))}

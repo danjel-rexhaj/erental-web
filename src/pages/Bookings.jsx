@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, Clock, Star } from "lucide-react";
-import { apiFetch } from "../api";
+import { Calendar, Clock, Star, Phone, MessageCircle, Mail } from "lucide-react";
+import { apiFetch, toWhatsappNumber } from "../api";
 import { GhostButton, PrimaryButton, StatusPill, inputClass } from "../components";
 
 export default function Bookings({ token, showError, showOk, highlightBookingId, refreshKey }) {
@@ -62,6 +62,29 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
             <p className="text-xs text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 rounded-lg px-2 py-1.5 mt-2">
               <span className="font-semibold">Arsyeja e refuzimit:</span> {b.arsyejaRefuzimit}
             </p>
+          )}
+
+          {(b.statusi === "confirmed" || b.statusi === "completed") && b.car?.company && (
+            <div className="mt-3 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5">
+              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Kontakto {b.car.company.emri}</p>
+              <div className="flex items-center gap-3">
+                {b.car.company.telefoni && (
+                  <a href={`tel:${b.car.company.telefoni}`} className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-slate-100">
+                    <Phone size={13} /> Telefono
+                  </a>
+                )}
+                {b.car.company.telefoni && (
+                  <a href={`https://wa.me/${toWhatsappNumber(b.car.company.telefoni)}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300">
+                    <MessageCircle size={13} /> WhatsApp
+                  </a>
+                )}
+                {b.car.company.email && (
+                  <a href={`mailto:${b.car.company.email}`} className="flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+                    <Mail size={13} /> Email
+                  </a>
+                )}
+              </div>
+            </div>
           )}
 
           <div className="flex gap-2 mt-3">
