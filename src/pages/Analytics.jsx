@@ -4,23 +4,31 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContai
 import { apiFetch } from "../api";
 
 const MUAJT = ["Jan", "Shk", "Mar", "Pri", "Maj", "Qer", "Kor", "Gsh", "Sht", "Tet", "Nen", "Dhj"];
-const monthLabel = (y, m) => `${MUAJT[m - 1]} ${y}`;
-const PERIODS = [
-  { value: 3, label: "3 muajt e fundit" },
-  { value: 6, label: "6 muajt e fundit" },
-  { value: 12, label: "12 muajt e fundit" },
-];
+const entryLabel = (m) => (m.day ? `${m.day} ${MUAJT[m.month - 1]}` : `${MUAJT[m.month - 1]} ${m.year}`);
 
-function PeriodSelect({ months, setMonths }) {
+const PERIODS = [
+  { key: "days:7", unit: "days", value: 7, label: "7 ditet e fundit" },
+  { key: "days:14", unit: "days", value: 14, label: "14 ditet e fundit" },
+  { key: "months:3", unit: "months", value: 3, label: "3 muajt e fundit" },
+  { key: "months:6", unit: "months", value: 6, label: "6 muajt e fundit" },
+  { key: "months:12", unit: "months", value: 12, label: "12 muajt e fundit" },
+];
+const DEFAULT_PERIOD = PERIODS.find((p) => p.key === "months:6");
+
+function PeriodSelect({ period, setPeriod }) {
   return (
     <select
-      value={months}
-      onChange={(e) => setMonths(Number(e.target.value))}
+      value={period.key}
+      onChange={(e) => setPeriod(PERIODS.find((p) => p.key === e.target.value) || DEFAULT_PERIOD)}
       className="text-xs font-medium border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 bg-white"
     >
-      {PERIODS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+      {PERIODS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
     </select>
   );
+}
+
+function periodQuery(period) {
+  return period.unit === "days" ? { days: period.value } : { months: period.value };
 }
 
 function StatCard({ icon: Icon, label, value }) {
@@ -40,27 +48,27 @@ function StatCard({ icon: Icon, label, value }) {
 export function BusinessAnalytics({ token, showError, refreshKey, companyId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [months, setMonths] = useState(6);
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
 
   useEffect(() => {
     setLoading(true);
-    const qs = new URLSearchParams({ months, ...(companyId ? { companyId } : {}) }).toString();
+    const qs = new URLSearchParams({ ...periodQuery(period), ...(companyId ? { companyId } : {}) }).toString();
     apiFetch(`/Analytics/business?${qs}`, token)
       .then(setData)
       .catch((e) => showError && showError(e))
       .finally(() => setLoading(false));
-  }, [token, refreshKey, months, companyId]);
+  }, [token, refreshKey, period, companyId]);
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (!data) return null;
 
-  const monthly = data.monthly.map((m) => ({ label: monthLabel(m.year, m.month), rezervime: m.rezervime, teArdhura: Math.round(m.teArdhura) }));
+  const monthly = data.monthly.map((m) => ({ label: entryLabel(m), rezervime: m.rezervime, teArdhura: Math.round(m.teArdhura) }));
   const viewsChart = data.viewsPerCar.map((v) => ({ makina: v.makina, shikime: v.shikime }));
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-end">
-        <PeriodSelect months={months} setMonths={setMonths} />
+        <PeriodSelect period={period} setPeriod={setPeriod} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -110,17 +118,18 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId }) {
 export function AdminAnalytics({ token, showError, refreshKey }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [months, setMonths] = useState(6);
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
 
   useEffect(() => {
     setLoading(true);
-    apiFetch(`/Analytics/admin?months=${months}`, token)
+    const qs = new URLSearchParams(periodQuery(period)).toString();
+    apiFetch(`/Analytics/admin?${qs}`, token)
       .then(setData)
       .catch((e) => showError && showError(e))
       .finally(() => setLoading(false));
-  }, [token, refreshKey, months]);
+  }, [token, refreshKey, period]);
 
   useEffect(() => {
     apiFetch("/Companies", null).then(setCompanies).catch(() => {});
@@ -129,12 +138,12 @@ export function AdminAnalytics({ token, showError, refreshKey }) {
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (!data) return null;
 
-  const monthly = data.monthly.map((m) => ({ label: monthLabel(m.year, m.month), users: m.users, companies: m.companies }));
+  const monthly = data.monthly.map((m) => ({ label: entryLabel(m), users: m.users, companies: m.companies }));
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-end">
-        <PeriodSelect months={months} setMonths={setMonths} />
+        <PeriodSelect period={period} setPeriod={setPeriod} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">

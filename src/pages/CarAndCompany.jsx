@@ -15,6 +15,10 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const shown = activePhoto || mainPhoto;
   const slotLabel = (kategoria) => PHOTO_SLOTS.find((s) => s.key === kategoria)?.label;
 
+  useEffect(() => {
+    apiFetch(`/Cars/${car.carId}/view`, token, { method: "POST" }).catch(() => {});
+  }, [car.carId]);
+
   function stepPhoto(dir) {
     if (photos.length < 2) return;
     const idx = photos.findIndex((p) => p.photoId === shown?.photoId);
