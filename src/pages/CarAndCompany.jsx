@@ -4,7 +4,7 @@ import { apiFetch } from "../api";
 import { PrimaryButton, Spec, CarPhoto } from "../components";
 import { PHOTO_SLOTS } from "../carData";
 
-export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, showError, showOk }) {
+export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, showError, showOk, isBusinessOwner }) {
   const [loading, setLoading] = useState(false);
   const days = Math.max(1, Math.round((new Date(dataPerfundimit) - new Date(dataFillimit)) / 86400000));
   const total = (days * car.cmimiDites).toFixed(2);
@@ -103,7 +103,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <p className="font-bold text-slate-900 text-2xl mt-1">{total}€</p>
           </div>
 
-          <PrimaryButton onClick={book} disabled={loading} className="mt-4">{loading ? "Duke rezervuar..." : "Rezervo"}</PrimaryButton>
+          {isBusinessOwner ? (
+            <p className="mt-4 text-xs text-slate-400 text-center bg-slate-50 rounded-xl py-2.5 px-3">
+              Llogarite e bizneseve nuk mund te bejne rezervime.
+            </p>
+          ) : (
+            <PrimaryButton onClick={book} disabled={loading} className="mt-4">{loading ? "Duke rezervuar..." : "Rezervo"}</PrimaryButton>
+          )}
         </div>
       </div>
 

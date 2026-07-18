@@ -186,6 +186,7 @@ export default function App() {
           needAuth={() => setView("auth")}
           showError={showError}
           showOk={showOk}
+          isBusinessOwner={user?.role === "business"}
         />
       );
     }

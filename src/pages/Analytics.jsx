@@ -5,6 +5,23 @@ import { apiFetch } from "../api";
 
 const MUAJT = ["Jan", "Shk", "Mar", "Pri", "Maj", "Qer", "Kor", "Gsh", "Sht", "Tet", "Nen", "Dhj"];
 const monthLabel = (y, m) => `${MUAJT[m - 1]} ${y}`;
+const PERIODS = [
+  { value: 3, label: "3 muajt e fundit" },
+  { value: 6, label: "6 muajt e fundit" },
+  { value: 12, label: "12 muajt e fundit" },
+];
+
+function PeriodSelect({ months, setMonths }) {
+  return (
+    <select
+      value={months}
+      onChange={(e) => setMonths(Number(e.target.value))}
+      className="text-xs font-medium border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 bg-white"
+    >
+      {PERIODS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+    </select>
+  );
+}
 
 function StatCard({ icon: Icon, label, value }) {
   return (
@@ -20,17 +37,19 @@ function StatCard({ icon: Icon, label, value }) {
   );
 }
 
-export function BusinessAnalytics({ token, showError, refreshKey }) {
+export function BusinessAnalytics({ token, showError, refreshKey, companyId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [months, setMonths] = useState(6);
 
   useEffect(() => {
     setLoading(true);
-    apiFetch("/Analytics/business", token)
+    const qs = new URLSearchParams({ months, ...(companyId ? { companyId } : {}) }).toString();
+    apiFetch(`/Analytics/business?${qs}`, token)
       .then(setData)
       .catch((e) => showError && showError(e))
       .finally(() => setLoading(false));
-  }, [token, refreshKey]);
+  }, [token, refreshKey, months, companyId]);
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (!data) return null;
@@ -40,6 +59,10 @@ export function BusinessAnalytics({ token, showError, refreshKey }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-end">
+        <PeriodSelect months={months} setMonths={setMonths} />
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={Eye} label="Shikime gjithsej" value={data.totals.totalViews} />
         <StatCard icon={CalendarIcon} label="Rezervime gjithsej" value={data.totals.totalBookings} />
@@ -64,7 +87,7 @@ export function BusinessAnalytics({ token, showError, refreshKey }) {
       </div>
 
       <div className="border border-slate-200 rounded-2xl p-4">
-        <h3 className="font-semibold text-sm text-slate-900 mb-4">Rezervime & te ardhura (6 muajt e fundit)</h3>
+        <h3 className="font-semibold text-sm text-slate-900 mb-4">Rezervime & te ardhura</h3>
         {monthly.length === 0 ? (
           <p className="text-sm text-slate-400 text-center py-8">Ende s'ka te dhena.</p>
         ) : (
@@ -87,14 +110,21 @@ export function BusinessAnalytics({ token, showError, refreshKey }) {
 export function AdminAnalytics({ token, showError, refreshKey }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [months, setMonths] = useState(6);
+  const [companies, setCompanies] = useState([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState("");
 
   useEffect(() => {
     setLoading(true);
-    apiFetch("/Analytics/admin", token)
+    apiFetch(`/Analytics/admin?months=${months}`, token)
       .then(setData)
       .catch((e) => showError && showError(e))
       .finally(() => setLoading(false));
-  }, [token, refreshKey]);
+  }, [token, refreshKey, months]);
+
+  useEffect(() => {
+    apiFetch("/Companies", null).then(setCompanies).catch(() => {});
+  }, []);
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (!data) return null;
@@ -103,6 +133,10 @@ export function AdminAnalytics({ token, showError, refreshKey }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-end">
+        <PeriodSelect months={months} setMonths={setMonths} />
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <StatCard icon={UsersIcon} label="Perdorues" value={data.totals.totalUsers} />
         <StatCard icon={Building2} label="Biznese" value={data.totals.totalCompanies} />
@@ -112,7 +146,7 @@ export function AdminAnalytics({ token, showError, refreshKey }) {
       </div>
 
       <div className="border border-slate-200 rounded-2xl p-4">
-        <h3 className="font-semibold text-sm text-slate-900 mb-4">Rritja (6 muajt e fundit)</h3>
+        <h3 className="font-semibold text-sm text-slate-900 mb-4">Rritja</h3>
         {monthly.length === 0 ? (
           <p className="text-sm text-slate-400 text-center py-8">Ende s'ka te dhena te mjaftueshme.</p>
         ) : (
@@ -142,6 +176,21 @@ export function AdminAnalytics({ token, showError, refreshKey }) {
               </div>
             ))}
           </div>
+        )}
+      </div>
+
+      <div className="border border-slate-200 rounded-2xl p-4">
+        <h3 className="font-semibold text-sm text-slate-900 mb-4">Statistikat e nje biznesi specifik</h3>
+        <select
+          value={selectedCompanyId}
+          onChange={(e) => setSelectedCompanyId(e.target.value)}
+          className="text-xs font-medium border border-slate-200 rounded-lg px-3 py-2 text-slate-700 bg-white w-full sm:w-64 mb-4"
+        >
+          <option value="">Zgjidh nje biznes...</option>
+          {companies.map((c) => <option key={c.companyId} value={c.companyId}>{c.emri}</option>)}
+        </select>
+        {selectedCompanyId && (
+          <BusinessAnalytics token={token} showError={showError} companyId={selectedCompanyId} refreshKey={refreshKey} />
         )}
       </div>
     </div>
