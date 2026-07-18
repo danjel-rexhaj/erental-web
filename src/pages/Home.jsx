@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ShieldCheck, Calendar, ArrowRight } from "lucide-react";
 import { apiFetch } from "../api";
-import { Field, PrimaryButton, inputClass } from "../components";
+import { Field, PrimaryButton } from "../components";
 
 export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, setDataPerfundimit, onSearch, loading }) {
   const [companies, setCompanies] = useState([]);
@@ -37,18 +37,28 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
           <div className="bg-white rounded-2xl p-4 mt-8 w-full max-w-2xl flex flex-col sm:flex-row sm:items-end gap-3 shadow-2xl">
             <div className="flex-1 min-w-0">
               <Field label="Nga">
-                <div className="relative">
-                  <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 pointer-events-none" />
-                  <input type="date" className={`${inputClass} w-full min-w-0 cursor-pointer pl-9 font-semibold`} value={dataFillimit} onChange={(e) => setDataFillimit(e.target.value)} />
+                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100 transition">
+                  <Calendar size={15} className="text-emerald-600 shrink-0 pointer-events-none" />
+                  <input
+                    type="date"
+                    className="flex-1 min-w-0 w-full py-2.5 text-sm text-slate-900 outline-none bg-transparent cursor-pointer font-semibold"
+                    value={dataFillimit}
+                    onChange={(e) => setDataFillimit(e.target.value)}
+                  />
                 </div>
               </Field>
             </div>
             <ArrowRight size={18} className="hidden sm:block text-slate-300 mb-3 shrink-0" />
             <div className="flex-1 min-w-0">
               <Field label="Deri">
-                <div className="relative">
-                  <Calendar size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600 pointer-events-none" />
-                  <input type="date" className={`${inputClass} w-full min-w-0 cursor-pointer pl-9 font-semibold`} value={dataPerfundimit} onChange={(e) => setDataPerfundimit(e.target.value)} />
+                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100 transition">
+                  <Calendar size={15} className="text-emerald-600 shrink-0 pointer-events-none" />
+                  <input
+                    type="date"
+                    className="flex-1 min-w-0 w-full py-2.5 text-sm text-slate-900 outline-none bg-transparent cursor-pointer font-semibold"
+                    value={dataPerfundimit}
+                    onChange={(e) => setDataPerfundimit(e.target.value)}
+                  />
                 </div>
               </Field>
             </div>
