@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { LogOut, Menu, X, Bell, Sun, Moon } from "lucide-react";
-import { apiFetch, decodeJwt, todayPlus } from "./api";
+import { apiFetch, decodeJwt } from "./api";
 import { useNotifications } from "./notifications";
 import { Logo } from "./Logo";
 import { Notice } from "./components";
@@ -49,8 +49,8 @@ export default function App() {
   // Browse flow state lives here so it persists across sub-page navigation
   const [stage, setStage] = useState("landing"); // landing | results | carDetail | companyProfile
   const [carDetailFrom, setCarDetailFrom] = useState("results"); // results | companyProfile
-  const [dataFillimit, setDataFillimit] = useState(todayPlus(2));
-  const [dataPerfundimit, setDataPerfundimit] = useState(todayPlus(5));
+  const [dataFillimit, setDataFillimit] = useState("");
+  const [dataPerfundimit, setDataPerfundimit] = useState("");
   const [cars, setCars] = useState([]);
   const [searching, setSearching] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
@@ -138,6 +138,10 @@ export default function App() {
   }
 
   const search = useCallback(async () => {
+    if (!dataFillimit || !dataPerfundimit) {
+      showError(new Error("Zgjidh datat e marrjes dhe te dorezimit."));
+      return;
+    }
     setSearching(true);
     try {
       const data = await apiFetch(`/Cars/available?dataFillimit=${dataFillimit}&dataPerfundimit=${dataPerfundimit}`, null);

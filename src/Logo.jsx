@@ -6,12 +6,12 @@ export function LogoMark({ size = 40 }) {
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#059669" />
-          <stop offset="100%" stopColor="#0f172a" />
+          <stop offset="0%" stopColor="#2dd4bf" />
+          <stop offset="100%" stopColor="#0f766e" />
         </linearGradient>
       </defs>
-      <rect x="2" y="2" width="96" height="96" rx="26" fill={`url(#${gradId})`} />
-      <text x="50" y="67" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif" fontWeight="800" fontSize="44" letterSpacing="-2" fill="#ffffff">ER</text>
+      <circle cx="50" cy="50" r="49" fill={`url(#${gradId})`} />
+      <text x="50" y="65" textAnchor="middle" fontFamily="'Alex Brush', cursive" fontSize="52" fill="#ffffff">ER</text>
     </svg>
   );
 }

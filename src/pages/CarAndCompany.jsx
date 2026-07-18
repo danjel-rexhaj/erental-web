@@ -6,6 +6,7 @@ import { PHOTO_SLOTS, AMENITIES } from "../carData";
 
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, showError, showOk, isBusinessOwner }) {
   const [loading, setLoading] = useState(false);
+  const [bookedRanges, setBookedRanges] = useState([]);
   const days = Math.max(1, Math.round((new Date(dataPerfundimit) - new Date(dataFillimit)) / 86400000));
   const total = (days * car.cmimiDites).toFixed(2);
 
@@ -18,6 +19,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   useEffect(() => {
     apiFetch(`/Cars/${car.carId}/view`, token, { method: "POST" }).catch(() => {});
   }, [car.carId]);
+
+  useEffect(() => {
+    apiFetch(`/Cars/${car.carId}/availability`, null).then(setBookedRanges).catch(() => {});
+  }, [car.carId]);
+
+  const fmt = (d) => new Date(d).toLocaleDateString("sq-AL", { day: "numeric", month: "long", year: "numeric" });
+  const mapsQuery = encodeURIComponent(`${car.company?.adresa ? car.company.adresa + ", " : ""}${car.company?.qyteti || ""}, Shqiperi`);
 
   function stepPhoto(dir) {
     if (photos.length < 2) return;
@@ -125,6 +133,17 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
           </div>
 
+          {bookedRanges.length > 0 && (
+            <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+              <p className="font-semibold text-slate-600 dark:text-slate-300 mb-1">Data te zena per kete makine:</p>
+              <ul className="space-y-0.5">
+                {bookedRanges.map((r, i) => (
+                  <li key={i}>{fmt(r.dataFillimit)} – {fmt(r.dataPerfundimit)}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {isBusinessOwner ? (
             <p className="mt-4 text-xs text-slate-400 text-center bg-slate-50 dark:bg-slate-800 rounded-xl py-2.5 px-3">
               Llogarite e bizneseve nuk mund te bejne rezervime.
@@ -139,6 +158,21 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
         <div className="mt-8 max-w-3xl">
           <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Pershkrimi</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{car.pershkrimi}</p>
+        </div>
+      )}
+
+      {car.company?.qyteti && (
+        <div className="mt-8 max-w-3xl border-t border-slate-100 dark:border-slate-800 pt-8">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-teal-700 dark:text-teal-400 underline mt-2"
+          >
+            Hap ne Google Maps
+          </a>
         </div>
       )}
     </div>

@@ -24,7 +24,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
         <div className="relative flex flex-col justify-end min-h-[560px] sm:min-h-[520px] p-6 sm:p-12">
-          <span className="inline-flex items-center gap-1.5 text-emerald-300 text-xs font-semibold tracking-wide uppercase bg-emerald-900/40 border border-emerald-400/30 rounded-full px-3 py-1.5 w-fit mb-4 backdrop-blur-sm">
+          <span className="inline-flex items-center gap-1.5 text-white text-xs font-semibold tracking-wide uppercase bg-gradient-to-r from-teal-500 to-emerald-600 rounded-full px-3 py-1.5 w-fit mb-4 shadow-lg shadow-teal-900/30">
             ERental Albania
           </span>
           <h1 className="text-white text-3xl sm:text-5xl font-bold tracking-tight max-w-xl">
@@ -69,15 +69,15 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
 
       {loop.length > 0 && (
         <div className="relative mt-10 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700">
-          <div className="absolute inset-0 bg-slate-50 dark:bg-slate-800" />
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-teal-950/40 dark:via-slate-800 dark:to-emerald-950/30" />
 
           <div className="relative p-6 sm:p-8">
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">Bizneset e verifikuara ne ERental</p>
             <div className="overflow-hidden">
               <div className="flex gap-3 animate-marquee w-max">
                 {loop.map((c, i) => (
-                  <div key={i} className="flex items-center gap-2 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 bg-white/90 dark:bg-slate-900/70 backdrop-blur-sm flex-shrink-0 shadow-sm">
-                    <ShieldCheck size={14} className="text-emerald-600 flex-shrink-0" />
+                  <div key={i} className="flex items-center gap-2 border border-teal-100 dark:border-teal-800/50 rounded-xl px-4 py-3 bg-white/90 dark:bg-slate-900/70 backdrop-blur-sm flex-shrink-0 shadow-sm">
+                    <ShieldCheck size={14} className="text-teal-600 dark:text-teal-400 flex-shrink-0" />
                     <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">{c.emri}</span>
                     <span className="text-xs text-slate-400 whitespace-nowrap">· {c.qyteti}</span>
                   </div>
