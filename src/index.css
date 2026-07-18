@@ -1,8 +1,13 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 html, body {
   overflow-x: hidden;
   max-width: 100%;
+}
+
+html.dark, html.dark body {
+  background-color: #0f172a;
 }
 
 button:not(:disabled), [role="button"] {

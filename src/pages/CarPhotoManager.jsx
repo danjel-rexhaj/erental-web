@@ -40,7 +40,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
 
   return (
     <div>
-      <p className="text-xs text-slate-500 mb-2">Foto ({totalCount}/7)</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Foto ({totalCount}/7)</p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {PHOTO_SLOTS.map((slot) => {
           const photo = byCategory[slot.key];
@@ -48,7 +48,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
 
           if (photo) {
             return (
-              <div key={slot.key} className="relative rounded-xl overflow-hidden border border-slate-200">
+              <div key={slot.key} className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                 <img src={photo.urlFotos} alt={slot.label} className="w-full h-20 object-cover" />
                 <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-1.5 py-0.5">{slot.label}</span>
                 <button
@@ -67,7 +67,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
             <label
               key={slot.key}
               className={`flex flex-col items-center justify-center gap-1 h-20 rounded-xl border border-dashed text-center px-1 ${
-                capReached ? "border-slate-200 text-slate-300 cursor-not-allowed" : "border-emerald-300 text-emerald-700 cursor-pointer hover:bg-emerald-50"
+                capReached ? "border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed" : "border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
               }`}
             >
               <Upload size={14} />
@@ -89,7 +89,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
           <p className="text-[11px] text-slate-400 mb-1">Foto te tjera</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {others.map((photo) => (
-              <div key={photo.photoId} className="relative rounded-xl overflow-hidden border border-slate-200">
+              <div key={photo.photoId} className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                 <img src={photo.urlFotos} alt="" className="w-full h-20 object-cover" />
                 <button
                   type="button"

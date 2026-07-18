@@ -37,6 +37,19 @@ export const CAR_BRANDS = {
   [OTHER_BRAND]: [],
 };
 
+export const AMENITIES = [
+  { key: "bluetooth", label: "Bluetooth" },
+  { key: "gps", label: "GPS / Navigacion" },
+  { key: "kamera_pas", label: "Kamera pas" },
+  { key: "sensore_parkimi", label: "Sensore parkimi" },
+  { key: "sedilje_lekuri", label: "Sedilje lekuri" },
+  { key: "sunroof", label: "Sunroof" },
+  { key: "usb", label: "USB / Karikim" },
+  { key: "sedilje_femije", label: "Sedilje per femije" },
+  { key: "traksion_4x4", label: "Traksion 4x4" },
+  { key: "bagazh_i_madh", label: "Bagazh i madh" },
+];
+
 export const PHOTO_SLOTS = [
   { key: "front", label: "Para" },
   { key: "back", label: "Mbrapa" },

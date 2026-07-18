@@ -34,14 +34,14 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             Platforma e pare shqiptare ku krahason dhe rezervon makinen tende me qera brenda sekondave — pa kosto te fshehura.
           </p>
 
-          <div className="bg-white rounded-2xl p-4 mt-8 w-full max-w-2xl flex flex-col sm:flex-row sm:items-end gap-3 shadow-2xl">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 mt-8 w-full max-w-2xl flex flex-col sm:flex-row sm:items-end gap-3 shadow-2xl">
             <div className="flex-1 min-w-0">
               <Field label="Nga">
-                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100 transition">
+                <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-emerald-100 dark:focus-within:ring-emerald-900/40 transition">
                   <Calendar size={15} className="text-emerald-600 shrink-0 pointer-events-none" />
                   <input
                     type="date"
-                    className="flex-1 min-w-0 w-full py-2.5 text-sm text-slate-900 outline-none bg-transparent cursor-pointer font-semibold"
+                    className="flex-1 min-w-0 w-full py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none bg-transparent cursor-pointer font-semibold"
                     value={dataFillimit}
                     onChange={(e) => setDataFillimit(e.target.value)}
                   />
@@ -51,11 +51,11 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             <ArrowRight size={18} className="hidden sm:block text-slate-300 mb-3 shrink-0" />
             <div className="flex-1 min-w-0">
               <Field label="Deri">
-                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100 transition">
+                <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-emerald-100 dark:focus-within:ring-emerald-900/40 transition">
                   <Calendar size={15} className="text-emerald-600 shrink-0 pointer-events-none" />
                   <input
                     type="date"
-                    className="flex-1 min-w-0 w-full py-2.5 text-sm text-slate-900 outline-none bg-transparent cursor-pointer font-semibold"
+                    className="flex-1 min-w-0 w-full py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none bg-transparent cursor-pointer font-semibold"
                     value={dataPerfundimit}
                     onChange={(e) => setDataPerfundimit(e.target.value)}
                   />
@@ -68,20 +68,17 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
       </div>
 
       {loop.length > 0 && (
-        <div className="relative mt-10 rounded-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-slate-50" />
-          <div className="pointer-events-none absolute -top-10 -left-10 w-72 h-72 bg-emerald-200 rounded-full blur-[80px] opacity-50 animate-blob" />
-          <div className="pointer-events-none absolute -bottom-16 right-0 w-80 h-80 bg-emerald-100 rounded-full blur-[90px] opacity-60 animate-blob animation-delay-2000" />
-          <div className="pointer-events-none absolute top-10 right-1/3 w-56 h-56 bg-slate-200 rounded-full blur-[70px] opacity-40 animate-blob animation-delay-4000" />
+        <div className="relative mt-10 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700">
+          <div className="absolute inset-0 bg-slate-50 dark:bg-slate-800" />
 
           <div className="relative p-6 sm:p-8">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Bizneset e verifikuara ne ERental</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">Bizneset e verifikuara ne ERental</p>
             <div className="overflow-hidden">
               <div className="flex gap-3 animate-marquee w-max">
                 {loop.map((c, i) => (
-                  <div key={i} className="flex items-center gap-2 border border-slate-200 rounded-xl px-4 py-3 bg-white/90 backdrop-blur-sm flex-shrink-0 shadow-sm">
+                  <div key={i} className="flex items-center gap-2 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 bg-white/90 dark:bg-slate-900/70 backdrop-blur-sm flex-shrink-0 shadow-sm">
                     <ShieldCheck size={14} className="text-emerald-600 flex-shrink-0" />
-                    <span className="text-sm font-semibold text-slate-800 whitespace-nowrap">{c.emri}</span>
+                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">{c.emri}</span>
                     <span className="text-xs text-slate-400 whitespace-nowrap">· {c.qyteti}</span>
                   </div>
                 ))}

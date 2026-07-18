@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail } from "lucide-react";
 import { apiFetch, toWhatsappNumber } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill } from "../components";
-import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL } from "../carData";
+import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
 
@@ -45,7 +45,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
     <div>
       <div className="flex mb-6 gap-2">
         {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)} className={`text-xs font-semibold px-3 py-1.5 rounded-full ${tab === t.key ? "bg-emerald-700 text-white" : "bg-slate-100 text-slate-500"}`}>
+          <button key={t.key} onClick={() => setTab(t.key)} className={`text-xs font-semibold px-3 py-1.5 rounded-full ${tab === t.key ? "bg-emerald-700 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}>
             {t.label}
           </button>
         ))}
@@ -79,6 +79,8 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState(null);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [reason, setReason] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,15 +102,22 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     catch (e) { showError(e); } finally { setActingId(null); }
   }
   async function reject(id) {
+    if (!reason.trim()) { showError(new Error("Duhet te shkruash nje arsye per refuzimin.")); return; }
     setActingId(id);
-    try { await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT" }); showOk("Rezervimi u refuzua."); load(); onChanged && onChanged(); }
-    catch (e) { showError(e); } finally { setActingId(null); }
+    try {
+      await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT", body: JSON.stringify({ reason }) });
+      showOk("Rezervimi u refuzua.");
+      setRejectingId(null);
+      setReason("");
+      load();
+      onChanged && onChanged();
+    } catch (e) { showError(e); } finally { setActingId(null); }
   }
 
   const days = (b) => Math.max(1, Math.round((new Date(b.dataPerfundimit) - new Date(b.dataFillimit)) / 86400000));
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
-  if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 mb-2" /><p className="text-sm text-slate-500">Ende s'ke asnje rezervim per makinat e tua.</p></div>;
+  if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Ende s'ke asnje rezervim per makinat e tua.</p></div>;
 
   const pending = bookings.filter((b) => b.statusi === "pending");
   const others = bookings.filter((b) => b.statusi !== "pending");
@@ -117,17 +126,17 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     <div className="flex flex-col gap-8">
       {pending.length > 0 && (
         <div>
-          <h3 className="font-semibold text-sm text-slate-900 mb-3">Ne pritje te miratimit ({pending.length})</h3>
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Ne pritje te miratimit ({pending.length})</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {pending.map((b) => (
               <div
                 key={b.bookingId}
                 id={`booking-${b.bookingId}`}
-                className={`border bg-amber-50/40 rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-emerald-400 ring-2 ring-emerald-200" : "border-amber-200"}`}
+                className={`border bg-amber-50/40 dark:bg-amber-900/20 rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/40" : "border-amber-200 dark:border-amber-800/60"}`}
               >
-                <p className="font-semibold text-sm text-slate-900">{b.car.marka} {b.car.modeli}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
-                <p className="text-xs text-slate-600 flex items-center gap-1 mt-2">
+                <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
                   <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri} · {b.klienti.telefoni}
                   {b.klienti.hasWhatsapp && b.klienti.telefoni && (
                     <a
@@ -135,7 +144,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-emerald-600 hover:text-emerald-800"
+                      className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
                       title="Shkruaj ne WhatsApp"
                     >
                       <MessageCircle size={13} />
@@ -145,22 +154,43 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                     <a
                       href={`mailto:${b.klienti.email}?subject=${encodeURIComponent(`Rezervimi juaj prane ${companyName || "nesh"}`)}&body=${encodeURIComponent(`Pershendetje ${b.klienti.emri},\n\nJu kontaktojme lidhur me rezervimin tuaj per ${b.car.marka} ${b.car.modeli} (${b.dataFillimit} - ${b.dataPerfundimit}) prane ${companyName || "nesh"}.\n\n`)}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="text-slate-500 hover:text-slate-800"
+                      className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                       title="Shkruaj email"
                     >
                       <Mail size={13} />
                     </a>
                   )}
                 </p>
-                <p className="text-sm font-bold text-slate-900 mt-2">{b.cmimiTotal}€</p>
-                <div className="flex gap-2 mt-3">
-                  <PrimaryButton onClick={() => confirm(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2">
-                    Mirato
-                  </PrimaryButton>
-                  <GhostButton onClick={() => reject(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2">
-                    Refuzo
-                  </GhostButton>
-                </div>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
+                {rejectingId === b.bookingId ? (
+                  <div className="mt-3">
+                    <textarea
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      placeholder="Arsyeja e refuzimit (i dergohet klientit)..."
+                      rows={2}
+                      autoFocus
+                      className="w-full text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 mb-2 outline-none focus:border-emerald-600 dark:focus:border-emerald-500"
+                    />
+                    <div className="flex gap-2">
+                      <GhostButton onClick={() => reject(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/60 hover:bg-red-50 dark:hover:bg-red-900/20">
+                        Konfirmo refuzimin
+                      </GhostButton>
+                      <GhostButton onClick={() => { setRejectingId(null); setReason(""); }} className="text-xs py-2">
+                        Anulo
+                      </GhostButton>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 mt-3">
+                    <PrimaryButton onClick={() => confirm(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2">
+                      Mirato
+                    </PrimaryButton>
+                    <GhostButton onClick={() => { setRejectingId(b.bookingId); setReason(""); }} disabled={actingId === b.bookingId} className="text-xs py-2">
+                      Refuzo
+                    </GhostButton>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -169,23 +199,28 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 
       {others.length > 0 && (
         <div>
-          <h3 className="font-semibold text-sm text-slate-900 mb-3">Historiku</h3>
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Historiku</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {others.map((b) => (
               <div
                 key={b.bookingId}
                 id={`booking-${b.bookingId}`}
-                className={`border rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-emerald-400 ring-2 ring-emerald-200" : "border-slate-200"}`}
+                className={`border rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/40" : "border-slate-200 dark:border-slate-700"}`}
               >
                 <div className="flex items-start justify-between">
-                  <p className="font-semibold text-sm text-slate-900">{b.car.marka} {b.car.modeli}</p>
+                  <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
                   <StatusPill status={b.statusi} />
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
-                <p className="text-xs text-slate-600 flex items-center gap-1 mt-2">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
                   <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri}
                 </p>
-                <p className="text-sm font-bold text-slate-900 mt-2">{b.cmimiTotal}€</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
+                {b.arsyejaRefuzimit && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
+                    <span className="font-semibold">Arsyeja:</span> {b.arsyejaRefuzimit}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -218,30 +253,30 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
   return (
     <div className="max-w-2xl mx-auto py-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Bëhu pjesë e ERental</h1>
-        <p className="text-sm text-slate-500 max-w-md mx-auto">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">Bëhu pjesë e ERental</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
           Lista makinat e biznesit tënd te platforma jonë dhe merr klientë të rinj çdo ditë — pa kosto fillestare.
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-        <div className="border border-slate-200 rounded-2xl p-4 text-center">
-          <p className="text-2xl font-bold text-emerald-700 mb-1">0€</p>
-          <p className="text-xs text-slate-500">Kosto fillestare</p>
+        <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">0€</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Kosto fillestare</p>
         </div>
-        <div className="border border-slate-200 rounded-2xl p-4 text-center"> 
-          <p className="text-2xl font-bold text-emerald-700 mb-1">24-48h</p>
-          <p className="text-xs text-slate-500">Verifikim i shpejtë</p>
+        <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center">
+          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">24-48h</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Verifikim i shpejtë</p>
         </div>
-        <div className="border border-slate-200 rounded-2xl p-4 text-center flex flex-col items-center justify-center">
-          <MessageCircle size={20} className="text-emerald-700 mb-1" />
-          <p className="text-xs text-slate-500">Support: <a href="https://wa.me/355688208868" target="_blank" rel="noreferrer" className="text-emerald-700 underline">WhatsApp</a></p>
+        <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center flex flex-col items-center justify-center">
+          <MessageCircle size={20} className="text-emerald-700 dark:text-emerald-400 mb-1" />
+          <p className="text-xs text-slate-500 dark:text-slate-400">Support: <a href="https://wa.me/355688208868" target="_blank" rel="noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">WhatsApp</a></p>
         </div>
       </div>
 
       <div className="max-w-md mx-auto">
-        <div className="flex items-center gap-2 mb-1"><Building2 size={20} className="text-emerald-700" /><h2 className="text-xl font-bold text-slate-900">Regjistro biznesin</h2></div>
-        <p className="text-xs text-slate-500 mb-4">Do te perdorim email-in e llogarise tende per biznesin.</p>
+        <div className="flex items-center gap-2 mb-1"><Building2 size={20} className="text-emerald-700 dark:text-emerald-400" /><h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Regjistro biznesin</h2></div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Do te perdorim email-in e llogarise tende per biznesin.</p>
         <form onSubmit={submit}>
           <Field label="Emri i biznesit"><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="AutoRent Tirana" /></Field>
           <Field label="Telefoni"><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder="0691234567" /></Field>
@@ -262,21 +297,21 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
   const [showAddCar, setShowAddCar] = useState(false);
   return (
     <div>
-      <div className="border border-slate-200 rounded-2xl p-4 mb-6 max-w-xl">
+      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6 max-w-xl">
         <div className="flex items-start justify-between">
-          <div><p className="font-bold text-slate-900 text-sm">{company.emri}</p><p className="text-xs text-slate-500">{company.qyteti} · NIPT {company.nipt}</p></div>
+          <div><p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{company.emri}</p><p className="text-xs text-slate-500 dark:text-slate-400">{company.qyteti} · NIPT {company.nipt}</p></div>
           {company.eshteVerifikuar ? (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full"><ShieldCheck size={12} /> I verifikuar</span>
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full"><ShieldCheck size={12} /> I verifikuar</span>
           ) : (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-1 rounded-full"><Clock size={12} /> Ne pritje</span>
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full"><Clock size={12} /> Ne pritje</span>
           )}
         </div>
         <p className="text-[11px] text-slate-400 mt-2">Modeli i faturimit: {company.billingModel === "commission" ? `Komision ${company.commissionRate}%` : "Abonim mujor"}</p>
       </div>
 
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm text-slate-900">Makinat e mia ({cars.length})</h3>
-        <button onClick={() => setShowAddCar((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-emerald-700 underline"><Plus size={14} /> Shto makine</button>
+        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">Makinat e mia ({cars.length})</h3>
+        <button onClick={() => setShowAddCar((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 underline"><Plus size={14} /> Shto makine</button>
       </div>
 
       {showAddCar && <div className="max-w-xl"><AddCarForm token={token} companyId={company.companyId} onDone={() => { setShowAddCar(false); reload(); }} showError={showError} showOk={showOk} /></div>}
@@ -294,7 +329,7 @@ function buildCarForm(car) {
       marka: "", markaCustom: "", modeli: "", modeliCustom: "",
       viti: "2020", km: "0", karburanti: "diesel", transmisioni: "manual",
       ngjyra: "", targa: "", kategoria: "economy", numriVendeve: "5",
-      klimatizimi: true, cmimiDites: "20", pershkrimi: "", kubatura: "", cilindra: "",
+      klimatizimi: true, cmimiDites: "20", pershkrimi: "", kubatura: "", cilindra: "", amenities: [],
     };
   }
   const markaKnown = Object.prototype.hasOwnProperty.call(CAR_BRANDS, car.marka);
@@ -317,6 +352,7 @@ function buildCarForm(car) {
     pershkrimi: car.pershkrimi || "",
     kubatura: car.kubatura != null ? String(car.kubatura) : "",
     cilindra: car.cilindra != null ? String(car.cilindra) : "",
+    amenities: car.amenities || [],
   };
 }
 
@@ -328,6 +364,13 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
   const [form, setForm] = useState(() => buildCarForm(existingCar));
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const models = CAR_BRANDS[form.marka] || [];
+
+  function toggleAmenity(key) {
+    setForm((f) => ({
+      ...f,
+      amenities: f.amenities.includes(key) ? f.amenities.filter((a) => a !== key) : [...f.amenities, key],
+    }));
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -342,6 +385,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
         cmimiDites: Number(form.cmimiDites), pershkrimi: form.pershkrimi || null,
         kubatura: form.kubatura ? Number(form.kubatura) : null,
         cilindra: form.cilindra ? Number(form.cilindra) : null,
+        amenities: form.amenities,
       };
       if (isEdit) {
         await apiFetch(`/Cars/${existingCar.carId}`, token, { method: "PUT", body: JSON.stringify(payload) });
@@ -361,8 +405,8 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
 
   if (createdCar) {
     return (
-      <div className="border border-slate-200 rounded-2xl p-3 mb-4 bg-slate-50">
-        <p className="text-sm font-semibold text-slate-900 mb-2">{createdCar.marka} {createdCar.modeli} u shtua</p>
+      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3 mb-4 bg-slate-50 dark:bg-slate-800">
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">{createdCar.marka} {createdCar.modeli} u shtua</p>
         <CarPhotoManager
           carId={createdCar.carId}
           token={token}
@@ -376,7 +420,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
   }
 
   return (
-    <form onSubmit={submit} className="border border-slate-200 rounded-2xl p-3 mb-4 bg-slate-50">
+    <form onSubmit={submit} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3 mb-4 bg-slate-50 dark:bg-slate-800">
       <div className="grid grid-cols-2 gap-2">
         <Field label="Marka">
           <select required className={inputClass} value={form.marka} onChange={(e) => setForm((f) => ({ ...f, marka: e.target.value, modeli: "" }))}>
@@ -420,10 +464,19 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
         </Field>
         <Field label="Vende"><input type="number" className={inputClass} value={form.numriVendeve} onChange={set("numriVendeve")} /></Field>
         <Field label="Cmimi/dite (€)"><input type="number" className={inputClass} value={form.cmimiDites} onChange={set("cmimiDites")} /></Field>
-        <label className="flex items-center gap-2 mt-6 text-xs text-slate-600">
+        <label className="flex items-center gap-2 mt-6 text-xs text-slate-600 dark:text-slate-300">
           <input type="checkbox" checked={form.klimatizimi} onChange={(e) => setForm((f) => ({ ...f, klimatizimi: e.target.checked }))} /> Klimatizim
         </label>
       </div>
+      <Field label="Pajisje shtese">
+        <div className="grid grid-cols-2 gap-1.5">
+          {AMENITIES.map((a) => (
+            <label key={a.key} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+              <input type="checkbox" checked={form.amenities.includes(a.key)} onChange={() => toggleAmenity(a.key)} /> {a.label}
+            </label>
+          ))}
+        </div>
+      </Field>
       <Field label="Pershkrimi"><textarea rows={3} className={inputClass} value={form.pershkrimi} onChange={set("pershkrimi")} placeholder="Detaje shtese per makinen..." /></Field>
       <PrimaryButton type="submit" disabled={loading} className="mt-2">
         {loading ? "Duke ruajtur..." : isEdit ? "Ruaj ndryshimet" : "Ruaj makinen"}
@@ -437,25 +490,25 @@ function BusinessCarCard({ car, token, reload, showError, showOk }) {
   const [editing, setEditing] = useState(false);
 
   return (
-    <div className="border border-slate-200 rounded-2xl overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
       <CarPhoto car={car} />
       <div className="p-3">
         <div className="flex items-start justify-between">
-          <div><p className="font-semibold text-sm text-slate-900">{car.marka} {car.modeli}</p><p className="text-xs text-slate-500">{car.targa} · {car.cmimiDites}€/dite</p></div>
+          <div><p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</p><p className="text-xs text-slate-500 dark:text-slate-400">{car.targa} · {car.cmimiDites}€/dite</p></div>
           <StatusPill status={car.statusi === "active" ? "confirmed" : car.statusi} />
         </div>
         <div className="flex gap-2 mt-3">
           <button
             type="button"
             onClick={() => setEditing((s) => !s)}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-700 border border-dashed border-slate-300 rounded-xl py-2 hover:bg-slate-50"
+            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl py-2 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             {editing ? "Mbyll" : "Edito"}
           </button>
           <button
             type="button"
             onClick={() => setManagingPhotos((s) => !s)}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-emerald-700 border border-dashed border-emerald-300 rounded-xl py-2 hover:bg-emerald-50"
+            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 border border-dashed border-emerald-300 dark:border-emerald-700 rounded-xl py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
           >
             <Upload size={13} />{managingPhotos ? "Mbyll" : "Fotot"}
           </button>
@@ -504,21 +557,21 @@ function AdminPending({ token, showError, showOk }) {
   }
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
-  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 mb-2" /><p className="text-sm text-slate-500">Asnje biznes ne pritje.</p></div>;
+  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Asnje biznes ne pritje.</p></div>;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {pending.map((c) => (
-        <div key={c.companyId} className="border border-slate-200 rounded-2xl p-4">
-          <p className="font-semibold text-sm text-slate-900">{c.emri}</p>
-          <p className="text-xs text-slate-500">{c.qyteti} · NIPT {c.nipt}</p>
+        <div key={c.companyId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+          <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{c.emri}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{c.qyteti} · NIPT {c.nipt}</p>
           <p className="text-xs text-slate-400">{c.email} · {c.telefoni}</p>
           {c.certifikataUrl ? (
-            <a href={c.certifikataUrl} target="_blank" rel="noreferrer" className="text-xs text-emerald-700 underline mt-2 block">
+            <a href={c.certifikataUrl} target="_blank" rel="noreferrer" className="text-xs text-emerald-700 dark:text-emerald-400 underline mt-2 block">
               Shiko certifikaten e NIPT-it
             </a>
           ) : (
-            <p className="text-xs text-amber-600 mt-2">S'ka certifikate te ngarkuar</p>
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">S'ka certifikate te ngarkuar</p>
           )}
           <PrimaryButton onClick={() => verify(c.companyId)} className="mt-2 text-xs py-2">Verifiko biznesin</PrimaryButton>
           <GhostButton onClick={() => reject(c.companyId)} className="mt-2 text-xs py-2">Refuzo dhe fshi</GhostButton>
@@ -550,17 +603,17 @@ function AdminWhatsapp({ token, showError, showOk }) {
   }
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
-  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 mb-2" /><p className="text-sm text-slate-500">Asnje kerkese ne pritje.</p></div>;
+  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Asnje kerkese ne pritje.</p></div>;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {pending.map((w) => (
-        <div key={w.id} className="border border-slate-200 rounded-2xl p-4">
-          <p className="font-semibold text-sm text-slate-900">{w.emri} {w.mbiemri}</p>
-          <p className="text-xs text-slate-500">{w.email}</p>
-          <p className="text-xs text-slate-500 flex items-center gap-1 mt-1"><MessageCircle size={12} /> {w.telefoni || "S'ka numer"}</p>
+        <div key={w.id} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+          <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{w.emri} {w.mbiemri}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{w.email}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1"><MessageCircle size={12} /> {w.telefoni || "S'ka numer"}</p>
           <p className="text-xs text-slate-400 mt-2">Kontrollo WhatsApp-in e biznesit per kodin:</p>
-          <p className="font-bold text-lg tracking-[0.3em] text-slate-900 text-center mt-1">{w.code}</p>
+          <p className="font-bold text-lg tracking-[0.3em] text-slate-900 dark:text-slate-100 text-center mt-1">{w.code}</p>
           <PrimaryButton onClick={() => verify(w.id)} className="mt-3 text-xs py-2">Verifiko</PrimaryButton>
           <GhostButton onClick={() => reject(w.id)} className="mt-2 text-xs py-2">Refuzo</GhostButton>
         </div>

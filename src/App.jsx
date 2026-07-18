@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { LogOut, Menu, X, Bell } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { LogOut, Menu, X, Bell, Sun, Moon } from "lucide-react";
 import { apiFetch, decodeJwt, todayPlus } from "./api";
 import { useNotifications } from "./notifications";
 import { Logo } from "./Logo";
@@ -37,6 +37,14 @@ export default function App() {
   const [businessTab, setBusinessTab] = useState("dashboard");
   const [highlightBookingId, setHighlightBookingId] = useState(null);
   const [bookingsRefreshKey, setBookingsRefreshKey] = useState(0);
+  const [theme, setTheme] = useState(() => localStorage.getItem("erental_theme") || "light");
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("erental_theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   // Browse flow state lives here so it persists across sub-page navigation
   const [stage, setStage] = useState("landing"); // landing | results | carDetail | companyProfile
@@ -223,7 +231,7 @@ export default function App() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 flex flex-col">
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col transition-colors">
       <TopBar
         view={view}
         setView={(v) => (v === "browse" ? goBrowseHome() : setView(v))}
@@ -236,6 +244,8 @@ export default function App() {
         onNotificationClick={handleNotificationClick}
         dismissNotification={dismissNotification}
         clearAllNotifications={clearAllNotifications}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
       <Notice notice={notice} onClose={() => setNotice(null)} />
       <div className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
@@ -244,7 +254,7 @@ export default function App() {
         {view === "business" && (token ? <Business token={token} showError={showError} showOk={showOk} isAdmin={isAdmin} tab={businessTab} setTab={setBusinessTab} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => setView("auth")} text="Kyçu per te menaxhuar biznesin tend." />)}
         {view === "auth" && (
           token
-            ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} />
+            ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => setView("business")} />
             : <AuthView onAuth={handleAuth} showError={showError} showOk={showOk} goTo={handleGoTo} />
         )}
         {view === "verifyEmail" && (
@@ -261,7 +271,7 @@ export default function App() {
   );
 }
 
-function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unreadCount, markAllRead, onNotificationClick, dismissNotification, clearAllNotifications }) {
+function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unreadCount, markAllRead, onNotificationClick, dismissNotification, clearAllNotifications, theme, toggleTheme }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -276,7 +286,7 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
     { key: "careers", label: "Karriere" },
   ];
   return (
-    <div className="border-b border-slate-200 bg-slate-50/95 backdrop-blur-md sticky top-0 z-20">
+    <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-20 transition-colors">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <button onClick={() => { setView("browse"); setMenuOpen(false); }} className="flex items-center">
@@ -289,7 +299,7 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
                 <button
                   onClick={() => setView(l.key)}
                   className={`text-sm font-medium px-3 py-1.5 rounded-lg transition ${
-                    view === l.key ? "text-emerald-700 bg-emerald-50" : "text-slate-500 hover:text-slate-900"
+                    view === l.key ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
                   {l.label}
@@ -301,19 +311,19 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
                 onClick={() => setMoreOpen((s) => !s)}
                 onBlur={() => setTimeout(() => setMoreOpen(false), 150)}
                 className={`text-sm font-medium px-3 py-1.5 rounded-lg transition ${
-                  moreLinks.some((l) => l.key === view) ? "text-emerald-700 bg-emerald-50" : "text-slate-500 hover:text-slate-900"
+                  moreLinks.some((l) => l.key === view) ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
                 Me shume
               </button>
               {moreOpen && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg py-1 w-40 z-30">
+                <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 w-40 z-30">
                   {moreLinks.map((l, i) => (
                     <span key={l.key}>
                       {i > 0 && " "}
                       <button
                         onClick={() => { setView(l.key); setMoreOpen(false); }}
-                        className="w-full text-left text-sm text-slate-600 hover:bg-slate-50 px-3 py-2"
+                        className="w-full text-left text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-2"
                       >
                         {l.label}
                       </button>
@@ -325,12 +335,19 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+            title={theme === "dark" ? "Kalo ne dritë" : "Kalo ne erresire"}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
           {loggedIn && (
             <div className="relative">
               <button
                 onClick={() => { setNotifOpen((s) => !s); if (!notifOpen) markAllRead(); }}
                 onBlur={() => setTimeout(() => setNotifOpen(false), 200)}
-                className="relative text-slate-500 hover:text-slate-900"
+                className="relative text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
               >
                 <Bell size={19} />
                 {unreadCount > 0 && (
@@ -340,12 +357,12 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
                 )}
               </button>
               {notifOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg w-72 max-h-96 overflow-y-auto z-30">
+                <div className="absolute top-full right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg w-72 max-h-96 overflow-y-auto z-30">
                   {notifications.length === 0 ? (
                     <p className="text-xs text-slate-400 text-center py-6">Asnje njoftim ende.</p>
                   ) : (
                     <>
-                      <div className="flex justify-end px-3 py-1.5 border-b border-slate-50 sticky top-0 bg-white">
+                      <div className="flex justify-end px-3 py-1.5 border-b border-slate-50 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
                         <button
                           onClick={() => clearAllNotifications()}
                           className="text-[11px] font-medium text-slate-400 hover:text-red-600"
@@ -357,11 +374,11 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
                         <div
                           key={n.id}
                           onClick={() => { onNotificationClick(n); setNotifOpen(false); }}
-                          className="px-4 py-3 border-b border-slate-50 last:border-0 flex items-start justify-between gap-2 cursor-pointer hover:bg-slate-50"
+                          className="px-4 py-3 border-b border-slate-50 dark:border-slate-700 last:border-0 flex items-start justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700"
                         >
                           <div>
-                            <p className="text-xs font-semibold text-slate-900">{n.title}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">{n.message}</p>
+                            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">{n.title}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{n.message}</p>
                           </div>
                           <button
                             onClick={(e) => { e.stopPropagation(); dismissNotification(n.id); }}
@@ -383,7 +400,7 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
             </button>
           )}
           {loggedIn ? (
-            <button onClick={onLogout} className="hidden md:block text-slate-400 hover:text-slate-700"><LogOut size={16} /></button>
+            <button onClick={onLogout} className="hidden md:block text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><LogOut size={16} /></button>
           ) : (
             <button
               onClick={() => setView("auth")}
@@ -392,28 +409,28 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
               Kyçu
             </button>
           )}
-          <button onClick={() => setMenuOpen((s) => !s)} className="md:hidden text-slate-600">
+          <button onClick={() => setMenuOpen((s) => !s)} className="md:hidden text-slate-600 dark:text-slate-300">
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
 
       {menuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-6 py-3 flex flex-col gap-1">
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 flex flex-col gap-1">
           {[...links, ...moreLinks].map((l, i) => (
             <span key={l.key}>
               {i > 0 && " "}
               <button
                 onClick={() => { setView(l.key); setMenuOpen(false); }}
                 className={`text-sm font-medium px-3 py-2 rounded-lg text-left transition ${
-                  view === l.key ? "text-emerald-700 bg-emerald-50" : "text-slate-600"
+                  view === l.key ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-600 dark:text-slate-300"
                 }`}
               >
                 {l.label}
               </button>
             </span>
           ))}
-          <div className="border-t border-slate-100 my-1" />
+          <div className="border-t border-slate-100 dark:border-slate-800 my-1" />
           {loggedIn ? (
             <>
               <button onClick={() => { setView("auth"); setMenuOpen(false); }} className="text-sm font-medium px-3 py-2 rounded-lg text-left text-slate-600">
