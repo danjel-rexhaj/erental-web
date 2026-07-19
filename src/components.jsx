@@ -120,12 +120,13 @@ export function StatusPill({ status }) {
 
 export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) {
   const [busy, setBusy] = useState(null);
+  const [query, setQuery] = useState([adresa, qyteti].filter(Boolean).join(", "));
 
   async function searchAddress() {
-    if (!adresa && !qyteti) { showError(new Error("Shkruaj adresen ose qytetin fillimisht.")); return; }
+    if (!query.trim()) { showError(new Error("Shkruaj nje adrese per te kerkuar.")); return; }
     setBusy("search");
     try {
-      const q = encodeURIComponent(`${adresa ? adresa + ", " : ""}${qyteti}, Shqiperi`);
+      const q = encodeURIComponent(`${query}, Shqiperi`);
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`);
       const data = await res.json();
       if (!data.length) throw new Error("Nuk u gjet adresa. Provo ta shkruash me saktesi, ose perdor GPS.");
@@ -143,19 +144,27 @@ export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) 
     );
   }
 
-  const btnClass = "flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl px-3 py-2.5 border transition border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50";
+  const btnClass = "flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl px-3 py-2.5 border transition border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 shrink-0";
 
   return (
     <div>
       <div className="flex gap-2">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); searchAddress(); } }}
+          placeholder="Rruga Kavajes, Tirane..."
+          className="flex-1 min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-teal-600"
+        />
         <button type="button" onClick={searchAddress} disabled={busy !== null} className={btnClass}>
-          <Search size={13} /> {busy === "search" ? "Duke kerkuar..." : "Gjej nga adresa"}
+          <Search size={13} /> {busy === "search" ? "..." : "Gjej"}
         </button>
         <button type="button" onClick={useGps} disabled={busy !== null} className={btnClass}>
-          <Crosshair size={13} /> {busy === "gps" ? "Duke marre..." : "Perdor GPS"}
+          <Crosshair size={13} /> {busy === "gps" ? "..." : "GPS"}
         </button>
       </div>
-      <p className="text-[10px] text-slate-400 mt-1">"Gjej nga adresa" eshte me e sakte. GPS-i i kompjuterit mund te gaboje (VPN, WiFi) — kontrollo piken poshte para se te ruash.</p>
+      <p className="text-[10px] text-slate-400 mt-1">Shkruaj adresen dhe kliko "Gjej" — eshte me e sakte se GPS-i, i cili mund te gaboje ne kompjuter (VPN, WiFi).</p>
       {coords && (
         <div className="mt-2">
           <div className="rounded-xl overflow-hidden border border-teal-200 dark:border-teal-800">

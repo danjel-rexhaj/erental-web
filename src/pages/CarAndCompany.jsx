@@ -198,6 +198,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   const allowCash = car.company?.allowCashPayment !== false;
   const [method, setMethod] = useState(allowCash ? "cash" : "paypal_full");
   const [loading, setLoading] = useState(false);
+  const [sdkError, setSdkError] = useState(null);
   const paypalRef = useRef(null);
 
   async function bookCash() {
@@ -215,7 +216,8 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     let cancelled = false;
 
     function renderButtons() {
-      if (cancelled || !paypalRef.current || !window.paypal) return;
+      if (cancelled || !paypalRef.current) return;
+      if (!window.paypal) { setSdkError("PayPal nuk u ngarkua dot. Provo te rifreskosh faqen."); return; }
       paypalRef.current.innerHTML = "";
       window.paypal.Buttons({
         style: { layout: "horizontal", height: 40 },
@@ -247,6 +249,11 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     }
 
     const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    if (!clientId) {
+      const t = setTimeout(() => setSdkError("PayPal nuk eshte konfiguruar akoma (mungon VITE_PAYPAL_CLIENT_ID)."), 0);
+      return () => { cancelled = true; clearTimeout(t); };
+    }
+
     let script = document.getElementById("paypal-sdk");
     if (!script) {
       script = document.createElement("script");
@@ -254,8 +261,14 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=EUR`;
       document.body.appendChild(script);
     }
+    const onError = () => setSdkError("PayPal SDK nuk u ngarkua dot. Kontrollo internetin dhe provo perseri.");
     script.addEventListener("load", renderButtons);
-    return () => { cancelled = true; script.removeEventListener("load", renderButtons); };
+    script.addEventListener("error", onError);
+    return () => {
+      cancelled = true;
+      script.removeEventListener("load", renderButtons);
+      script.removeEventListener("error", onError);
+    };
   }, [method, token]);
 
   return (
@@ -268,10 +281,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
             </label>
           )}
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => setMethod("paypal_deposit")} /> Depozite ({car.cmimiDites}€) me PayPal, pjesa tjeter cash
+            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> Depozite ({car.cmimiDites}€) me PayPal, pjesa tjeter cash
           </label>
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => setMethod("paypal_full")} /> Pagese e plote ({total}€) me PayPal
+            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> Pagese e plote ({total}€) me PayPal
           </label>
         </div>
       )}
@@ -279,7 +292,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       {method === "cash" ? (
         <PrimaryButton onClick={bookCash} disabled={loading}>{loading ? "Duke rezervuar..." : token ? "Rezervo" : "Kyçu per te rezervuar"}</PrimaryButton>
       ) : token ? (
-        <div ref={paypalRef} className={loading ? "opacity-50 pointer-events-none" : ""} />
+        <>
+          <div ref={paypalRef} className={loading ? "opacity-50 pointer-events-none" : ""} />
+          {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
+        </>
       ) : (
         <PrimaryButton onClick={needAuth}>Kyçu per te rezervuar</PrimaryButton>
       )}
