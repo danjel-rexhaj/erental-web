@@ -40,11 +40,14 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Ende s'ke asnje rezervim.</p></div>;
 
+  const STATUS_PRIORITY = { confirmed: 0, completed: 1, pending: 2, cancelled: 3 };
+  const sortedBookings = [...bookings].sort((a, b) => (STATUS_PRIORITY[a.statusi] ?? 4) - (STATUS_PRIORITY[b.statusi] ?? 4));
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Rezervimet e mia</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {bookings.map((b) => (
+        {sortedBookings.map((b) => (
         <div
           key={b.bookingId}
           id={`booking-${b.bookingId}`}
