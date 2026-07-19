@@ -415,7 +415,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
     <div>
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6"><ChevronLeft size={16} /> Prapa te kerkimi</button>
 
-      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-6 mb-8">
+      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-8">
         <div className="flex items-center lg:items-stretch gap-4">
           <div className="w-16 h-16 rounded-2xl overflow-hidden bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
             {company.logoUrl ? (
@@ -447,7 +447,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
               target="_blank"
               rel="noreferrer"
               title="Merr udhezime"
-              className="hidden lg:block relative flex-1 min-h-24 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
+              className="hidden lg:block relative flex-1 min-h-20 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
             >
               <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" loading="lazy" tabIndex={-1} />
               <span className="absolute inset-0 bg-black/0 hover:bg-black/10 transition" />
@@ -455,7 +455,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+        <div className="flex items-center justify-between flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
           <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1"><MapPin size={13} /> {company.adresa ? `${company.adresa}, ` : ""}{company.qyteti}</p>
           <a
             href={directionsUrl}
@@ -466,7 +466,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
             <MapPin size={13} /> Merr udhezime
           </a>
         </div>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
       </div>
 
       <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Makinat e {company.emri} ({cars.length})</h2>
