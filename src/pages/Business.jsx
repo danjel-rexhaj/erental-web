@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard } from "lucide-react";
-import { apiFetch, toWhatsappNumber } from "../api";
+import { apiFetch, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, AvailabilityCalendar } from "../components";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
@@ -388,34 +388,68 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
     } catch (e) { showError(e); } finally { setSavingLocation(false); }
   }
 
+  const hasCoords = company.latitude != null && company.longitude != null;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const directionsUrl = hasCoords
+    ? (isIOS ? `https://maps.apple.com/?daddr=${company.latitude},${company.longitude}` : `https://www.google.com/maps/dir/?api=1&destination=${company.latitude},${company.longitude}`)
+    : null;
+  const mapEmbedUrl = hasCoords ? getMapEmbedUrl(company.latitude, company.longitude) : null;
+
   return (
     <div>
-      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6 max-w-xl">
-        <div className="flex items-start justify-between">
-          <div><p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{company.emri}</p><p className="text-xs text-slate-500 dark:text-slate-400">{company.qyteti} · NIPT {company.nipt}</p></div>
-          {company.eshteVerifikuar ? (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full"><ShieldCheck size={12} /> I verifikuar</span>
-          ) : (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full"><Clock size={12} /> Ne pritje</span>
-          )}
-        </div>
-        <p className="text-[11px] text-slate-400 mt-2">Modeli i faturimit: {company.billingModel === "commission" ? `Komision ${company.commissionRate}%` : "Abonim mujor"}</p>
+      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-stretch gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+              {company.logoUrl ? (
+                <img src={company.logoUrl} alt={company.emri} className="w-full h-full object-cover" />
+              ) : (
+                <Building2 size={28} className="text-emerald-700 dark:text-emerald-400" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1 lg:flex-initial">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{company.emri}</p>
+                {company.eshteVerifikuar ? (
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={12} /> I verifikuar</span>
+                ) : (
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Clock size={12} /> Ne pritje</span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{company.qyteti} · NIPT {company.nipt}</p>
+              <p className="text-[11px] text-slate-400 mt-1">Modeli i faturimit: {company.billingModel === "commission" ? `Komision ${company.commissionRate}%` : "Abonim mujor"}</p>
 
-        {editingLocation ? (
-          <div className="mt-3">
-            <LocationPicker adresa={company.adresa} qyteti={company.qyteti} coords={coords} onChange={setCoords} showError={showError} />
-            <div className="flex gap-2 mt-2">
-              <PrimaryButton type="button" onClick={saveLocation} disabled={!coords || savingLocation} className="text-xs py-2">
-                {savingLocation ? "Duke ruajtur..." : "Ruaj vendndodhjen"}
-              </PrimaryButton>
-              <GhostButton type="button" onClick={() => { setEditingLocation(false); setCoords(null); }} className="text-xs py-2">Anulo</GhostButton>
+              {editingLocation ? (
+                <div className="mt-3">
+                  <LocationPicker adresa={company.adresa} qyteti={company.qyteti} coords={coords} onChange={setCoords} showError={showError} />
+                  <div className="flex gap-2 mt-2">
+                    <PrimaryButton type="button" onClick={saveLocation} disabled={!coords || savingLocation} className="text-xs py-2">
+                      {savingLocation ? "Duke ruajtur..." : "Ruaj vendndodhjen"}
+                    </PrimaryButton>
+                    <GhostButton type="button" onClick={() => { setEditingLocation(false); setCoords(null); }} className="text-xs py-2">Anulo</GhostButton>
+                  </div>
+                </div>
+              ) : (
+                <button onClick={() => setEditingLocation(true)} className={`flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 mt-2.5 w-fit border transition ${company.latitude != null ? "border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+                  <MapPin size={11} /> {company.latitude != null ? "Vendndodhja e saktë e vendosur — ndrysho" : "Vendos vendndodhjen e sakte per hartë"}
+                </button>
+              )}
             </div>
           </div>
-        ) : (
-          <button onClick={() => setEditingLocation(true)} className={`flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 mt-2.5 w-fit border transition ${company.latitude != null ? "border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-            <MapPin size={11} /> {company.latitude != null ? "Vendndodhja e saktë e vendosur — ndrysho" : "Vendos vendndodhjen e sakte per hartë"}
-          </button>
-        )}
+
+          {mapEmbedUrl && !editingLocation && (
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noreferrer"
+              title="Hap ne Google Maps"
+              className="hidden lg:block relative flex-1 min-h-20 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
+            >
+              <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" loading="lazy" tabIndex={-1} />
+              <span className="absolute inset-0 bg-black/0 hover:bg-black/10 transition" />
+            </a>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center justify-between mb-3">
