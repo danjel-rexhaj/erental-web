@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, CheckCircle2, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, CheckCircle2, Download, Lock } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto, DateRangeCalendar } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
@@ -46,7 +46,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
     <div>
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4"><ChevronLeft size={16} /> Prapa te kerkimi</button>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 lg:row-start-1 order-1">
           <div className="relative rounded-2xl overflow-hidden">
             <img
               src={shown?.urlFotos}
@@ -90,35 +90,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               ))}
             </div>
           )}
-
-          {car.company?.qyteti && (
-            <div className="mt-6 border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
-
-              {mapEmbedUrl && (
-                <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
-                  <iframe
-                    title="Vendndodhja e biznesit"
-                    src={mapEmbedUrl}
-                    className="w-full h-64 border-0"
-                    loading="lazy"
-                  />
-                </div>
-              )}
-
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-4 py-2.5"
-              >
-                <MapPin size={15} /> Merr udhezime
-              </a>
-            </div>
-          )}
         </div>
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 lg:row-start-1 lg:row-span-2 order-2">
           <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli} · {car.viti}</p>
           <button
             onClick={() => onSelectCompany(car.companyId)}
@@ -191,6 +164,33 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             </div>
           )}
         </div>
+
+        {car.company?.qyteti && (
+          <div className="lg:col-span-3 lg:row-start-2 order-3 border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
+
+            {mapEmbedUrl && (
+              <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
+                <iframe
+                  title="Vendndodhja e biznesit"
+                  src={mapEmbedUrl}
+                  className="w-full h-64 border-0"
+                  loading="lazy"
+                />
+              </div>
+            )}
+
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-4 py-2.5"
+            >
+              <MapPin size={15} /> Merr udhezime
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -286,7 +286,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       )}
 
       {token ? (
-        <div>
+        <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3 bg-slate-50/60 dark:bg-slate-900/40">
+          <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <Lock size={11} /> Pagese e sigurte, e procesuar direkt nga PayPal
+          </p>
           <div ref={paypalRef} className={loading ? "opacity-60 pointer-events-none min-h-[45px]" : "min-h-[45px]"} />
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
         </div>
