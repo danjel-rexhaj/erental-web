@@ -424,7 +424,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
               <Building2 size={28} className="text-emerald-700 dark:text-emerald-400" />
             )}
           </div>
-          <div className="min-w-0">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{company.emri}</h1>
               {company.eshteVerifikuar && (
@@ -441,6 +441,18 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
               {company.dataRegjistrimit && <span className="whitespace-nowrap">Anetar qe nga {memberSince(company.dataRegjistrimit)}</span>}
             </div>
           </div>
+          {mapEmbedUrl && (
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noreferrer"
+              title="Merr udhezime"
+              className="hidden lg:block relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex-shrink-0"
+            >
+              <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" loading="lazy" tabIndex={-1} />
+              <span className="absolute inset-0 bg-black/0 hover:bg-black/10 transition" />
+            </a>
+          )}
         </div>
 
         <div className="flex items-center justify-between flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
@@ -454,20 +466,6 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
             <MapPin size={13} /> Merr udhezime
           </a>
         </div>
-
-        {mapEmbedUrl && (
-          <div className="hidden lg:block relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mt-3">
-            <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-56 border-0" loading="lazy" />
-            <a
-              href={directionsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-3 py-2 shadow-lg"
-            >
-              <MapPin size={13} /> Merr udhezime
-            </a>
-          </div>
-        )}
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
       </div>
 
