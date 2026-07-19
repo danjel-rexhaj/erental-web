@@ -333,7 +333,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
               <Loader2 size={16} className="animate-spin" /> Duke procesuar pagesen...
             </div>
           )}
-          <div className={loading ? "hidden" : ""} ref={buttonsRef} />
+          <div className={loading || showRefundPolicy ? "hidden" : ""} ref={buttonsRef} />
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
         </div>
       ) : (
