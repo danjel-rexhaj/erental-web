@@ -424,7 +424,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
               <Building2 size={28} className="text-emerald-700 dark:text-emerald-400" />
             )}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 lg:flex-initial min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{company.emri}</h1>
               {company.eshteVerifikuar && (
@@ -447,7 +447,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
               target="_blank"
               rel="noreferrer"
               title="Merr udhezime"
-              className="hidden lg:block relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex-shrink-0"
+              className="hidden lg:block relative flex-1 max-w-sm h-24 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
             >
               <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" loading="lazy" tabIndex={-1} />
               <span className="absolute inset-0 bg-black/0 hover:bg-black/10 transition" />
