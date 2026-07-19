@@ -79,6 +79,18 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
             </p>
           )}
 
+          {b.statusi === "confirmed" && (
+            b.idVerifikuar ? (
+              <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
+                <CheckCircle2 size={12} /> Identiteti u verifikua — gati per te marre makinen
+              </p>
+            ) : (
+              <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 rounded-lg px-2 py-1.5 mt-2">
+                Dergo ne WhatsApp te biznesit foto te patentes dhe ID se shoferit per verifikim, para se te shkosh ta marresh makinen.
+              </p>
+            )
+          )}
+
           {(b.statusi === "confirmed" || b.statusi === "completed") && b.car?.company && (
             <div className="mt-3 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5">
               <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Kontakto {b.car.company.emri}</p>
@@ -102,11 +114,14 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
             </div>
           )}
 
-          <div className="flex gap-2 mt-3">
+          <div className="flex flex-col gap-1 mt-3">
             {(b.statusi === "pending" || b.statusi === "confirmed") && (
               <GhostButton onClick={() => cancelBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2">
-                Anulo {b.statusi === "confirmed" ? "(brenda 24 oresh)" : ""}
+                Anulo
               </GhostButton>
+            )}
+            {(b.statusi === "pending" || b.statusi === "confirmed") && (
+              <p className="text-[10px] text-slate-400 dark:text-slate-500">Anulim me rimbursim te plote brenda 12 oresh nga rezervimi; pas kesaj varet nga biznesi.</p>
             )}
           </div>
 

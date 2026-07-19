@@ -131,6 +131,11 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     try { await apiFetch(`/Bookings/${id}`, token, { method: "DELETE" }); showOk("Rezervimi u fshi."); setDeletingId(null); load(); }
     catch (e) { showError(e); } finally { setActingId(null); }
   }
+  async function verifyId(id) {
+    setActingId(id);
+    try { await apiFetch(`/Bookings/${id}/verify-id`, token, { method: "PUT" }); showOk("Identiteti u verifikua."); load(); }
+    catch (e) { showError(e); } finally { setActingId(null); }
+  }
 
   const days = (b) => Math.max(1, Math.round((new Date(b.dataPerfundimit) - new Date(b.dataFillimit)) / 86400000));
 
@@ -233,9 +238,31 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
                 <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
                   <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri}
+                  {b.klienti.hasWhatsapp && b.klienti.telefoni && (
+                    <a
+                      href={`https://wa.me/${toWhatsappNumber(b.klienti.telefoni)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
+                      title="Shkruaj ne WhatsApp"
+                    >
+                      <MessageCircle size={13} />
+                    </a>
+                  )}
                 </p>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
                 <PaymentBadge b={b} />
+                {b.statusi === "confirmed" && (
+                  b.idVerifikuar ? (
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
+                      <CheckCircle2 size={12} /> Identiteti u verifikua
+                    </p>
+                  ) : (
+                    <GhostButton onClick={() => verifyId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 mt-2">
+                      Verifiko ID (patente + karte identiteti ne WhatsApp)
+                    </GhostButton>
+                  )
+                )}
                 {b.arsyejaRefuzimit && (
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
                     <span className="font-semibold">Arsyeja:</span> {b.arsyejaRefuzimit}
