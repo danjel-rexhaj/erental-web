@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, Search, Building2, ShieldCheck, Fuel, Gauge, Users as UsersIcon, Car as CarIcon, SlidersHorizontal, Clock } from "lucide-react";
+import { ChevronLeft, Search, Building2, ShieldCheck, Fuel, Gauge, Users as UsersIcon, Car as CarIcon, SlidersHorizontal, Clock, Star } from "lucide-react";
 import { CarPhoto } from "../components";
 
 const selectClass = "text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition";
@@ -124,13 +124,21 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
                 <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{car.marka} {car.modeli}</p>
                 <span className="text-xs font-bold text-white bg-slate-900 dark:bg-slate-700 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites}€/dite</span>
               </div>
-              <span
-                onClick={(e) => { e.stopPropagation(); onSelectCompany(car.companyId); }}
-                className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:underline flex items-center gap-1 mt-1 w-fit cursor-pointer"
-              >
-                <Building2 size={11} /> {car.company?.emri}
-                {car.company?.eshteVerifikuar && <ShieldCheck size={11} className="text-emerald-600" />}
-              </span>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span
+                  onClick={(e) => { e.stopPropagation(); onSelectCompany(car.companyId); }}
+                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:underline flex items-center gap-1 w-fit cursor-pointer"
+                >
+                  <Building2 size={11} /> {car.company?.emri}
+                  {car.company?.eshteVerifikuar && <ShieldCheck size={11} className="text-emerald-600" />}
+                </span>
+                {car.company?.avgRating != null && (
+                  <span className="flex items-center gap-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                    <Star size={11} className="text-amber-400 fill-amber-400" /> {car.company.avgRating}
+                    <span className="text-slate-400 dark:text-slate-500 font-normal">({car.company.reviewCount})</span>
+                  </span>
+                )}
+              </div>
               <div className="flex gap-3 mt-2 text-[11px] text-slate-400">
                 <span className="flex items-center gap-1"><Fuel size={12} />{car.karburanti}</span>
                 <span className="flex items-center gap-1"><Gauge size={12} />{car.transmisioni}</span>

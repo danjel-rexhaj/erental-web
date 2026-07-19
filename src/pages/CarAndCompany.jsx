@@ -191,9 +191,51 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             </a>
           </div>
         )}
+
+        {car.company && (
+          <div className="lg:col-span-5 order-4 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 flex items-center gap-4 flex-wrap">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+              {car.company.logoUrl ? (
+                <img src={car.company.logoUrl} alt={car.company.emri} className="w-full h-full object-cover" />
+              ) : (
+                <Building2 size={28} className="text-emerald-700 dark:text-emerald-400" />
+              )}
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-slate-900 dark:text-slate-100">{car.company.emri}</p>
+                {car.company.eshteVerifikuar && (
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full"><ShieldCheck size={11} /> I verifikuar</span>
+                )}
+              </div>
+              <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                {car.company.avgRating != null && (
+                  <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-200">
+                    <Star size={13} className="text-amber-400 fill-amber-400" /> {car.company.avgRating} <span className="font-normal text-slate-400">({car.company.reviewCount} vleresime)</span>
+                  </span>
+                )}
+                <span>{car.company.carCount} {car.company.carCount === 1 ? "makine" : "makina"} ne platforme</span>
+                {car.company.dataRegjistrimit && <span>Anetar qe nga {memberSince(car.company.dataRegjistrimit)}</span>}
+              </div>
+            </div>
+            <button
+              onClick={() => onSelectCompany(car.companyId)}
+              className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 underline underline-offset-2 whitespace-nowrap"
+            >
+              Shiko profilin e biznesit
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
+}
+
+const MUAJT = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
+function memberSince(raw) {
+  const d = new Date(raw);
+  if (isNaN(d)) return "";
+  return `${MUAJT[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth, showError, showOk, onBooked }) {
