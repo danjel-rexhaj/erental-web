@@ -399,24 +399,59 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
 
 export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
   if (!company) return null;
+
+  const lat = company.latitude;
+  const lng = company.longitude;
+  const hasCoords = lat != null && lng != null;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const directionsUrl = hasCoords
+    ? (isIOS ? `https://maps.apple.com/?daddr=${lat},${lng}` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`)
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.adresa ? company.adresa + ", " : ""}${company.qyteti || ""}, Shqiperi`)}`;
+
   return (
     <div>
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6"><ChevronLeft size={16} /> Prapa te kerkimi</button>
 
-      <div className="flex items-start justify-between border border-slate-200 dark:border-slate-700 rounded-2xl p-6 mb-8">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{company.emri}</h1>
-            {company.eshteVerifikuar && (
-              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full"><ShieldCheck size={12} /> I verifikuar</span>
+      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-6 mb-8">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+            {company.logoUrl ? (
+              <img src={company.logoUrl} alt={company.emri} className="w-full h-full object-cover" />
+            ) : (
+              <Building2 size={28} className="text-emerald-700 dark:text-emerald-400" />
             )}
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-2"><MapPin size={13} /> {company.adresa ? `${company.adresa}, ` : ""}{company.qyteti}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{company.emri}</h1>
+              {company.eshteVerifikuar && (
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> I verifikuar</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+              {company.avgRating != null && (
+                <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                  <Star size={13} className="text-amber-400 fill-amber-400" /> {company.avgRating} <span className="font-normal text-slate-400">({company.reviewCount})</span>
+                </span>
+              )}
+              <span className="whitespace-nowrap">{company.carCount ?? cars.length} {(company.carCount ?? cars.length) === 1 ? "makine" : "makina"}</span>
+              {company.dataRegjistrimit && <span className="whitespace-nowrap">Anetar qe nga {memberSince(company.dataRegjistrimit)}</span>}
+            </div>
+          </div>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-          <Building2 size={22} className="text-emerald-700 dark:text-emerald-400" />
+
+        <div className="flex items-center justify-between flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1"><MapPin size={13} /> {company.adresa ? `${company.adresa}, ` : ""}{company.qyteti}</p>
+          <a
+            href={directionsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-3 py-2 whitespace-nowrap"
+          >
+            <MapPin size={13} /> Merr udhezime
+          </a>
         </div>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
       </div>
 
       <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Makinat e {company.emri} ({cars.length})</h2>
