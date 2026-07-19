@@ -401,7 +401,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   );
 }
 
-export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
+export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds, onToggleFavorite }) {
   if (!company) return null;
 
   const lat = company.latitude;
@@ -473,7 +473,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
       <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Makinat e {company.emri} ({cars.length})</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cars.map((car) => (
-          <CarCard key={car.carId} car={car} onSelectCar={onSelectCar} showCompany={false} />
+          <CarCard key={car.carId} car={car} onSelectCar={onSelectCar} showCompany={false} isFavorited={favoriteIds?.has(car.carId)} onToggleFavorite={onToggleFavorite} />
         ))}
       </div>
 

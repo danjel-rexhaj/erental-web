@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock } from "lucide-react";
+import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart } from "lucide-react";
 
 const MUAJT_KAL = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
 const DITET_KAL = ["H", "M", "M", "E", "P", "S", "D"];
@@ -278,7 +278,7 @@ export function CarPhoto({ car }) {
   return <div className="w-full h-36 rounded-t-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><CarIcon size={32} className="text-slate-300 dark:text-slate-600" /></div>;
 }
 
-export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLabel, showCompany = true }) {
+export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLabel, showCompany = true, isFavorited, onToggleFavorite }) {
   return (
     <div
       onClick={() => onSelectCar(car)}
@@ -296,6 +296,15 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
           <span className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-semibold bg-amber-500 text-white px-2 py-1 rounded-lg">
             <Clock size={11} /> {freeInLabel}
           </span>
+        )}
+        {onToggleFavorite && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleFavorite(car); }}
+            className={`absolute right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition ${nearMiss && freeInLabel ? "top-10" : "top-2"}`}
+            title={isFavorited ? "Hiq nga te preferuarat" : "Shto te preferuarat"}
+          >
+            <Heart size={15} className={isFavorited ? "text-red-500 fill-red-500" : "text-slate-500 dark:text-slate-300"} />
+          </button>
         )}
       </div>
       <div className="p-3">

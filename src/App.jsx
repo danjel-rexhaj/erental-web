@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Results from "./pages/Results";
 import { CarDetail, CompanyProfile } from "./pages/CarAndCompany";
 import Bookings from "./pages/Bookings";
+import Favorites from "./pages/Favorites";
 import Business from "./pages/Business";
 import { AuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
@@ -57,6 +58,32 @@ export default function App() {
   const [selectedCar, setSelectedCar] = useState(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
   const [paymentSuccessInfo, setPaymentSuccessInfo] = useState(null);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
+
+  useEffect(() => {
+    if (!token) { const t = setTimeout(() => setFavoriteIds(new Set()), 0); return () => clearTimeout(t); }
+    apiFetch("/Favorites/ids", token).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
+  }, [token]);
+
+  async function toggleFavorite(car) {
+    if (!token) { go("/profili"); return; }
+    const isFav = favoriteIds.has(car.carId);
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (isFav) next.delete(car.carId); else next.add(car.carId);
+      return next;
+    });
+    try {
+      await apiFetch(`/Favorites/${car.carId}`, token, { method: isFav ? "DELETE" : "POST" });
+    } catch (e) {
+      setFavoriteIds((prev) => {
+        const next = new Set(prev);
+        if (isFav) next.add(car.carId); else next.delete(car.carId);
+        return next;
+      });
+      showError(e);
+    }
+  }
 
   const showError = (e) => {
     setNotice({ type: "error", text: e.message || String(e) });
@@ -92,7 +119,7 @@ export default function App() {
 
   // ---- URL routing (hash-based: no server rewrite needed, refresh/back/forward all just work) ----
   const VIEW_TO_HASH = {
-    browse: "/", bookings: "/rezervimet", business: "/biznesi", auth: "/profili",
+    browse: "/", bookings: "/rezervimet", favorites: "/preferuarat", business: "/biznesi", auth: "/profili",
     verifyEmail: "/verifiko", about: "/rreth-nesh", contact: "/kontakt", careers: "/karriere",
     privacy: "/privatesia", terms: "/kushtet",
   };
@@ -181,6 +208,7 @@ export default function App() {
       return;
     }
     if (segs[0] === "rezervimet") { setView("bookings"); return; }
+    if (segs[0] === "preferuarat") { setView("favorites"); return; }
     if (segs[0] === "biznesi") { setView("business"); setBusinessTab(params.get("tab") || "dashboard"); return; }
     if (segs[0] === "profili") { setView("auth"); return; }
     if (segs[0] === "verifiko") { setView("verifyEmail"); return; }
@@ -287,6 +315,8 @@ export default function App() {
             ? () => go(`/makina/${companyProfileFromCarId}?nga=${dataFillimit}&deri=${dataPerfundimit}`, selectedCar?.carId === companyProfileFromCarId ? { car: selectedCar } : undefined)
             : () => go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`)}
           onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}&nga_faqja=kompania&kompania=${selectedCompanyId}`, { car })}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={toggleFavorite}
         />
       );
     }
@@ -318,6 +348,8 @@ export default function App() {
           onBack={() => go("/")}
           onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}&nga_faqja=rezultate`, { car })}
           onSelectCompany={(id) => go(`/kompania/${id}`, { cars })}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={toggleFavorite}
         />
       );
     }
@@ -364,6 +396,16 @@ export default function App() {
       <div className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
         {view === "browse" && renderBrowse()}
         {view === "bookings" && (token ? <Bookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text="Kyçu per te pare rezervimet e tua." />)}
+        {view === "favorites" && (token ? (
+          <Favorites
+            token={token}
+            showError={showError}
+            onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}`, { car })}
+            onSelectCompany={(id) => go(`/kompania/${id}`)}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={toggleFavorite}
+          />
+        ) : <AuthGate onGo={() => go("/profili")} text="Kyçu per te pare makinat e preferuara." />)}
         {view === "business" && (token ? <Business token={token} showError={showError} showOk={showOk} isAdmin={isAdmin} tab={businessTab} setTab={(t) => { setBusinessTab(t); window.history.replaceState(null, "", "#/biznesi?tab=" + t); }} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text="Kyçu per te menaxhuar biznesin tend." />)}
         {view === "auth" && (
           token
@@ -403,6 +445,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
       ]
     : [
         { key: "browse", label: "Makina" },
+        { key: "favorites", label: "Te preferuarat" },
         { key: "bookings", label: "Rezervimet" },
         { key: "business", label: "Biznesi" },
       ];

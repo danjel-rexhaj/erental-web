@@ -11,7 +11,7 @@ function freeInLabel(lirohetMe, dataFillimit) {
   return `Lirohet pas ${days} ditesh`;
 }
 
-export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany }) {
+export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite }) {
   const [filters, setFilters] = useState({ search: "", marka: "", karburanti: "", kategoria: "", sort: "" });
 
   const brands = [...new Set(cars.map((c) => c.marka).filter(Boolean))].sort();
@@ -108,6 +108,8 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
             onSelectCompany={onSelectCompany}
             nearMiss={car.eshteELire === false}
             freeInLabel={car.eshteELire === false ? freeInLabel(car.lirohetMe, dataFillimit) : null}
+            isFavorited={favoriteIds?.has(car.carId)}
+            onToggleFavorite={onToggleFavorite}
           />
         ))}
       </div>
