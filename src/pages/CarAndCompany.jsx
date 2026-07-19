@@ -235,6 +235,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       if (cancelled || !buttonsRef.current || !window.paypal?.Buttons) return;
       buttonsRef.current.innerHTML = "";
       const buttons = window.paypal.Buttons({
+        fundingSource: window.paypal.FUNDING.CARD,
         style: { layout: "vertical", color: "black", shape: "rect", label: "pay" },
         createOrder,
         onApprove,
@@ -263,7 +264,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     if (!script) {
       script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=buttons&disable-funding=paypal&currency=EUR`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=buttons&currency=EUR`;
       document.body.appendChild(script);
     }
     const onScriptError = () => setSdkError("Sistemi i pagesave nuk u ngarkua dot. Kontrollo internetin dhe provo perseri.");
