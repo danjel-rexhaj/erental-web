@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { LogOut, Menu, X, Bell, Sun, Moon } from "lucide-react";
 import { apiFetch, decodeJwt } from "./api";
 import { useNotifications } from "./notifications";
@@ -88,15 +88,102 @@ export default function App() {
 
   const { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications } = useNotifications(token, handleAvailabilityChanged, handleLiveNotification);
 
+  // ---- URL routing (hash-based: no server rewrite needed, refresh/back/forward all just work) ----
+  const VIEW_TO_HASH = {
+    browse: "/", bookings: "/rezervimet", business: "/biznesi", auth: "/profili",
+    verifyEmail: "/verifiko", about: "/rreth-nesh", contact: "/kontakt", careers: "/karriere",
+    privacy: "/privatesia", terms: "/kushtet",
+  };
+  const viewToHash = (v) => VIEW_TO_HASH[v] || "/";
+
+  const applyRoute = useCallback(async (hashStr, hint) => {
+    const [path = "/", queryStr] = (hashStr || "#/").replace(/^#/, "").split("?");
+    const params = new URLSearchParams(queryStr || "");
+    const segs = path.split("/").filter(Boolean);
+
+    if (segs[0] === "makina" && segs[1]) {
+      const from = params.get("nga") || dataFillimit;
+      const to = params.get("deri") || dataPerfundimit;
+      if (from) setDataFillimit(from);
+      if (to) setDataPerfundimit(to);
+      setCarDetailFrom(params.get("nga_faqja") === "kompania" ? "companyProfile" : "results");
+      if (params.get("kompania")) setSelectedCompanyId(Number(params.get("kompania")));
+      setView("browse");
+      setStage("carDetail");
+      if (hint?.car) {
+        setSelectedCar(hint.car);
+      } else {
+        try { setSelectedCar(await apiFetch(`/Cars/${segs[1]}`, null)); }
+        catch { showError(new Error("Makina nuk u gjet.")); }
+      }
+      return;
+    }
+    if (segs[0] === "kompania" && segs[1]) {
+      const id = Number(segs[1]);
+      setSelectedCompanyId(id);
+      setView("browse");
+      setStage("companyProfile");
+      if (hint?.cars) {
+        setCars(hint.cars);
+      } else {
+        try { setCars(await apiFetch("/Cars", null)); } catch { /* ignore */ }
+      }
+      return;
+    }
+    if (segs[0] === "rezultate") {
+      const from = params.get("nga") || "";
+      const to = params.get("deri") || "";
+      setDataFillimit(from);
+      setDataPerfundimit(to);
+      setView("browse");
+      setStage("results");
+      if (hint?.cars) {
+        setCars(hint.cars);
+      } else if (from && to) {
+        try { setCars(await apiFetch(`/Cars/available?dataFillimit=${from}&dataPerfundimit=${to}`, null)); } catch { /* ignore */ }
+      }
+      return;
+    }
+    if (segs[0] === "rezervimet") { setView("bookings"); return; }
+    if (segs[0] === "biznesi") { setView("business"); setBusinessTab(params.get("tab") || "dashboard"); return; }
+    if (segs[0] === "profili") { setView("auth"); return; }
+    if (segs[0] === "verifiko") { setView("verifyEmail"); return; }
+    if (segs[0] === "rreth-nesh") { setView("about"); return; }
+    if (segs[0] === "kontakt") { setView("contact"); return; }
+    if (segs[0] === "karriere") { setView("careers"); return; }
+    if (segs[0] === "privatesia") { setView("privacy"); return; }
+    if (segs[0] === "kushtet") { setView("terms"); return; }
+
+    setView("browse");
+    setStage("landing");
+    setSelectedCar(null);
+    setSelectedCompanyId(null);
+  }, [dataFillimit, dataPerfundimit]);
+
+  function go(hashStr, hint) {
+    window.history.pushState(null, "", "#" + hashStr.replace(/^#/, ""));
+    applyRoute(hashStr, hint);
+  }
+
+  const applyRouteRef = useRef(applyRoute);
+  useEffect(() => { applyRouteRef.current = applyRoute; }, [applyRoute]);
+
+  useEffect(() => {
+    const t = setTimeout(() => applyRoute(window.location.hash || "#/"), 0);
+    function onPopState() { applyRouteRef.current(window.location.hash || "#/"); }
+    window.addEventListener("popstate", onPopState);
+    return () => { clearTimeout(t); window.removeEventListener("popstate", onPopState); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function handleNotificationClick(n) {
     setHighlightBookingId(n.bookingId ?? null);
     window.clearTimeout(window.__highlightTimeout);
     window.__highlightTimeout = window.setTimeout(() => setHighlightBookingId(null), 3000);
     if (n.target === "business_booking") {
-      setBusinessTab("bookings");
-      setView("business");
+      go("/biznesi?tab=bookings");
     } else if (n.target === "client_booking" || n.target === "leave_review") {
-      setView("bookings");
+      go("/rezervimet");
     }
   }
 
@@ -109,7 +196,7 @@ export default function App() {
     setNotice(null);
     setVerifyData(null);
     localStorage.removeItem("erental_verify");
-    setView(role === "business" ? "business" : "browse");
+    go(role === "business" ? "/biznesi" : "/");
   }
 
   function updateUser(patch) {
@@ -134,7 +221,7 @@ export default function App() {
     setToken(null);
     setUser(null);
     localStorage.removeItem("erental_auth");
-    setView("browse");
+    go("/");
   }
 
   const search = useCallback(async () => {
@@ -145,32 +232,10 @@ export default function App() {
     setSearching(true);
     try {
       const data = await apiFetch(`/Cars/available?dataFillimit=${dataFillimit}&dataPerfundimit=${dataPerfundimit}`, null);
-      setCars(data);
-      setStage("results");
+      go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`, { cars: data });
     } catch (e) { showError(e); } finally { setSearching(false); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataFillimit, dataPerfundimit]);
-
-  const backToResults = useCallback(async () => {
-    setStage("results");
-    try {
-      const data = await apiFetch(`/Cars/available?dataFillimit=${dataFillimit}&dataPerfundimit=${dataPerfundimit}`, null);
-      setCars(data);
-    } catch { /* mban rezultatet e vjetra nese rifreskimi deshton */ }
-  }, [dataFillimit, dataPerfundimit]);
-
-  function goBrowseHome() {
-    setView("browse");
-    setStage("landing");
-    setSelectedCar(null);
-    setSelectedCompanyId(null);
-  }
-
-  function goToBookingsAfterBooking() {
-    setStage("landing");
-    setSelectedCar(null);
-    setSelectedCompanyId(null);
-    setView("bookings");
-  }
 
   function renderBrowse() {
     if (stage === "companyProfile" && selectedCompanyId) {
@@ -180,8 +245,8 @@ export default function App() {
         <CompanyProfile
           company={company}
           cars={companyCars}
-          onBack={() => setStage("results")}
-          onSelectCar={(car) => { setSelectedCar(car); setCarDetailFrom("companyProfile"); setStage("carDetail"); }}
+          onBack={() => go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`)}
+          onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}&nga_faqja=kompania&kompania=${selectedCompanyId}`, { car })}
         />
       );
     }
@@ -191,11 +256,13 @@ export default function App() {
           car={selectedCar}
           dataFillimit={dataFillimit}
           dataPerfundimit={dataPerfundimit}
-          onBack={carDetailFrom === "companyProfile" ? () => setStage("companyProfile") : backToResults}
-          onSelectCompany={(id) => { setSelectedCompanyId(id); setStage("companyProfile"); }}
-          onGoToBookings={goToBookingsAfterBooking}
+          onBack={carDetailFrom === "companyProfile"
+            ? () => go(`/kompania/${selectedCompanyId}`, { cars })
+            : () => go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`)}
+          onSelectCompany={(id) => go(`/kompania/${id}`, { cars })}
+          onGoToBookings={() => go("/rezervimet")}
           token={token}
-          needAuth={() => setView("auth")}
+          needAuth={() => go("/profili")}
           showError={showError}
           showOk={showOk}
           isBusinessOwner={user?.role === "business"}
@@ -208,9 +275,9 @@ export default function App() {
           cars={cars}
           dataFillimit={dataFillimit}
           dataPerfundimit={dataPerfundimit}
-          onBack={() => setStage("landing")}
-          onSelectCar={(car) => { setSelectedCar(car); setCarDetailFrom("results"); setStage("carDetail"); }}
-          onSelectCompany={(id) => { setSelectedCompanyId(id); setStage("companyProfile"); }}
+          onBack={() => go("/")}
+          onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}&nga_faqja=rezultate`, { car })}
+          onSelectCompany={(id) => go(`/kompania/${id}`, { cars })}
         />
       );
     }
@@ -231,14 +298,14 @@ export default function App() {
       setVerifyData(data);
       localStorage.setItem("erental_verify", JSON.stringify(data));
     }
-    setView(page);
+    go(viewToHash(page));
   }
 
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col transition-colors">
       <TopBar
         view={view}
-        setView={(v) => (v === "browse" ? goBrowseHome() : setView(v))}
+        setView={(v) => go(viewToHash(v))}
         user={user}
         onLogout={logout}
         loggedIn={!!token}
@@ -254,15 +321,15 @@ export default function App() {
       <Notice notice={notice} onClose={() => setNotice(null)} />
       <div className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
         {view === "browse" && renderBrowse()}
-        {view === "bookings" && (token ? <Bookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => setView("auth")} text="Kyçu per te pare rezervimet e tua." />)}
-        {view === "business" && (token ? <Business token={token} showError={showError} showOk={showOk} isAdmin={isAdmin} tab={businessTab} setTab={setBusinessTab} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => setView("auth")} text="Kyçu per te menaxhuar biznesin tend." />)}
+        {view === "bookings" && (token ? <Bookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text="Kyçu per te pare rezervimet e tua." />)}
+        {view === "business" && (token ? <Business token={token} showError={showError} showOk={showOk} isAdmin={isAdmin} tab={businessTab} setTab={(t) => { setBusinessTab(t); window.history.replaceState(null, "", "#/biznesi?tab=" + t); }} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text="Kyçu per te menaxhuar biznesin tend." />)}
         {view === "auth" && (
           token
-            ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => setView("business")} />
+            ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} />
             : <AuthView onAuth={handleAuth} showError={showError} showOk={showOk} goTo={handleGoTo} />
         )}
         {view === "verifyEmail" && (
-          <VerifyView initialData={verifyData} onAuth={handleAuth} showError={showError} showOk={showOk} goTo={setView} />
+          <VerifyView initialData={verifyData} onAuth={handleAuth} showError={showError} showOk={showOk} goTo={(v) => go(viewToHash(v))} />
         )}
         {view === "privacy" && <Privacy />}
         {view === "terms" && <Terms />}
@@ -270,7 +337,7 @@ export default function App() {
         {view === "about" && <About />}
         {view === "contact" && <Contact loggedIn={!!token} showError={showError} />}
       </div>
-      <Footer setView={setView} />
+      <Footer setView={(v) => go(viewToHash(v))} />
     </div>
   );
 }
