@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto, DateRangeCalendar, PaymentSuccessModal } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
@@ -201,6 +201,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   const [loading, setLoading] = useState(false);
   const [sdkError, setSdkError] = useState(null);
   const [successInfo, setSuccessInfo] = useState(null);
+  const [showRefundPolicy, setShowRefundPolicy] = useState(false);
   const buttonsRef = useRef(null);
 
   useEffect(() => {
@@ -287,9 +288,38 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
             <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> Pagese e plote ({total}€) me karte
           </label>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
-            Anulim brenda 12 oresh nga rezervimi: rimbursim i plote i pageses online. Pas 12 oresh, rimbursimi i pageses online varet nga marreveshja mes teje dhe biznesit — ERental s'nderhyn me. Pjesa cash (nese zgjedh depozite) paguhet direkt te biznesi dhe s'ka lidhje me platformen.
-          </p>
+          <button
+            type="button"
+            onClick={() => setShowRefundPolicy(true)}
+            className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline underline-offset-2 mt-1"
+          >
+            <Info size={11} /> Politika e rimbursimit
+          </button>
+        </div>
+      )}
+
+      {showRefundPolicy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowRefundPolicy(false)}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-3">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Politika e rimbursimit</h3>
+              <button onClick={() => setShowRefundPolicy(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="mb-3">
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 mb-1">Depozite (karte) + pjesa tjeter cash</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Depozita e paguar me karte rimbursohet plotesisht nese anulon brenda 12 oresh nga rezervimi. Pas 12 oresh, rimbursimi i saj varet nga marreveshja mes teje dhe biznesit. Pjesa cash paguhet direkt te biznesi kur merr makinen — s'kalon nga ERental, ndaj s'ka nevoje per rimbursim nga ne.
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 mb-1">Pagese e plote (karte)</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Shuma e plote rimbursohet nese anulon brenda 12 oresh nga rezervimi. Pas 12 oresh, rimbursimi varet nga marreveshja mes teje dhe biznesit — ERental s'nderhyn me ne kete vendim.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
