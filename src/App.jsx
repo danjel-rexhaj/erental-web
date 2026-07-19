@@ -346,6 +346,8 @@ export default function App() {
       <TopBar
         view={view}
         setView={(v) => go(viewToHash(v))}
+        businessTab={businessTab}
+        goHash={go}
         user={user}
         onLogout={logout}
         loggedIn={!!token}
@@ -388,15 +390,22 @@ export default function App() {
   );
 }
 
-function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unreadCount, markAllRead, onNotificationClick, dismissNotification, clearAllNotifications, theme, toggleTheme }) {
+function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, notifications, unreadCount, markAllRead, onNotificationClick, dismissNotification, clearAllNotifications, theme, toggleTheme }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const links = [
-    { key: "browse", label: "Makina" },
-    { key: "bookings", label: "Rezervimet" },
-    { key: "business", label: "Biznesi" },
-  ];
+  const links = user?.role === "business"
+    ? [
+        { key: "browse", label: "Makina" },
+        { key: "business", tab: "bookings", label: "Rezervimet" },
+        { key: "business", tab: "dashboard", label: "Biznesi" },
+        { key: "business", tab: "analytics", label: "Statistikat" },
+      ]
+    : [
+        { key: "browse", label: "Makina" },
+        { key: "bookings", label: "Rezervimet" },
+        { key: "business", label: "Biznesi" },
+      ];
   const moreLinks = [
     { key: "about", label: "Rreth nesh" },
     { key: "contact", label: "Kontakt" },
@@ -411,12 +420,12 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
           </button>
           <nav className="hidden md:flex items-center gap-1">
             {links.map((l, i) => (
-              <span key={l.key}>
+              <span key={l.key + (l.tab || "")}>
                 {i > 0 && " "}
                 <button
-                  onClick={() => setView(l.key)}
+                  onClick={() => (l.tab ? goHash(`/biznesi?tab=${l.tab}`) : setView(l.key))}
                   className={`text-sm font-medium px-3 py-1.5 rounded-lg transition ${
-                    view === l.key ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                    view === l.key && (!l.tab || l.tab === businessTab) ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
                   {l.label}
@@ -539,12 +548,12 @@ function TopBar({ view, setView, user, onLogout, loggedIn, notifications, unread
       {menuOpen && (
         <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 flex flex-col gap-1">
           {[...links, ...moreLinks].map((l, i) => (
-            <span key={l.key}>
+            <span key={l.key + (l.tab || "")}>
               {i > 0 && " "}
               <button
-                onClick={() => { setView(l.key); setMenuOpen(false); }}
+                onClick={() => { if (l.tab) goHash(`/biznesi?tab=${l.tab}`); else setView(l.key); setMenuOpen(false); }}
                 className={`text-sm font-medium px-3 py-2 rounded-lg text-left transition ${
-                  view === l.key ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-600 dark:text-slate-300"
+                  view === l.key && (!l.tab || l.tab === businessTab) ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-600 dark:text-slate-300"
                 }`}
               >
                 {l.label}
