@@ -397,8 +397,8 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
   const links = user?.role === "business"
     ? [
         { key: "browse", label: "Makina" },
-        { key: "business", tab: "bookings", label: "Rezervimet" },
         { key: "business", tab: "dashboard", label: "Biznesi" },
+        { key: "business", tab: "bookings", label: "Rezervimet" },
         { key: "business", tab: "analytics", label: "Statistikat" },
       ]
     : [
