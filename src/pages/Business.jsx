@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard, Pencil } from "lucide-react";
 import { apiFetch, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, AvailabilityCalendar } from "../components";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
@@ -375,6 +375,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
   const [editingLocation, setEditingLocation] = useState(false);
   const [coords, setCoords] = useState(null);
   const [savingLocation, setSavingLocation] = useState(false);
+  const [editingDetails, setEditingDetails] = useState(false);
 
   async function saveLocation() {
     if (!coords) return;
@@ -415,11 +416,29 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
                 ) : (
                   <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Clock size={12} /> Ne pritje</span>
                 )}
+                {!editingDetails && (
+                  <button onClick={() => setEditingDetails(true)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" title="Ndrysho te dhenat">
+                    <Pencil size={13} />
+                  </button>
+                )}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{company.qyteti} · NIPT {company.nipt}</p>
-              <p className="text-[11px] text-slate-400 mt-1">Modeli i faturimit: {company.billingModel === "commission" ? `Komision ${company.commissionRate}%` : "Abonim mujor"}</p>
 
-              {editingLocation ? (
+              {editingDetails ? (
+                <EditCompanyDetailsForm
+                  token={token}
+                  company={company}
+                  showError={showError}
+                  onDone={() => { setEditingDetails(false); reload(); }}
+                  onCancel={() => setEditingDetails(false)}
+                />
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{company.qyteti} · NIPT {company.nipt}</p>
+                  <p className="text-[11px] text-slate-400 mt-1">Modeli i faturimit: {company.billingModel === "commission" ? `Komision ${company.commissionRate}%` : "Abonim mujor"}</p>
+                </>
+              )}
+
+              {!editingDetails && editingLocation ? (
                 <div className="mt-3">
                   <LocationPicker adresa={company.adresa} qyteti={company.qyteti} coords={coords} onChange={setCoords} showError={showError} />
                   <div className="flex gap-2 mt-2">
@@ -429,7 +448,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
                     <GhostButton type="button" onClick={() => { setEditingLocation(false); setCoords(null); }} className="text-xs py-2">Anulo</GhostButton>
                   </div>
                 </div>
-              ) : (
+              ) : !editingDetails && (
                 <button onClick={() => setEditingLocation(true)} className={`flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 mt-2.5 w-fit border transition ${company.latitude != null ? "border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                   <MapPin size={11} /> {company.latitude != null ? "Vendndodhja e saktë e vendosur — ndrysho" : "Vendos vendndodhjen e sakte per hartë"}
                 </button>
@@ -463,6 +482,39 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
         {cars.map((car) => <BusinessCarCard key={car.carId} car={car} token={token} reload={reload} showError={showError} showOk={showOk} />)}
       </div>
     </div>
+  );
+}
+
+function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel }) {
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    emri: company.emri || "",
+    telefoni: company.telefoni || "",
+    adresa: company.adresa || "",
+    qyteti: company.qyteti || "",
+  });
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  async function submit(e) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await apiFetch("/Companies/my-company", token, { method: "PUT", body: JSON.stringify(form) });
+      onDone();
+    } catch (e) { showError(e); } finally { setLoading(false); }
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-2 flex flex-col gap-2 max-w-xs">
+      <Field label="Emri i biznesit"><input required className={inputClass} value={form.emri} onChange={set("emri")} /></Field>
+      <Field label="Telefoni"><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} /></Field>
+      <Field label="Adresa"><input className={inputClass} value={form.adresa} onChange={set("adresa")} /></Field>
+      <Field label="Qyteti"><input className={inputClass} value={form.qyteti} onChange={set("qyteti")} /></Field>
+      <div className="flex gap-2">
+        <PrimaryButton type="submit" disabled={loading} className="text-xs py-2">{loading ? "Duke ruajtur..." : "Ruaj"}</PrimaryButton>
+        <GhostButton type="button" onClick={onCancel} className="text-xs py-2">Anulo</GhostButton>
+      </div>
+    </form>
   );
 }
 
