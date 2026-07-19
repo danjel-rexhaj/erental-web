@@ -49,6 +49,7 @@ export default function App() {
   // Browse flow state lives here so it persists across sub-page navigation
   const [stage, setStage] = useState("landing"); // landing | results | carDetail | companyProfile
   const [carDetailFrom, setCarDetailFrom] = useState("results"); // results | companyProfile
+  const [companyProfileFromCarId, setCompanyProfileFromCarId] = useState(null);
   const [dataFillimit, setDataFillimit] = useState("");
   const [dataPerfundimit, setDataPerfundimit] = useState("");
   const [cars, setCars] = useState([]);
@@ -155,6 +156,7 @@ export default function App() {
     if (segs[0] === "kompania" && segs[1]) {
       const id = Number(segs[1]);
       setSelectedCompanyId(id);
+      setCompanyProfileFromCarId(params.get("nga_faqja") === "makina" && params.get("makina") ? Number(params.get("makina")) : null);
       setView("browse");
       setStage("companyProfile");
       if (hint?.cars) {
@@ -281,7 +283,9 @@ export default function App() {
         <CompanyProfile
           company={company}
           cars={companyCars}
-          onBack={() => go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`)}
+          onBack={companyProfileFromCarId
+            ? () => go(`/makina/${companyProfileFromCarId}?nga=${dataFillimit}&deri=${dataPerfundimit}`, selectedCar?.carId === companyProfileFromCarId ? { car: selectedCar } : undefined)
+            : () => go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`)}
           onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}&nga_faqja=kompania&kompania=${selectedCompanyId}`, { car })}
         />
       );
@@ -295,7 +299,7 @@ export default function App() {
           onBack={carDetailFrom === "companyProfile"
             ? () => go(`/kompania/${selectedCompanyId}`, { cars })
             : () => go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`)}
-          onSelectCompany={(id) => go(`/kompania/${id}`, { cars })}
+          onSelectCompany={(id) => go(`/kompania/${id}?nga_faqja=makina&makina=${selectedCar.carId}`, { cars })}
           onGoToBookings={() => go("/rezervimet")}
           token={token}
           needAuth={() => go("/profili")}
