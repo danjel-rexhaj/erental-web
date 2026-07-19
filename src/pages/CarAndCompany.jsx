@@ -194,38 +194,40 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
 
         {car.company && (
           <div className="lg:col-span-5 order-4 border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-                {car.company.logoUrl ? (
-                  <img src={car.company.logoUrl} alt={car.company.emri} className="w-full h-full object-cover" />
-                ) : (
-                  <Building2 size={28} className="text-emerald-700 dark:text-emerald-400" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{car.company.emri}</p>
-                  {car.company.eshteVerifikuar && (
-                    <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> I verifikuar</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                  {car.company.logoUrl ? (
+                    <img src={car.company.logoUrl} alt={car.company.emri} className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 size={28} className="text-emerald-700 dark:text-emerald-400" />
                   )}
                 </div>
-                <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400 mt-1.5">
-                  {car.company.avgRating != null && (
-                    <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                      <Star size={13} className="text-amber-400 fill-amber-400" /> {car.company.avgRating} <span className="font-normal text-slate-400">({car.company.reviewCount})</span>
-                    </span>
-                  )}
-                  <span className="whitespace-nowrap">{car.company.carCount} {car.company.carCount === 1 ? "makine" : "makina"} ne platforme</span>
-                  {car.company.dataRegjistrimit && <span className="whitespace-nowrap">Anetar qe nga {memberSince(car.company.dataRegjistrimit)}</span>}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{car.company.emri}</p>
+                    {car.company.eshteVerifikuar && (
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> I verifikuar</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                    {car.company.avgRating != null && (
+                      <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                        <Star size={13} className="text-amber-400 fill-amber-400" /> {car.company.avgRating} <span className="font-normal text-slate-400">({car.company.reviewCount})</span>
+                      </span>
+                    )}
+                    <span className="whitespace-nowrap">{car.company.carCount} {car.company.carCount === 1 ? "makine" : "makina"} ne platforme</span>
+                    {car.company.dataRegjistrimit && <span className="whitespace-nowrap">Anetar qe nga {memberSince(car.company.dataRegjistrimit)}</span>}
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={() => onSelectCompany(car.companyId)}
+                className="w-full sm:w-auto shrink-0 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.99] transition"
+              >
+                Shiko profilin e biznesit
+              </button>
             </div>
-            <button
-              onClick={() => onSelectCompany(car.companyId)}
-              className="w-full sm:w-auto mt-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.99] transition"
-            >
-              Shiko profilin e biznesit
-            </button>
           </div>
         )}
       </div>
@@ -486,6 +488,7 @@ function Stars({ rating, size = 12 }) {
 function CompanyReviews({ companyId }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(3);
 
   useEffect(() => {
     let cancelled = false;
@@ -510,7 +513,7 @@ function CompanyReviews({ companyId }) {
         <span className="text-sm text-slate-500 dark:text-slate-400">({reviews.length} vleresime)</span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {reviews.map((r) => (
+        {reviews.slice(0, visibleCount).map((r) => (
           <div key={r.reviewId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{r.emri} {r.mbiemri}</p>
@@ -521,6 +524,14 @@ function CompanyReviews({ companyId }) {
           </div>
         ))}
       </div>
+      {visibleCount < reviews.length && (
+        <button
+          onClick={() => setVisibleCount((n) => n + 6)}
+          className="mt-4 text-sm font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800"
+        >
+          Shiko me shume ({reviews.length - visibleCount})
+        </button>
+      )}
     </div>
   );
 }
