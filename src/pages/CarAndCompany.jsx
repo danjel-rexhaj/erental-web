@@ -424,14 +424,14 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
               <Building2 size={28} className="text-emerald-700 dark:text-emerald-400" />
             )}
           </div>
-          <div className="flex-1 lg:flex-initial min-w-0">
+          <div className="flex-1 lg:flex-initial min-w-0 flex flex-col justify-center gap-1.5">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{company.emri}</h1>
               {company.eshteVerifikuar && (
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> I verifikuar</span>
               )}
             </div>
-            <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+            <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400">
               {company.avgRating != null && (
                 <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
                   <Star size={13} className="text-amber-400 fill-amber-400" /> {company.avgRating} <span className="font-normal text-slate-400">({company.reviewCount})</span>
@@ -439,6 +439,18 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
               )}
               <span className="whitespace-nowrap">{company.carCount ?? cars.length} {(company.carCount ?? cars.length) === 1 ? "makine" : "makina"}</span>
               {company.dataRegjistrimit && <span className="whitespace-nowrap">Anetar qe nga {memberSince(company.dataRegjistrimit)}</span>}
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1"><MapPin size={13} /> {company.adresa ? `${company.adresa}, ` : ""}{company.qyteti}</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-xs text-slate-400 dark:text-slate-500">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="lg:hidden inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-3 py-2 whitespace-nowrap"
+              >
+                <MapPin size={13} /> Merr udhezime
+              </a>
             </div>
           </div>
           {mapEmbedUrl && (
@@ -454,19 +466,6 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
             </a>
           )}
         </div>
-
-        <div className="flex items-center justify-between flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-          <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1"><MapPin size={13} /> {company.adresa ? `${company.adresa}, ` : ""}{company.qyteti}</p>
-          <a
-            href={directionsUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="lg:hidden inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-3 py-2 whitespace-nowrap"
-          >
-            <MapPin size={13} /> Merr udhezime
-          </a>
-        </div>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
       </div>
 
       <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Makinat e {company.emri} ({cars.length})</h2>
