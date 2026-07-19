@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight } from "lucide-react";
-import { mapEmbedUrl } from "./api";
 
 const MUAJT_KAL = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
 const DITET_KAL = ["H", "M", "M", "E", "P", "S", "D"];
@@ -118,28 +117,88 @@ export function StatusPill({ status }) {
   return <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>;
 }
 
+const TIRANA = [41.3275, 19.8189];
+
+function loadLeaflet(onReady) {
+  if (window.L) { onReady(); return; }
+  if (!document.getElementById("leaflet-css")) {
+    const link = document.createElement("link");
+    link.id = "leaflet-css";
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    document.head.appendChild(link);
+  }
+  let script = document.getElementById("leaflet-js");
+  if (!script) {
+    script = document.createElement("script");
+    script.id = "leaflet-js";
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    document.body.appendChild(script);
+  }
+  script.addEventListener("load", onReady);
+  return () => script.removeEventListener("load", onReady);
+}
+
 export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) {
-  const [busy, setBusy] = useState(null);
+  const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState([adresa, qyteti].filter(Boolean).join(", "));
+  const [results, setResults] = useState([]);
+  const mapElRef = useRef(null);
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+
+  useEffect(() => loadLeaflet(() => {
+    if (!mapElRef.current || mapRef.current || !window.L) return;
+    const start = coords ? [coords.latitude, coords.longitude] : TIRANA;
+    const map = window.L.map(mapElRef.current).setView(start, coords ? 15 : 12);
+    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap",
+      maxZoom: 19,
+    }).addTo(map);
+    const marker = window.L.marker(start, { draggable: true }).addTo(map);
+    marker.on("dragend", () => {
+      const { lat, lng } = marker.getLatLng();
+      onChange({ latitude: lat, longitude: lng });
+    });
+    map.on("click", (e) => {
+      marker.setLatLng(e.latlng);
+      onChange({ latitude: e.latlng.lat, longitude: e.latlng.lng });
+    });
+    mapRef.current = map;
+    markerRef.current = marker;
+  }), []);
+
+  useEffect(() => {
+    if (!mapRef.current || !markerRef.current || !coords) return;
+    const latlng = [coords.latitude, coords.longitude];
+    markerRef.current.setLatLng(latlng);
+    mapRef.current.setView(latlng, 15);
+  }, [coords]);
 
   async function searchAddress() {
-    if (!query.trim()) { showError(new Error("Shkruaj nje adrese per te kerkuar.")); return; }
-    setBusy("search");
+    if (!query.trim()) { showError(new Error("Shkruaj diçka per te kerkuar.")); return; }
+    setBusy(true);
+    setResults([]);
     try {
-      const q = encodeURIComponent(`${query}, Shqiperi`);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`);
+      const q = encodeURIComponent(query);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=al&q=${q}`);
       const data = await res.json();
-      if (!data.length) throw new Error("Nuk u gjet adresa. Provo ta shkruash me saktesi, ose perdor GPS.");
-      onChange({ latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) });
-    } catch (e) { showError(e); } finally { setBusy(null); }
+      if (!data.length) { showError(new Error("Nuk u gjet asgje me kete emer. Provo tjeter, ose kliko direkt ne harte per te vendosur piken.")); return; }
+      setResults(data);
+    } catch (e) { showError(e); } finally { setBusy(false); }
+  }
+
+  function pickResult(r) {
+    onChange({ latitude: parseFloat(r.lat), longitude: parseFloat(r.lon) });
+    setResults([]);
   }
 
   function useGps() {
     if (!navigator.geolocation) { showError(new Error("Shfletuesi yt nuk mbeshtet vendndodhjen.")); return; }
-    setBusy("gps");
+    setBusy(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => { onChange({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }); setBusy(null); },
-      () => { showError(new Error("Nuk u lejua akses ne vendndodhje.")); setBusy(null); },
+      (pos) => { onChange({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }); setBusy(false); },
+      () => { showError(new Error("Nuk u lejua akses ne vendndodhje.")); setBusy(false); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
@@ -154,24 +213,29 @@ export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) 
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); searchAddress(); } }}
-          placeholder="Rruga Kavajes, Tirane..."
+          placeholder="Plaza Tirane, Rruga Kavajes..."
           className="flex-1 min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-teal-600"
         />
-        <button type="button" onClick={searchAddress} disabled={busy !== null} className={btnClass}>
-          <Search size={13} /> {busy === "search" ? "..." : "Gjej"}
+        <button type="button" onClick={searchAddress} disabled={busy} className={btnClass}>
+          <Search size={13} /> {busy ? "..." : "Kerko"}
         </button>
-        <button type="button" onClick={useGps} disabled={busy !== null} className={btnClass}>
-          <Crosshair size={13} /> {busy === "gps" ? "..." : "GPS"}
+        <button type="button" onClick={useGps} disabled={busy} className={btnClass}>
+          <Crosshair size={13} /> GPS
         </button>
       </div>
-      <p className="text-[10px] text-slate-400 mt-1">Shkruaj adresen dhe kliko "Gjej" — eshte me e sakte se GPS-i, i cili mund te gaboje ne kompjuter (VPN, WiFi).</p>
-      {coords && (
-        <div className="mt-2">
-          <div className="rounded-xl overflow-hidden border border-teal-200 dark:border-teal-800">
-            <iframe title="Pamje paraprake" src={mapEmbedUrl(coords.latitude, coords.longitude)} className="w-full h-36 border-0" loading="lazy" />
-          </div>
-          <p className="flex items-center gap-1 text-[11px] text-teal-700 dark:text-teal-400 font-medium mt-1"><MapPin size={11} /> Nese pika s'duket ne vendin e sakte, provo "Gjej nga adresa"</p>
+      {results.length > 0 && (
+        <div className="mt-1 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+          {results.map((r, i) => (
+            <button key={i} type="button" onClick={() => pickResult(r)} className="block w-full text-left px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
+              {r.display_name}
+            </button>
+          ))}
         </div>
+      )}
+      <p className="text-[10px] text-slate-400 mt-1">Kerko me emer/adrese, ose kliko/terhiq piken direkt ne harte per ta vendosur vete.</p>
+      <div ref={mapElRef} className="mt-2 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 h-52" />
+      {coords && (
+        <p className="flex items-center gap-1 text-[11px] text-teal-700 dark:text-teal-400 font-medium mt-1"><MapPin size={11} /> Vendndodhja u vendos</p>
       )}
     </div>
   );

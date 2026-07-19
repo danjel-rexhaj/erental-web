@@ -157,20 +157,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
         </div>
       </div>
 
-      {car.pershkrimi && (
-        <div className="mt-8 max-w-3xl">
-          <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Pershkrimi</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{car.pershkrimi}</p>
-        </div>
-      )}
-
       {car.company?.qyteti && (
-        <div className="mt-8 max-w-3xl border-t border-slate-100 dark:border-slate-800 pt-8">
-          <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
+        <div className="mt-8 max-w-3xl border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
           <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
 
           {mapEmbedUrl && (
-            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
+            <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
               <iframe
                 title="Vendndodhja e biznesit"
                 src={mapEmbedUrl}
@@ -199,7 +192,11 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   const [method, setMethod] = useState(allowCash ? "cash" : "paypal_full");
   const [loading, setLoading] = useState(false);
   const [sdkError, setSdkError] = useState(null);
-  const paypalRef = useRef(null);
+  const [cardReady, setCardReady] = useState(false);
+  const numberRef = useRef(null);
+  const expiryRef = useRef(null);
+  const cvvRef = useRef(null);
+  const cardFieldsRef = useRef(null);
 
   async function bookCash() {
     if (!token) return needAuth();
@@ -214,43 +211,69 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   useEffect(() => {
     if (method === "cash" || !token) return;
     let cancelled = false;
+    const paymentMethod = method === "paypal_deposit" ? "deposit" : "full";
 
-    function renderButtons() {
-      if (cancelled || !paypalRef.current) return;
-      if (!window.paypal) { setSdkError("PayPal nuk u ngarkua dot. Provo te rifreskosh faqen."); return; }
-      paypalRef.current.innerHTML = "";
-      window.paypal.Buttons({
-        style: { layout: "horizontal", height: 40 },
-        createOrder: (data, actions) => actions.order.create({
-          purchase_units: [{ amount: { value: (method === "paypal_deposit" ? car.cmimiDites : Number(total)).toFixed(2), currency_code: "EUR" } }],
-        }),
-        onApprove: async (data) => {
-          setLoading(true);
-          try {
-            const cap = await apiFetch("/Payments/paypal/capture", token, {
-              method: "POST",
-              body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, method: method === "paypal_deposit" ? "deposit" : "full", paypalOrderId: data.orderID }),
-            });
-            await apiFetch("/Bookings", token, {
-              method: "POST",
-              body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId }),
-            });
-            showOk("Pagesa dhe rezervimi u kryen me sukses!");
-            onBooked();
-          } catch (e) { showError(e); } finally { setLoading(false); }
-        },
-        onError: () => showError(new Error("Pagesa me PayPal deshtoi.")),
-      }).render(paypalRef.current);
+    async function createOrder() {
+      const res = await apiFetch("/Payments/paypal/create-order", token, {
+        method: "POST",
+        body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, method: paymentMethod }),
+      });
+      return res.orderId;
+    }
+
+    async function onApprove(data) {
+      setLoading(true);
+      try {
+        const cap = await apiFetch("/Payments/paypal/capture", token, {
+          method: "POST",
+          body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, method: paymentMethod, paypalOrderId: data.orderID }),
+        });
+        await apiFetch("/Bookings", token, {
+          method: "POST",
+          body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId }),
+        });
+        showOk("Pagesa dhe rezervimi u kryen me sukses!");
+        onBooked();
+      } catch (e) { showError(e); setLoading(false); }
+    }
+
+    function renderFields() {
+      if (cancelled || !numberRef.current) return;
+      if (!window.paypal?.CardFields) {
+        setSdkError("Pagesa me karte nuk eshte gati per kete llogari.");
+        return;
+      }
+
+      const cardFields = window.paypal.CardFields({
+        createOrder,
+        onApprove,
+        onError: () => { showError(new Error("Pagesa me karte deshtoi.")); setLoading(false); },
+        style: { input: { "font-size": "14px", color: "#0f172a" } },
+      });
+
+      if (!cardFields.isEligible()) {
+        setSdkError("Pagesa me karte nuk eshte e disponueshme per kete llogari.");
+        return;
+      }
+
+      numberRef.current.innerHTML = "";
+      expiryRef.current.innerHTML = "";
+      cvvRef.current.innerHTML = "";
+      cardFields.NumberField({ placeholder: "Numri i kartes" }).render(numberRef.current);
+      cardFields.ExpiryField({ placeholder: "MM/YY" }).render(expiryRef.current);
+      cardFields.CVVField({ placeholder: "CVV" }).render(cvvRef.current);
+      cardFieldsRef.current = cardFields;
+      setCardReady(true);
     }
 
     if (window.paypal) {
-      renderButtons();
+      renderFields();
       return () => { cancelled = true; };
     }
 
     const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
     if (!clientId) {
-      const t = setTimeout(() => setSdkError("PayPal nuk eshte konfiguruar akoma (mungon VITE_PAYPAL_CLIENT_ID)."), 0);
+      const t = setTimeout(() => setSdkError("Pagesat nuk jane konfiguruar akoma."), 0);
       return () => { cancelled = true; clearTimeout(t); };
     }
 
@@ -258,18 +281,29 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     if (!script) {
       script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=EUR`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=card-fields&currency=EUR`;
       document.body.appendChild(script);
     }
-    const onError = () => setSdkError("PayPal SDK nuk u ngarkua dot. Kontrollo internetin dhe provo perseri.");
-    script.addEventListener("load", renderButtons);
-    script.addEventListener("error", onError);
+    const onScriptError = () => setSdkError("Sistemi i pagesave nuk u ngarkua dot. Kontrollo internetin dhe provo perseri.");
+    script.addEventListener("load", renderFields);
+    script.addEventListener("error", onScriptError);
     return () => {
       cancelled = true;
-      script.removeEventListener("load", renderButtons);
-      script.removeEventListener("error", onError);
+      script.removeEventListener("load", renderFields);
+      script.removeEventListener("error", onScriptError);
     };
   }, [method, token]);
+
+  async function submitCard() {
+    if (!cardFieldsRef.current) return;
+    setLoading(true);
+    try {
+      await cardFieldsRef.current.submit();
+    } catch {
+      showError(new Error("Kontrollo te dhenat e kartes dhe provo perseri."));
+      setLoading(false);
+    }
+  }
 
   return (
     <div>
@@ -281,10 +315,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
             </label>
           )}
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> Depozite ({car.cmimiDites}€) me PayPal, pjesa tjeter cash
+            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); setCardReady(false); }} /> Depozite ({car.cmimiDites}€) me karte, pjesa tjeter cash
           </label>
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> Pagese e plote ({total}€) me PayPal
+            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); setCardReady(false); }} /> Pagese e plote ({total}€) me karte
           </label>
         </div>
       )}
@@ -292,10 +326,17 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       {method === "cash" ? (
         <PrimaryButton onClick={bookCash} disabled={loading}>{loading ? "Duke rezervuar..." : token ? "Rezervo" : "Kyçu per te rezervuar"}</PrimaryButton>
       ) : token ? (
-        <>
-          <div ref={paypalRef} className={loading ? "opacity-50 pointer-events-none" : ""} />
+        <div className={loading ? "opacity-60 pointer-events-none" : ""}>
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 min-h-[42px] mb-2" ref={numberRef} />
+          <div className="flex gap-2 mb-2">
+            <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 min-h-[42px]" ref={expiryRef} />
+            <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 min-h-[42px]" ref={cvvRef} />
+          </div>
+          <PrimaryButton onClick={submitCard} disabled={loading || !cardReady}>
+            {loading ? "Duke procesuar..." : `Paguaj ${method === "paypal_deposit" ? car.cmimiDites : total}€`}
+          </PrimaryButton>
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
-        </>
+        </div>
       ) : (
         <PrimaryButton onClick={needAuth}>Kyçu per te rezervuar</PrimaryButton>
       )}

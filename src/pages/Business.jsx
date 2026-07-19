@@ -81,8 +81,8 @@ function PaymentBadge({ b }) {
     <p className="text-[11px] text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-0.5">
       <CreditCard size={11} />
       {b.paymentMethod === "paypal_full"
-        ? "Paguar plotesisht me PayPal"
-        : `Depozite ${b.payment?.shumaPaguarOnline ?? ""}€ e paguar me PayPal, pjesa tjeter cash`}
+        ? "Paguar plotesisht me karte"
+        : `Depozite ${b.payment?.shumaPaguarOnline ?? ""}€ e paguar me karte, pjesa tjeter cash`}
     </p>
   );
 }
@@ -323,7 +323,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
           </Field>
           <label className="flex items-center gap-2 mb-3 text-xs text-slate-600 dark:text-slate-300">
             <input type="checkbox" checked={form.allowCashPayment} onChange={(e) => setForm((f) => ({ ...f, allowCashPayment: e.target.checked }))} />
-            Prano pagesa cash (klientet mund te paguajne ne dorezim, jo vetem me PayPal)
+            Prano pagesa cash (klientet mund te paguajne ne dorezim, jo vetem me karte)
           </label>
           <Field label="NIPT"><input required className={inputClass} value={form.nipt} onChange={set("nipt")} placeholder="L12345678A" /></Field>
           <Field label="Certifikata e NIPT-it (foto/PDF)">
