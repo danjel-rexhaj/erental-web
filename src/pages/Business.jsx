@@ -141,11 +141,81 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Ende s'ke asnje rezervim per makinat e tua.</p></div>;
 
+  const confirmedGroup = bookings.filter((b) => b.statusi === "confirmed" || b.statusi === "completed");
   const pending = bookings.filter((b) => b.statusi === "pending");
-  const others = bookings.filter((b) => b.statusi !== "pending");
+  const cancelledGroup = bookings.filter((b) => b.statusi === "cancelled");
+
+  const renderHistoryCard = (b) => (
+    <div
+      key={b.bookingId}
+      id={`booking-${b.bookingId}`}
+      className={`border rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/40" : "border-slate-200 dark:border-slate-700"}`}
+    >
+      <div className="flex items-start justify-between">
+        <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
+        <StatusPill status={b.statusi} />
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
+      <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
+        <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri}
+        {b.klienti.hasWhatsapp && b.klienti.telefoni && (
+          <a
+            href={`https://wa.me/${toWhatsappNumber(b.klienti.telefoni)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
+            title="Shkruaj ne WhatsApp"
+          >
+            <MessageCircle size={13} />
+          </a>
+        )}
+      </p>
+      <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
+      <PaymentBadge b={b} />
+      {b.statusi === "confirmed" && (
+        b.idVerifikuar ? (
+          <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
+            <CheckCircle2 size={12} /> Identiteti u verifikua
+          </p>
+        ) : (
+          <GhostButton type="button" onClick={() => verifyId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 mt-2">
+            Verifiko ID (patente + karte identiteti ne WhatsApp)
+          </GhostButton>
+        )
+      )}
+      {b.arsyejaRefuzimit && (
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
+          <span className="font-semibold">Arsyeja:</span> {b.arsyejaRefuzimit}
+        </p>
+      )}
+      {b.statusi === "cancelled" && (
+        deletingId === b.bookingId ? (
+          <div className="flex items-center gap-2 mt-3">
+            <button onClick={() => removeBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
+              {actingId === b.bookingId ? "Duke fshire..." : "Po, fshije"}
+            </button>
+            <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">Anulo</button>
+          </div>
+        ) : (
+          <button onClick={() => setDeletingId(b.bookingId)} className="text-xs text-slate-400 dark:text-slate-500 underline mt-3">
+            Fshi
+          </button>
+        )
+      )}
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-8">
+      {confirmedGroup.length > 0 && (
+        <div>
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Konfirmuar ({confirmedGroup.length})</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {confirmedGroup.map(renderHistoryCard)}
+          </div>
+        </div>
+      )}
+
       {pending.length > 0 && (
         <div>
           <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Ne pritje te miratimit ({pending.length})</h3>
@@ -220,69 +290,11 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
         </div>
       )}
 
-      {others.length > 0 && (
+      {cancelledGroup.length > 0 && (
         <div>
-          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Historiku</h3>
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Anuluar ({cancelledGroup.length})</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {others.map((b) => (
-              <div
-                key={b.bookingId}
-                id={`booking-${b.bookingId}`}
-                className={`border rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/40" : "border-slate-200 dark:border-slate-700"}`}
-              >
-                <div className="flex items-start justify-between">
-                  <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
-                  <StatusPill status={b.statusi} />
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
-                  <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri}
-                  {b.klienti.hasWhatsapp && b.klienti.telefoni && (
-                    <a
-                      href={`https://wa.me/${toWhatsappNumber(b.klienti.telefoni)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
-                      title="Shkruaj ne WhatsApp"
-                    >
-                      <MessageCircle size={13} />
-                    </a>
-                  )}
-                </p>
-                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
-                <PaymentBadge b={b} />
-                {b.statusi === "confirmed" && (
-                  b.idVerifikuar ? (
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
-                      <CheckCircle2 size={12} /> Identiteti u verifikua
-                    </p>
-                  ) : (
-                    <GhostButton type="button" onClick={() => verifyId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 mt-2">
-                      Verifiko ID (patente + karte identiteti ne WhatsApp)
-                    </GhostButton>
-                  )
-                )}
-                {b.arsyejaRefuzimit && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
-                    <span className="font-semibold">Arsyeja:</span> {b.arsyejaRefuzimit}
-                  </p>
-                )}
-                {b.statusi === "cancelled" && (
-                  deletingId === b.bookingId ? (
-                    <div className="flex items-center gap-2 mt-3">
-                      <button onClick={() => removeBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
-                        {actingId === b.bookingId ? "Duke fshire..." : "Po, fshije"}
-                      </button>
-                      <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">Anulo</button>
-                    </div>
-                  ) : (
-                    <button onClick={() => setDeletingId(b.bookingId)} className="text-xs text-slate-400 dark:text-slate-500 underline mt-3">
-                      Fshi
-                    </button>
-                  )
-                )}
-              </div>
-            ))}
+            {cancelledGroup.map(renderHistoryCard)}
           </div>
         </div>
       )}
