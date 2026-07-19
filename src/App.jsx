@@ -3,7 +3,7 @@ import { LogOut, Menu, X, Bell, Sun, Moon } from "lucide-react";
 import { apiFetch, decodeJwt } from "./api";
 import { useNotifications } from "./notifications";
 import { Logo } from "./Logo";
-import { Notice } from "./components";
+import { Notice, PaymentSuccessModal } from "./components";
 import Home from "./pages/Home";
 import Results from "./pages/Results";
 import { CarDetail, CompanyProfile } from "./pages/CarAndCompany";
@@ -55,6 +55,7 @@ export default function App() {
   const [searching, setSearching] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
+  const [paymentSuccessInfo, setPaymentSuccessInfo] = useState(null);
 
   const showError = (e) => {
     setNotice({ type: "error", text: e.message || String(e) });
@@ -100,6 +101,39 @@ export default function App() {
     const [path = "/", queryStr] = (hashStr || "#/").replace(/^#/, "").split("?");
     const params = new URLSearchParams(queryStr || "");
     const segs = path.split("/").filter(Boolean);
+
+    if (segs[0] === "paypal-kthim") {
+      const orderId = params.get("token");
+      let pending = null;
+      try { pending = JSON.parse(localStorage.getItem("erental_pending_payment") || "null"); } catch { /* ignore */ }
+      localStorage.removeItem("erental_pending_payment");
+
+      if (!orderId || !pending) { go("/"); return; }
+
+      const paymentMethod = pending.method === "paypal_deposit" ? "deposit" : "full";
+      setView("browse");
+      setStage("landing");
+      try {
+        const cap = await apiFetch("/Payments/paypal/capture", token, {
+          method: "POST",
+          body: JSON.stringify({ carId: pending.carId, dataFillimit: pending.dataFillimit, dataPerfundimit: pending.dataPerfundimit, method: paymentMethod, paypalOrderId: orderId }),
+        });
+        const booking = await apiFetch("/Bookings", token, {
+          method: "POST",
+          body: JSON.stringify({ carId: pending.carId, dataFillimit: pending.dataFillimit, dataPerfundimit: pending.dataPerfundimit, paymentMethod: pending.method, paypalCaptureId: cap.captureId }),
+        });
+        const car = await apiFetch(`/Cars/${pending.carId}`, null).catch(() => null);
+        setPaymentSuccessInfo({
+          car: car || { marka: "", modeli: "" },
+          dataFillimit: pending.dataFillimit,
+          dataPerfundimit: pending.dataPerfundimit,
+          successInfo: { bookingId: booking.bookingId, amountPaid: cap.amountPaid, method: pending.method },
+        });
+      } catch (e) {
+        showError(e);
+      }
+      return;
+    }
 
     if (segs[0] === "makina" && segs[1]) {
       const from = params.get("nga") || dataFillimit;
@@ -158,7 +192,8 @@ export default function App() {
     setStage("landing");
     setSelectedCar(null);
     setSelectedCompanyId(null);
-  }, [dataFillimit, dataPerfundimit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataFillimit, dataPerfundimit, token]);
 
   function go(hashStr, hint) {
     window.history.pushState(null, "", "#" + hashStr.replace(/^#/, ""));
@@ -338,6 +373,12 @@ export default function App() {
         {view === "contact" && <Contact loggedIn={!!token} showError={showError} />}
       </div>
       <Footer setView={(v) => go(viewToHash(v))} />
+      {paymentSuccessInfo && (
+        <PaymentSuccessModal
+          {...paymentSuccessInfo}
+          onClose={() => { setPaymentSuccessInfo(null); go("/rezervimet"); }}
+        />
+      )}
     </div>
   );
 }

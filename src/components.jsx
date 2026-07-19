@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight } from "lucide-react";
+import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download } from "lucide-react";
 
 const MUAJT_KAL = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
 const DITET_KAL = ["H", "M", "M", "E", "P", "S", "D"];
@@ -213,6 +213,60 @@ export function PrimaryButton({ children, className = "", ...props }) {
 
 export function GhostButton({ children, className = "", ...props }) {
   return <button {...props} className={`w-full rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.99] transition disabled:opacity-50 ${className}`}>{children}</button>;
+}
+
+export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, successInfo, onClose }) {
+  const confirmim = `ER-${String(successInfo.bookingId).padStart(6, "0")}`;
+
+  function downloadInvoice() {
+    const lines = [
+      "ERental — Fatura e pageses",
+      "",
+      `Numri i konfirmimit: ${confirmim}`,
+      `Makina: ${car.marka} ${car.modeli}`,
+      `Biznesi: ${car.company?.emri || ""}`,
+      `Marrja: ${dataFillimit}`,
+      `Dorezimi: ${dataPerfundimit}`,
+      `Menyra: ${successInfo.method === "paypal_full" ? "Pagese e plote" : "Depozite (1 dite)"}`,
+      `Shuma e paguar: ${successInfo.amountPaid}€`,
+      `Data e pageses: ${new Date().toLocaleDateString("sq-AL")}`,
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `fatura-${confirmim}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-3">
+          <CheckCircle2 size={28} className="text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <h3 className="text-lg font-bold text-center text-slate-900 dark:text-slate-100 mb-1">Pagesa u krye ✓</h3>
+        <p className="text-sm text-center text-slate-500 dark:text-slate-400 mb-4">Rezervimi yt per {car.marka} {car.modeli} u konfirmua.</p>
+
+        <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 mb-4 text-xs space-y-1.5">
+          <div className="flex justify-between"><span className="text-slate-400">Konfirmimi</span><span className="font-semibold text-slate-900 dark:text-slate-100">{confirmim}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Datat</span><span className="font-semibold text-slate-900 dark:text-slate-100">{dataFillimit} → {dataPerfundimit}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Shuma e paguar</span><span className="font-semibold text-emerald-700 dark:text-emerald-400">{successInfo.amountPaid}€</span></div>
+        </div>
+
+        <button
+          onClick={downloadInvoice}
+          className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 mb-2 hover:bg-slate-50 dark:hover:bg-slate-700"
+        >
+          <Download size={15} /> Shkarko faturen
+        </button>
+        <PrimaryButton onClick={onClose}>Kthehu</PrimaryButton>
+      </div>
+    </div>
+  );
 }
 
 export function CarPhoto({ car }) {
