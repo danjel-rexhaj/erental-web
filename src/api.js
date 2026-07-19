@@ -9,8 +9,10 @@ export function decodeJwt(token) {
   }
 }
 
-export function osmEmbedUrl(lat, lng, delta = 0.01) {
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - delta}%2C${lat - delta}%2C${lng + delta}%2C${lat + delta}&layer=mapnik&marker=${lat}%2C${lng}`;
+// Keyless Google Maps embed (the classic output=embed URL) — no API key/billing needed,
+// and looks like real Google Maps everywhere, unlike the plain OpenStreetMap tile embed.
+export function mapEmbedUrl(lat, lng, zoom = 15) {
+  return `https://maps.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
 }
 
 export function toWhatsappNumber(phone) {

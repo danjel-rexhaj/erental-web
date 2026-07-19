@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard } from "lucide-react";
 import { apiFetch, toWhatsappNumber } from "../api";
-import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker } from "../components";
+import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, AvailabilityCalendar } from "../components";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
@@ -575,6 +575,14 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
 function BusinessCarCard({ car, token, reload, showError, showOk }) {
   const [managingPhotos, setManagingPhotos] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [ranges, setRanges] = useState([]);
+
+  function toggleCalendar() {
+    const next = !showCalendar;
+    setShowCalendar(next);
+    if (next) apiFetch(`/Cars/${car.carId}/availability`, null).then(setRanges).catch(() => {});
+  }
 
   return (
     <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
@@ -600,6 +608,18 @@ function BusinessCarCard({ car, token, reload, showError, showOk }) {
             <Upload size={13} />{managingPhotos ? "Mbyll" : "Fotot"}
           </button>
         </div>
+        <button
+          type="button"
+          onClick={toggleCalendar}
+          className="flex items-center justify-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400 border border-dashed border-teal-300 dark:border-teal-700 rounded-xl py-2 mt-2 w-full hover:bg-teal-50 dark:hover:bg-teal-900/20"
+        >
+          <Calendar size={13} />{showCalendar ? "Mbyll kalendarin" : "Kalendari i rezervimeve"}
+        </button>
+        {showCalendar && (
+          <div className="mt-3">
+            <AvailabilityCalendar ranges={ranges} />
+          </div>
+        )}
         {editing && (
           <div className="mt-3">
             <AddCarForm

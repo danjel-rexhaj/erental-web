@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check } from "lucide-react";
-import { apiFetch, osmEmbedUrl } from "../api";
-import { PrimaryButton, Spec, CarPhoto } from "../components";
+import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
+import { PrimaryButton, Spec, CarPhoto, AvailabilityCalendar } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
 
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, showError, showOk, isBusinessOwner }) {
@@ -23,7 +23,6 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
     apiFetch(`/Cars/${car.carId}/availability`, null).then(setBookedRanges).catch(() => {});
   }, [car.carId]);
 
-  const fmt = (d) => new Date(d).toLocaleDateString("sq-AL", { day: "numeric", month: "long", year: "numeric" });
   const lat = car.company?.latitude;
   const lng = car.company?.longitude;
   const hasCoords = lat != null && lng != null;
@@ -31,7 +30,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const directionsUrl = hasCoords
     ? (isIOS ? `https://maps.apple.com/?daddr=${lat},${lng}` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`)
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${car.company?.adresa ? car.company.adresa + ", " : ""}${car.company?.qyteti || ""}, Shqiperi`)}`;
-  const mapEmbedUrl = hasCoords ? osmEmbedUrl(lat, lng) : null;
+  const mapEmbedUrl = hasCoords ? getMapEmbedUrl(lat, lng) : null;
 
   function stepPhoto(dir) {
     if (photos.length < 2) return;
@@ -130,13 +129,9 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           </div>
 
           {bookedRanges.length > 0 && (
-            <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              <p className="font-semibold text-slate-600 dark:text-slate-300 mb-1">Data te zena per kete makine:</p>
-              <ul className="space-y-0.5">
-                {bookedRanges.map((r, i) => (
-                  <li key={i}>{fmt(r.dataFillimit)} – {fmt(r.dataPerfundimit)}</li>
-                ))}
-              </ul>
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Data te zena per kete makine</p>
+              <AvailabilityCalendar ranges={bookedRanges} />
             </div>
           )}
 

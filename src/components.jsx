@@ -1,6 +1,61 @@
 import { useState } from "react";
-import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair } from "lucide-react";
-import { osmEmbedUrl } from "./api";
+import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight } from "lucide-react";
+import { mapEmbedUrl } from "./api";
+
+const MUAJT_KAL = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
+const DITET_KAL = ["H", "M", "M", "E", "P", "S", "D"];
+
+export function AvailabilityCalendar({ ranges = [] }) {
+  const [monthOffset, setMonthOffset] = useState(0);
+  const today = new Date();
+  const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const startWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  function isBooked(day) {
+    const d = new Date(year, month, day);
+    return ranges.some((r) => {
+      const start = new Date(r.dataFillimit);
+      const end = new Date(r.dataPerfundimit);
+      const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const e = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      return d >= s && d < e;
+    });
+  }
+
+  const cells = Array(startWeekday).fill(null).concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
+
+  return (
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 max-w-xs">
+      <div className="flex items-center justify-between mb-2">
+        <button type="button" onClick={() => setMonthOffset((m) => m - 1)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><ChevronLeft size={14} /></button>
+        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">{MUAJT_KAL[month]} {year}</p>
+        <button type="button" onClick={() => setMonthOffset((m) => m + 1)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><ChevronRight size={14} /></button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {DITET_KAL.map((d, i) => <span key={i} className="text-[10px] text-slate-400">{d}</span>)}
+        {cells.map((day, i) => (
+          <span
+            key={i}
+            className={`text-[11px] h-7 flex items-center justify-center rounded-lg ${
+              day == null ? "" : isBooked(day)
+                ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 font-semibold"
+                : "text-slate-600 dark:text-slate-300"
+            }`}
+          >
+            {day || ""}
+          </span>
+        ))}
+      </div>
+      <div className="flex items-center gap-1.5 mt-2">
+        <span className="w-2.5 h-2.5 rounded bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800" />
+        <span className="text-[10px] text-slate-400">E zene</span>
+      </div>
+    </div>
+  );
+}
 
 export const inputClass = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-emerald-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
 
@@ -100,12 +155,13 @@ export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) 
           <Crosshair size={13} /> {busy === "gps" ? "Duke marre..." : "Perdor GPS"}
         </button>
       </div>
+      <p className="text-[10px] text-slate-400 mt-1">"Gjej nga adresa" eshte me e sakte. GPS-i i kompjuterit mund te gaboje (VPN, WiFi) — kontrollo piken poshte para se te ruash.</p>
       {coords && (
         <div className="mt-2">
           <div className="rounded-xl overflow-hidden border border-teal-200 dark:border-teal-800">
-            <iframe title="Pamje paraprake" src={osmEmbedUrl(coords.latitude, coords.longitude)} className="w-full h-36 border-0" loading="lazy" />
+            <iframe title="Pamje paraprake" src={mapEmbedUrl(coords.latitude, coords.longitude)} className="w-full h-36 border-0" loading="lazy" />
           </div>
-          <p className="flex items-center gap-1 text-[11px] text-teal-700 dark:text-teal-400 font-medium mt-1"><MapPin size={11} /> Vendndodhja u vendos</p>
+          <p className="flex items-center gap-1 text-[11px] text-teal-700 dark:text-teal-400 font-medium mt-1"><MapPin size={11} /> Nese pika s'duket ne vendin e sakte, provo "Gjej nga adresa"</p>
         </div>
       )}
     </div>
