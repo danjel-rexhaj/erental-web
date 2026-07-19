@@ -258,7 +258,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                       <CheckCircle2 size={12} /> Identiteti u verifikua
                     </p>
                   ) : (
-                    <GhostButton onClick={() => verifyId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 mt-2">
+                    <GhostButton type="button" onClick={() => verifyId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 mt-2">
                       Verifiko ID (patente + karte identiteti ne WhatsApp)
                     </GhostButton>
                   )
