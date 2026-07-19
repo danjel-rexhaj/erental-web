@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, Clock, Star, Phone, MessageCircle, Mail, CheckCircle2, CreditCard } from "lucide-react";
+import { Calendar, Clock, Star, Phone, MessageCircle, Mail, CheckCircle2, CreditCard, ChevronDown } from "lucide-react";
 import { apiFetch, toWhatsappNumber } from "../api";
 import { GhostButton, PrimaryButton, StatusPill, inputClass } from "../components";
 
@@ -8,6 +8,7 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [showCancelled, setShowCancelled] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,14 +41,13 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Ende s'ke asnje rezervim.</p></div>;
 
-  const STATUS_PRIORITY = { confirmed: 0, completed: 1, pending: 2, cancelled: 3 };
-  const sortedBookings = [...bookings].sort((a, b) => (STATUS_PRIORITY[a.statusi] ?? 4) - (STATUS_PRIORITY[b.statusi] ?? 4));
+  const STATUS_PRIORITY = { confirmed: 0, completed: 1, pending: 2 };
+  const activeBookings = bookings
+    .filter((b) => b.statusi !== "cancelled")
+    .sort((a, b) => (STATUS_PRIORITY[a.statusi] ?? 3) - (STATUS_PRIORITY[b.statusi] ?? 3));
+  const cancelledBookings = bookings.filter((b) => b.statusi === "cancelled");
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Rezervimet e mia</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sortedBookings.map((b) => (
+  const renderCard = (b) => (
         <div
           key={b.bookingId}
           id={`booking-${b.bookingId}`}
@@ -158,8 +158,31 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
             )
           )}
         </div>
-        ))}
+  );
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Rezervimet e mia</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {activeBookings.map(renderCard)}
       </div>
+
+      {cancelledBookings.length > 0 && (
+        <div className="mt-6">
+          <button
+            onClick={() => setShowCancelled((s) => !s)}
+            className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+          >
+            <ChevronDown size={16} className={`transition-transform ${showCancelled ? "rotate-180" : ""}`} />
+            Rezervime te anuluara ({cancelledBookings.length})
+          </button>
+          {showCancelled && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+              {cancelledBookings.map(renderCard)}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
