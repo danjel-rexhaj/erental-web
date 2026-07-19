@@ -29,27 +29,26 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
 
   if (company === null && !isAdmin) return <RegisterCompanyForm token={token} onDone={load} showError={showError} showOk={showOk} />;
 
-  const tabs = [
-    { key: "dashboard", label: "Biznesi im" },
-    { key: "bookings", label: "Rezervimet" },
-    ...(company ? [{ key: "analytics", label: "Statistikat" }] : []),
-    ...(isAdmin ? [
-      { key: "admin", label: "Verifikime" },
-      { key: "whatsapp", label: "WhatsApp" },
-      { key: "admin-analytics", label: "Statistikat e platformes" },
-      { key: "admin-logins", label: "Logs hyrjesh" },
-    ] : []),
-  ];
+  // Biznesi im / Rezervimet / Statistikat are reachable directly from the top nav now,
+  // so this bar only needs to surface the admin-only views.
+  const tabs = isAdmin ? [
+    { key: "admin", label: "Verifikime" },
+    { key: "whatsapp", label: "WhatsApp" },
+    { key: "admin-analytics", label: "Statistikat e platformes" },
+    { key: "admin-logins", label: "Logs hyrjesh" },
+  ] : [];
 
   return (
     <div>
-      <div className="flex mb-6 gap-2">
-        {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)} className={`text-xs font-semibold px-3 py-1.5 rounded-full ${tab === t.key ? "bg-emerald-700 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}>
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {tabs.length > 0 && (
+        <div className="flex mb-6 gap-2">
+          {tabs.map((t) => (
+            <button key={t.key} onClick={() => setTab(t.key)} className={`text-xs font-semibold px-3 py-1.5 rounded-full ${tab === t.key ? "bg-emerald-700 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
       {tab === "admin" && <AdminPending token={token} showError={showError} showOk={showOk} />}
       {tab === "whatsapp" && <AdminWhatsapp token={token} showError={showError} showOk={showOk} />}
       {tab === "admin-analytics" && <AdminAnalytics token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
