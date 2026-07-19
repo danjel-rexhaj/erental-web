@@ -459,7 +459,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <button onClick={() => { setView("browse"); setMenuOpen(false); }} className="flex items-center">
-            <Logo size={34} />
+            <Logo size={44} />
           </button>
           <nav className="hidden md:flex items-center gap-1">
             {links.map((l, i) => (
@@ -628,7 +628,7 @@ function Footer({ setView }) {
   return (
     <div className="bg-slate-900">
       <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <Logo size={30} textClassName="text-white" />
+        <Logo size={38} variant="dark" />
         <div className="flex items-center gap-4">
           <button onClick={() => setView("privacy")} className="text-xs text-slate-400 hover:text-white">Privatesia</button>{" "}
           <button onClick={() => setView("terms")} className="text-xs text-slate-400 hover:text-white">Kushtet</button>{" "}
