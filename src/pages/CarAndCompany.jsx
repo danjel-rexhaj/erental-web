@@ -25,7 +25,16 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   }, [car.carId]);
 
   const fmt = (d) => new Date(d).toLocaleDateString("sq-AL", { day: "numeric", month: "long", year: "numeric" });
-  const mapsQuery = encodeURIComponent(`${car.company?.adresa ? car.company.adresa + ", " : ""}${car.company?.qyteti || ""}, Shqiperi`);
+  const lat = car.company?.latitude;
+  const lng = car.company?.longitude;
+  const hasCoords = lat != null && lng != null;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const directionsUrl = hasCoords
+    ? (isIOS ? `https://maps.apple.com/?daddr=${lat},${lng}` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`)
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${car.company?.adresa ? car.company.adresa + ", " : ""}${car.company?.qyteti || ""}, Shqiperi`)}`;
+  const mapEmbedUrl = hasCoords
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01}%2C${lat - 0.01}%2C${lng + 0.01}%2C${lat + 0.01}&layer=mapnik&marker=${lat}%2C${lng}`
+    : null;
 
   function stepPhoto(dir) {
     if (photos.length < 2) return;
@@ -164,14 +173,26 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
       {car.company?.qyteti && (
         <div className="mt-8 max-w-3xl border-t border-slate-100 dark:border-slate-800 pt-8">
           <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
+
+          {mapEmbedUrl && (
+            <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
+              <iframe
+                title="Vendndodhja e biznesit"
+                src={mapEmbedUrl}
+                className="w-full h-64 border-0"
+                loading="lazy"
+              />
+            </div>
+          )}
+
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`}
+            href={directionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-teal-700 dark:text-teal-400 underline mt-2"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-4 py-2.5"
           >
-            Hap ne Google Maps
+            <MapPin size={15} /> Merr udhezime
           </a>
         </div>
       )}

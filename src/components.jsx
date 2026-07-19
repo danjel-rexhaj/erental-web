@@ -1,20 +1,25 @@
-import { Car as CarIcon } from "lucide-react";
+import { Car as CarIcon, CheckCircle2, AlertCircle } from "lucide-react";
 
 export const inputClass = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-emerald-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
 
 export function Notice({ notice, onClose }) {
   if (!notice) return null;
   const isError = notice.type === "error";
+  const Icon = isError ? AlertCircle : CheckCircle2;
   return (
-    <div
-      className={`mx-4 mt-3 rounded-xl px-3 py-2 text-sm flex items-start justify-between gap-2 border ${
-        isError
-          ? "bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-800 text-red-700 dark:text-red-300"
-          : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-      }`}
-    >
-      <span>{notice.text}</span>
-      <button onClick={onClose} className="text-xs opacity-60 hover:opacity-100">✕</button>
+    <div className="fixed top-4 inset-x-4 sm:inset-x-auto sm:right-4 sm:left-auto z-[100] sm:max-w-sm pointer-events-none">
+      <div
+        key={notice.text + notice.type}
+        className={`animate-toast-in pointer-events-auto rounded-2xl px-4 py-3 text-sm font-medium flex items-start gap-2.5 border shadow-lg backdrop-blur-sm ${
+          isError
+            ? "bg-red-50/95 dark:bg-red-950/90 border-red-300 dark:border-red-800 text-red-700 dark:text-red-300"
+            : "bg-emerald-50/95 dark:bg-emerald-950/90 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+        }`}
+      >
+        <Icon size={18} className="shrink-0 mt-0.5" />
+        <span className="flex-1">{notice.text}</span>
+        <button onClick={onClose} className="text-xs opacity-50 hover:opacity-100 shrink-0 mt-0.5">✕</button>
+      </div>
     </div>
   );
 }

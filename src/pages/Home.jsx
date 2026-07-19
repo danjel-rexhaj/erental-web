@@ -3,6 +3,13 @@ import { ShieldCheck, Calendar, ArrowRight } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton } from "../components";
 
+const today = () => new Date().toISOString().split("T")[0];
+const dayAfter = (dateStr) => {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split("T")[0];
+};
+
 export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, setDataPerfundimit, onSearch, loading }) {
   const [companies, setCompanies] = useState([]);
 
@@ -13,6 +20,16 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
   }, []);
 
   const loop = companies.length > 0 ? [...companies, ...companies] : [];
+
+  function changeFrom(value) {
+    setDataFillimit(value);
+    if (dataPerfundimit && value >= dataPerfundimit) setDataPerfundimit(dayAfter(value));
+  }
+
+  function changeTo(value) {
+    if (dataFillimit && value <= dataFillimit) return;
+    setDataPerfundimit(value);
+  }
 
   return (
     <div>
@@ -41,9 +58,10 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
                   <Calendar size={15} className="text-emerald-600 shrink-0 pointer-events-none" />
                   <input
                     type="date"
+                    min={today()}
                     className="flex-1 min-w-0 w-full py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none bg-transparent cursor-pointer font-semibold"
                     value={dataFillimit}
-                    onChange={(e) => setDataFillimit(e.target.value)}
+                    onChange={(e) => changeFrom(e.target.value)}
                   />
                 </div>
               </Field>
@@ -55,9 +73,10 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
                   <Calendar size={15} className="text-emerald-600 shrink-0 pointer-events-none" />
                   <input
                     type="date"
+                    min={dataFillimit ? dayAfter(dataFillimit) : today()}
                     className="flex-1 min-w-0 w-full py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none bg-transparent cursor-pointer font-semibold"
                     value={dataPerfundimit}
-                    onChange={(e) => setDataPerfundimit(e.target.value)}
+                    onChange={(e) => changeTo(e.target.value)}
                   />
                 </div>
               </Field>
