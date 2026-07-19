@@ -1,8 +1,15 @@
 import { useState } from "react";
-import { ChevronLeft, Search, Building2, ShieldCheck, Fuel, Gauge, Users as UsersIcon, Car as CarIcon, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, Search, Building2, ShieldCheck, Fuel, Gauge, Users as UsersIcon, Car as CarIcon, SlidersHorizontal, Clock } from "lucide-react";
 import { CarPhoto } from "../components";
 
 const selectClass = "text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition";
+
+function freeInLabel(lirohetMe, dataFillimit) {
+  const days = Math.round((new Date(lirohetMe) - new Date(dataFillimit)) / 86400000);
+  if (days <= 0) return "Lirohet sot";
+  if (days === 1) return "Lirohet neser";
+  return `Lirohet pas ${days} ditesh`;
+}
 
 export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany }) {
   const [filters, setFilters] = useState({ search: "", marka: "", karburanti: "", kategoria: "", sort: "" });
@@ -82,7 +89,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
           )}
         </div>
 
-        <p className="text-xs text-slate-400 mt-3">{visibleCars.length} makina · {companyGroups.length} biznese</p>
+        <p className="text-xs text-slate-400 mt-3">{visibleCars.filter((c) => c.eshteELire !== false).length} makina te lira · {companyGroups.length} biznese</p>
       </div>
 
       {visibleCars.length === 0 && (
@@ -93,17 +100,24 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visibleCars.map((car) => (
+        {visibleCars.map((car) => {
+          const nearMiss = car.eshteELire === false;
+          return (
           <button
             key={car.carId}
             onClick={() => onSelectCar(car)}
-            className="text-left rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-md transition bg-white dark:bg-slate-800"
+            className={`text-left rounded-2xl border overflow-hidden hover:shadow-md transition bg-white dark:bg-slate-800 ${nearMiss ? "border-amber-200 dark:border-amber-800/60" : "border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500"}`}
           >
-            <div className="relative">
+            <div className={`relative ${nearMiss ? "opacity-70 grayscale-[30%]" : ""}`}>
               <CarPhoto car={car} />
               <span className="absolute top-2 left-2 text-[10px] font-semibold uppercase tracking-wide bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg backdrop-blur-sm">
                 {car.kategoria}
               </span>
+              {nearMiss && (
+                <span className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-semibold bg-amber-500 text-white px-2 py-1 rounded-lg">
+                  <Clock size={11} /> {freeInLabel(car.lirohetMe, dataFillimit)}
+                </span>
+              )}
             </div>
             <div className="p-3">
               <div className="flex items-start justify-between">
@@ -124,7 +138,8 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
               </div>
             </div>
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

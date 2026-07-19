@@ -9,6 +9,10 @@ export function decodeJwt(token) {
   }
 }
 
+export function osmEmbedUrl(lat, lng, delta = 0.01) {
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - delta}%2C${lat - delta}%2C${lng + delta}%2C${lat + delta}&layer=mapnik&marker=${lat}%2C${lng}`;
+}
+
 export function toWhatsappNumber(phone) {
   const digits = (phone || "").replace(/\D/g, "");
   if (!digits) return "";

@@ -1,4 +1,6 @@
-import { Car as CarIcon, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair } from "lucide-react";
+import { osmEmbedUrl } from "./api";
 
 export const inputClass = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-emerald-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
 
@@ -59,6 +61,55 @@ export function StatusPill({ status }) {
   };
   const s = map[status] || { cls: "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300", label: status };
   return <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>;
+}
+
+export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) {
+  const [busy, setBusy] = useState(null);
+
+  async function searchAddress() {
+    if (!adresa && !qyteti) { showError(new Error("Shkruaj adresen ose qytetin fillimisht.")); return; }
+    setBusy("search");
+    try {
+      const q = encodeURIComponent(`${adresa ? adresa + ", " : ""}${qyteti}, Shqiperi`);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`);
+      const data = await res.json();
+      if (!data.length) throw new Error("Nuk u gjet adresa. Provo ta shkruash me saktesi, ose perdor GPS.");
+      onChange({ latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) });
+    } catch (e) { showError(e); } finally { setBusy(null); }
+  }
+
+  function useGps() {
+    if (!navigator.geolocation) { showError(new Error("Shfletuesi yt nuk mbeshtet vendndodhjen.")); return; }
+    setBusy("gps");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { onChange({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }); setBusy(null); },
+      () => { showError(new Error("Nuk u lejua akses ne vendndodhje.")); setBusy(null); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  const btnClass = "flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold rounded-xl px-3 py-2.5 border transition border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50";
+
+  return (
+    <div>
+      <div className="flex gap-2">
+        <button type="button" onClick={searchAddress} disabled={busy !== null} className={btnClass}>
+          <Search size={13} /> {busy === "search" ? "Duke kerkuar..." : "Gjej nga adresa"}
+        </button>
+        <button type="button" onClick={useGps} disabled={busy !== null} className={btnClass}>
+          <Crosshair size={13} /> {busy === "gps" ? "Duke marre..." : "Perdor GPS"}
+        </button>
+      </div>
+      {coords && (
+        <div className="mt-2">
+          <div className="rounded-xl overflow-hidden border border-teal-200 dark:border-teal-800">
+            <iframe title="Pamje paraprake" src={osmEmbedUrl(coords.latitude, coords.longitude)} className="w-full h-36 border-0" loading="lazy" />
+          </div>
+          <p className="flex items-center gap-1 text-[11px] text-teal-700 dark:text-teal-400 font-medium mt-1"><MapPin size={11} /> Vendndodhja u vendos</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function Spec({ icon: Icon, label, value }) {

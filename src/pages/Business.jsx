@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin } from "lucide-react";
 import { apiFetch, toWhatsappNumber } from "../api";
-import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill } from "../components";
+import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker } from "../components";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
@@ -255,18 +255,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
   const [file, setFile] = useState(null);
   const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "" });
   const [coords, setCoords] = useState(null);
-  const [locating, setLocating] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  function locate() {
-    if (!navigator.geolocation) { showError(new Error("Shfletuesi yt nuk mbeshtet vendndodhjen.")); return; }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => { setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }); setLocating(false); },
-      () => { showError(new Error("Nuk u lejua akses ne vendndodhje.")); setLocating(false); },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }
 
   async function submit(e) {
     e.preventDefault();
@@ -316,9 +305,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
           <Field label="Adresa"><input className={inputClass} value={form.adresa} onChange={set("adresa")} placeholder="Rruga..." /></Field>
           <Field label="Qyteti"><input className={inputClass} value={form.qyteti} onChange={set("qyteti")} placeholder="Tirane" /></Field>
           <Field label="Vendndodhja e sakte (per hartë tek klientët)">
-            <button type="button" onClick={locate} disabled={locating} className={`flex items-center gap-1.5 text-xs font-semibold rounded-xl px-3 py-2.5 w-full justify-center border transition ${coords ? "border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-              <MapPin size={13} /> {locating ? "Duke marre vendndodhjen..." : coords ? "Vendndodhja u mor ✓" : "Merr vendndodhjen time"}
-            </button>
+            <LocationPicker adresa={form.adresa} qyteti={form.qyteti} coords={coords} onChange={setCoords} showError={showError} />
           </Field>
           <Field label="NIPT"><input required className={inputClass} value={form.nipt} onChange={set("nipt")} placeholder="L12345678A" /></Field>
           <Field label="Certifikata e NIPT-it (foto/PDF)">
@@ -333,25 +320,20 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
 
 function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
   const [showAddCar, setShowAddCar] = useState(false);
-  const [locating, setLocating] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(false);
+  const [coords, setCoords] = useState(null);
+  const [savingLocation, setSavingLocation] = useState(false);
 
-  function locate() {
-    if (!navigator.geolocation) { showError(new Error("Shfletuesi yt nuk mbeshtet vendndodhjen.")); return; }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          await apiFetch("/Companies/my-company/location", token, {
-            method: "PUT",
-            body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-          });
-          showOk("Vendndodhja u ruajt.");
-          reload();
-        } catch (e) { showError(e); } finally { setLocating(false); }
-      },
-      () => { showError(new Error("Nuk u lejua akses ne vendndodhje.")); setLocating(false); },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+  async function saveLocation() {
+    if (!coords) return;
+    setSavingLocation(true);
+    try {
+      await apiFetch("/Companies/my-company/location", token, { method: "PUT", body: JSON.stringify(coords) });
+      showOk("Vendndodhja u ruajt.");
+      setEditingLocation(false);
+      setCoords(null);
+      reload();
+    } catch (e) { showError(e); } finally { setSavingLocation(false); }
   }
 
   return (
@@ -366,9 +348,22 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
           )}
         </div>
         <p className="text-[11px] text-slate-400 mt-2">Modeli i faturimit: {company.billingModel === "commission" ? `Komision ${company.commissionRate}%` : "Abonim mujor"}</p>
-        <button onClick={locate} disabled={locating} className={`flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 mt-2.5 w-fit border transition ${company.latitude != null ? "border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-          <MapPin size={11} /> {locating ? "Duke ruajtur..." : company.latitude != null ? "Vendndodhja e saktë e vendosur" : "Vendos vendndodhjen e sakte per hartë"}
-        </button>
+
+        {editingLocation ? (
+          <div className="mt-3">
+            <LocationPicker adresa={company.adresa} qyteti={company.qyteti} coords={coords} onChange={setCoords} showError={showError} />
+            <div className="flex gap-2 mt-2">
+              <PrimaryButton type="button" onClick={saveLocation} disabled={!coords || savingLocation} className="text-xs py-2">
+                {savingLocation ? "Duke ruajtur..." : "Ruaj vendndodhjen"}
+              </PrimaryButton>
+              <GhostButton type="button" onClick={() => { setEditingLocation(false); setCoords(null); }} className="text-xs py-2">Anulo</GhostButton>
+            </div>
+          </div>
+        ) : (
+          <button onClick={() => setEditingLocation(true)} className={`flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 mt-2.5 w-fit border transition ${company.latitude != null ? "border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+            <MapPin size={11} /> {company.latitude != null ? "Vendndodhja e saktë e vendosur — ndrysho" : "Vendos vendndodhjen e sakte per hartë"}
+          </button>
+        )}
       </div>
 
       <div className="flex items-center justify-between mb-3">

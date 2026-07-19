@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check } from "lucide-react";
-import { apiFetch } from "../api";
+import { apiFetch, osmEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
 
@@ -32,9 +32,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const directionsUrl = hasCoords
     ? (isIOS ? `https://maps.apple.com/?daddr=${lat},${lng}` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`)
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${car.company?.adresa ? car.company.adresa + ", " : ""}${car.company?.qyteti || ""}, Shqiperi`)}`;
-  const mapEmbedUrl = hasCoords
-    ? `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01}%2C${lat - 0.01}%2C${lng + 0.01}%2C${lat + 0.01}&layer=mapnik&marker=${lat}%2C${lng}`
-    : null;
+  const mapEmbedUrl = hasCoords ? osmEmbedUrl(lat, lng) : null;
 
   function stepPhoto(dir) {
     if (photos.length < 2) return;

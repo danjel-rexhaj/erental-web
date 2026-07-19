@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, Clock, Star, Phone, MessageCircle, Mail } from "lucide-react";
+import { Calendar, Clock, Star, Phone, MessageCircle, Mail, CheckCircle2 } from "lucide-react";
 import { apiFetch, toWhatsappNumber } from "../api";
 import { GhostButton, PrimaryButton, StatusPill, inputClass } from "../components";
 
@@ -61,6 +61,12 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
           {b.statusi === "cancelled" && b.arsyejaRefuzimit && (
             <p className="text-xs text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 rounded-lg px-2 py-1.5 mt-2">
               <span className="font-semibold">Arsyeja e refuzimit:</span> {b.arsyejaRefuzimit}
+            </p>
+          )}
+
+          {b.statusi === "confirmed" && (
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
+              <CheckCircle2 size={12} /> U miratua nga {b.car?.company?.emri || "biznesi"}
             </p>
           )}
 
