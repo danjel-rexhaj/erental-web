@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, CheckCircle2, Download, Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, CheckCircle2, Download, Lock, Loader2 } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto, DateRangeCalendar } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
@@ -290,7 +290,12 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
           <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-2">
             <Lock size={11} /> Pagese e sigurte, e procesuar direkt nga PayPal
           </p>
-          <div ref={paypalRef} className={loading ? "opacity-60 pointer-events-none min-h-[45px]" : "min-h-[45px]"} />
+          {loading && (
+            <div className="flex items-center justify-center gap-2 py-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+              <Loader2 size={16} className="animate-spin" /> Duke procesuar pagesen...
+            </div>
+          )}
+          <div ref={paypalRef} className={loading ? "hidden" : "min-h-[45px]"} />
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
         </div>
       ) : (
