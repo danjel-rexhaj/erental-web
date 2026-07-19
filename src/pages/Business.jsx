@@ -564,7 +564,6 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
           ))}
         </div>
       </Field>
-      <Field label="Pershkrimi"><textarea rows={3} className={inputClass} value={form.pershkrimi} onChange={set("pershkrimi")} placeholder="Detaje shtese per makinen..." /></Field>
       <PrimaryButton type="submit" disabled={loading} className="mt-2">
         {loading ? "Duke ruajtur..." : isEdit ? "Ruaj ndryshimet" : "Ruaj makinen"}
       </PrimaryButton>

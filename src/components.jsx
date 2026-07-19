@@ -56,6 +56,124 @@ export function AvailabilityCalendar({ ranges = [] }) {
   );
 }
 
+function isoDate(year, month, day) {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+// Interactive booking calendar: red = booked, green = the currently selected range.
+// Click a day to start a range, click a later free day to complete it; clicking a booked
+// day is ignored, and picking past a booked gap simply restarts the selection at that day.
+export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
+  const [monthOffset, setMonthOffset] = useState(0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const startWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  function isBooked(day) {
+    const d = new Date(year, month, day);
+    return ranges.some((r) => {
+      const s = new Date(r.dataFillimit);
+      const e = new Date(r.dataPerfundimit);
+      return d >= new Date(s.getFullYear(), s.getMonth(), s.getDate()) && d < new Date(e.getFullYear(), e.getMonth(), e.getDate());
+    });
+  }
+
+  function isPast(day) {
+    return new Date(year, month, day) < today;
+  }
+
+  function isSelected(day) {
+    if (!selFrom) return false;
+    const d = isoDate(year, month, day);
+    if (!selTo) return d === selFrom;
+    return d >= selFrom && d <= selTo;
+  }
+
+  function hasBookedBetween(fromDate, toDateVal) {
+    const cur = new Date(fromDate);
+    while (cur <= toDateVal) {
+      if (ranges.some((r) => {
+        const s = new Date(r.dataFillimit);
+        const e = new Date(r.dataPerfundimit);
+        return cur >= new Date(s.getFullYear(), s.getMonth(), s.getDate()) && cur < new Date(e.getFullYear(), e.getMonth(), e.getDate());
+      })) return true;
+      cur.setDate(cur.getDate() + 1);
+    }
+    return false;
+  }
+
+  function clickDay(day) {
+    if (isPast(day) || isBooked(day)) return;
+    const clicked = new Date(year, month, day);
+    const clickedIso = isoDate(year, month, day);
+
+    if (!selFrom || selTo) {
+      onSelect(clickedIso, null);
+      return;
+    }
+    const start = new Date(selFrom);
+    if (clicked <= start || hasBookedBetween(start, clicked)) {
+      onSelect(clickedIso, null);
+      return;
+    }
+    onSelect(selFrom, clickedIso);
+  }
+
+  const cells = Array(startWeekday).fill(null).concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
+
+  return (
+    <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3">
+      <div className="flex items-center justify-between mb-2">
+        <button type="button" onClick={() => setMonthOffset((m) => m - 1)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><ChevronLeft size={14} /></button>
+        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">{MUAJT_KAL[month]} {year}</p>
+        <button type="button" onClick={() => setMonthOffset((m) => m + 1)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><ChevronRight size={14} /></button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {DITET_KAL.map((d, i) => <span key={i} className="text-[10px] text-slate-400">{d}</span>)}
+        {cells.map((day, i) => {
+          if (day == null) return <span key={i} />;
+          const booked = isBooked(day);
+          const past = isPast(day);
+          const selected = isSelected(day);
+          return (
+            <button
+              type="button"
+              key={i}
+              onClick={() => clickDay(day)}
+              disabled={booked || past}
+              className={`text-[11px] h-7 flex items-center justify-center rounded-lg transition ${
+                selected
+                  ? "bg-emerald-500 text-white font-semibold"
+                  : booked
+                    ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 font-semibold cursor-not-allowed"
+                    : past
+                      ? "text-slate-300 dark:text-slate-700 cursor-not-allowed"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex items-center gap-3 mt-2">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800" />
+          <span className="text-[10px] text-slate-400">E zene</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded bg-emerald-500" />
+          <span className="text-[10px] text-slate-400">Zgjedhur</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const inputClass = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-emerald-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
 
 export function Notice({ notice, onClose }) {

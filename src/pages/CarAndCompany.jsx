@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
-import { PrimaryButton, Spec, CarPhoto, AvailabilityCalendar } from "../components";
+import { PrimaryButton, Spec, CarPhoto, DateRangeCalendar } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
 
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, showError, showOk, isBusinessOwner }) {
   const [bookedRanges, setBookedRanges] = useState([]);
-  const days = Math.max(1, Math.round((new Date(dataPerfundimit) - new Date(dataFillimit)) / 86400000));
+  const [selFrom, setSelFrom] = useState(dataFillimit);
+  const [selTo, setSelTo] = useState(dataPerfundimit);
+  const activeFrom = selTo ? selFrom : dataFillimit;
+  const activeTo = selTo ? selTo : dataPerfundimit;
+  const days = Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000));
   const total = (days * car.cmimiDites).toFixed(2);
 
   const photos = (car.carPhotos || []).filter(Boolean);
@@ -86,6 +90,33 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               ))}
             </div>
           )}
+
+          {car.company?.qyteti && (
+            <div className="mt-6 border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
+
+              {mapEmbedUrl && (
+                <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
+                  <iframe
+                    title="Vendndodhja e biznesit"
+                    src={mapEmbedUrl}
+                    className="w-full h-64 border-0"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-4 py-2.5"
+              >
+                <MapPin size={15} /> Merr udhezime
+              </a>
+            </div>
+          )}
         </div>
         <div className="lg:col-span-2">
           <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli} · {car.viti}</p>
@@ -123,17 +154,22 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mt-5">
             <div className="flex items-center justify-between">
               <p className="text-xs text-slate-500 dark:text-slate-400">{days} dite × {car.cmimiDites}€</p>
-              <span className="text-[11px] text-slate-400">{dataFillimit} → {dataPerfundimit}</span>
+              <span className="text-[11px] text-slate-400">{activeFrom} → {activeTo}</span>
             </div>
             <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
           </div>
 
-          {bookedRanges.length > 0 && (
-            <div className="mt-3">
-              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Data te zena per kete makine</p>
-              <AvailabilityCalendar ranges={bookedRanges} />
-            </div>
-          )}
+          <div className="mt-3">
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+              {selTo ? "Zgjidh datat direkt ne kalendar per t'i ndryshuar" : "Zgjidh daten e fillimit ne kalendar"}
+            </p>
+            <DateRangeCalendar
+              ranges={bookedRanges}
+              selFrom={selFrom}
+              selTo={selTo}
+              onSelect={(from, to) => { setSelFrom(from); setSelTo(to); }}
+            />
+          </div>
 
           {isBusinessOwner ? (
             <p className="mt-4 text-xs text-slate-400 text-center bg-slate-50 dark:bg-slate-800 rounded-xl py-2.5 px-3">
@@ -143,8 +179,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <div className="mt-4">
               <BookingBox
                 car={car}
-                dataFillimit={dataFillimit}
-                dataPerfundimit={dataPerfundimit}
+                dataFillimit={activeFrom}
+                dataPerfundimit={activeTo}
                 total={total}
                 token={token}
                 needAuth={needAuth}
@@ -156,33 +192,6 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           )}
         </div>
       </div>
-
-      {car.company?.qyteti && (
-        <div className="mt-8 max-w-3xl border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
-          <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
-
-          {mapEmbedUrl && (
-            <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
-              <iframe
-                title="Vendndodhja e biznesit"
-                src={mapEmbedUrl}
-                className="w-full h-64 border-0"
-                loading="lazy"
-              />
-            </div>
-          )}
-
-          <a
-            href={directionsUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-4 py-2.5"
-          >
-            <MapPin size={15} /> Merr udhezime
-          </a>
-        </div>
-      )}
     </div>
   );
 }
@@ -192,11 +201,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   const [method, setMethod] = useState(allowCash ? "cash" : "paypal_full");
   const [loading, setLoading] = useState(false);
   const [sdkError, setSdkError] = useState(null);
-  const [cardReady, setCardReady] = useState(false);
-  const numberRef = useRef(null);
-  const expiryRef = useRef(null);
-  const cvvRef = useRef(null);
-  const cardFieldsRef = useRef(null);
+  const paypalRef = useRef(null);
 
   async function bookCash() {
     if (!token) return needAuth();
@@ -237,37 +242,21 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       } catch (e) { showError(e); setLoading(false); }
     }
 
-    function renderFields() {
-      if (cancelled || !numberRef.current) return;
-      if (!window.paypal?.CardFields) {
-        setSdkError("Pagesa me karte nuk eshte gati per kete llogari.");
-        return;
-      }
-
-      const cardFields = window.paypal.CardFields({
+    function renderButton() {
+      if (cancelled || !paypalRef.current) return;
+      if (!window.paypal) { setSdkError("Sistemi i pagesave nuk u ngarkua dot. Provo te rifreskosh faqen."); return; }
+      paypalRef.current.innerHTML = "";
+      window.paypal.Buttons({
+        fundingSource: window.paypal.FUNDING.CARD,
+        style: { height: 45, shape: "rect" },
         createOrder,
         onApprove,
-        onError: () => { showError(new Error("Pagesa me karte deshtoi.")); setLoading(false); },
-        style: { input: { "font-size": "14px", color: "#0f172a" } },
-      });
-
-      if (!cardFields.isEligible()) {
-        setSdkError("Pagesa me karte nuk eshte e disponueshme per kete llogari.");
-        return;
-      }
-
-      numberRef.current.innerHTML = "";
-      expiryRef.current.innerHTML = "";
-      cvvRef.current.innerHTML = "";
-      cardFields.NumberField({ placeholder: "Numri i kartes" }).render(numberRef.current);
-      cardFields.ExpiryField({ placeholder: "MM/YY" }).render(expiryRef.current);
-      cardFields.CVVField({ placeholder: "CVV" }).render(cvvRef.current);
-      cardFieldsRef.current = cardFields;
-      setCardReady(true);
+        onError: () => { showError(new Error("Pagesa deshtoi.")); setLoading(false); },
+      }).render(paypalRef.current);
     }
 
     if (window.paypal) {
-      renderFields();
+      renderButton();
       return () => { cancelled = true; };
     }
 
@@ -281,29 +270,18 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     if (!script) {
       script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=card-fields&currency=EUR`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=EUR`;
       document.body.appendChild(script);
     }
     const onScriptError = () => setSdkError("Sistemi i pagesave nuk u ngarkua dot. Kontrollo internetin dhe provo perseri.");
-    script.addEventListener("load", renderFields);
+    script.addEventListener("load", renderButton);
     script.addEventListener("error", onScriptError);
     return () => {
       cancelled = true;
-      script.removeEventListener("load", renderFields);
+      script.removeEventListener("load", renderButton);
       script.removeEventListener("error", onScriptError);
     };
   }, [method, token]);
-
-  async function submitCard() {
-    if (!cardFieldsRef.current) return;
-    setLoading(true);
-    try {
-      await cardFieldsRef.current.submit();
-    } catch {
-      showError(new Error("Kontrollo te dhenat e kartes dhe provo perseri."));
-      setLoading(false);
-    }
-  }
 
   return (
     <div>
@@ -315,10 +293,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
             </label>
           )}
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); setCardReady(false); }} /> Depozite ({car.cmimiDites}€) me karte, pjesa tjeter cash
+            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> Depozite ({car.cmimiDites}€) me karte, pjesa tjeter cash
           </label>
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); setCardReady(false); }} /> Pagese e plote ({total}€) me karte
+            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> Pagese e plote ({total}€) me karte
           </label>
         </div>
       )}
@@ -326,15 +304,8 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       {method === "cash" ? (
         <PrimaryButton onClick={bookCash} disabled={loading}>{loading ? "Duke rezervuar..." : token ? "Rezervo" : "Kyçu per te rezervuar"}</PrimaryButton>
       ) : token ? (
-        <div className={loading ? "opacity-60 pointer-events-none" : ""}>
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 min-h-[42px] mb-2" ref={numberRef} />
-          <div className="flex gap-2 mb-2">
-            <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 min-h-[42px]" ref={expiryRef} />
-            <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 min-h-[42px]" ref={cvvRef} />
-          </div>
-          <PrimaryButton onClick={submitCard} disabled={loading || !cardReady}>
-            {loading ? "Duke procesuar..." : `Paguaj ${method === "paypal_deposit" ? car.cmimiDites : total}€`}
-          </PrimaryButton>
+        <div>
+          <div ref={paypalRef} className={loading ? "opacity-60 pointer-events-none min-h-[45px]" : "min-h-[45px]"} />
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
         </div>
       ) : (
