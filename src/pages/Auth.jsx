@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
-import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight } from "lucide-react";
+import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass } from "../components";
+
+const MUAJT = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
+function memberSince(raw) {
+  if (!raw) return null;
+  const d = new Date(raw);
+  if (isNaN(d)) return null;
+  return `${MUAJT[d.getMonth()]} ${d.getFullYear()}`;
+}
 
 function looksAlbanian(phone) {
   const digits = (phone || "").replace(/[\s-]/g, "");
@@ -333,7 +341,11 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
           </div>
           <div className="mt-3">
             <p className="font-bold text-lg text-slate-900 dark:text-slate-100">{user?.emri} {user?.mbiemri}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{user?.role === "business" ? "Biznes" : "Klient"}</p>
+            <div className="flex items-center gap-3 flex-wrap text-xs text-slate-400 dark:text-slate-500 mt-2">
+              <span>{user?.email}</span>
+              {memberSince(user?.dataRegjistrimit) && <span>Anetar qe nga {memberSince(user.dataRegjistrimit)}</span>}
+            </div>
           </div>
         </div>
       </div>
@@ -431,40 +443,46 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
         </div>
       </div>
 
-      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 bg-white dark:bg-slate-800">
-        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-3">Veprime</p>
-        <div className="flex flex-col gap-3">
-          {editing ? (
-            <EditProfileForm
-              user={user}
-              token={token}
-              showError={showError}
-              onDone={(patch) => { onUpdated && onUpdated(patch); setEditing(false); showOk("Te dhenat u ndryshuan."); }}
-              onCancel={() => setEditing(false)}
-            />
-          ) : (
-            <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 w-fit">
-              <Pencil size={14} /> Ndrysho te dhenat
-            </button>
-          )}
+      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden">
+        {editing ? (
+          <div className="p-4"><EditProfileForm
+            user={user}
+            token={token}
+            showError={showError}
+            onDone={(patch) => { onUpdated && onUpdated(patch); setEditing(false); showOk("Te dhenat u ndryshuan."); }}
+            onCancel={() => setEditing(false)}
+          /></div>
+        ) : (
+          <SettingsRow icon={Pencil} label="Ndrysho te dhenat" onClick={() => setEditing(true)} />
+        )}
 
-          {changingPassword ? (
-            <ChangePasswordForm
-              token={token}
-              showError={showError}
-              onDone={() => { setChangingPassword(false); showOk("Fjalekalimi u ndryshua."); }}
-              onCancel={() => setChangingPassword(false)}
-            />
-          ) : (
-            <button onClick={() => setChangingPassword(true)} className="flex items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 w-fit">
-              <KeyRound size={14} /> Ndrysho fjalekalimin
-            </button>
-          )}
+        {changingPassword ? (
+          <div className="p-4"><ChangePasswordForm
+            token={token}
+            showError={showError}
+            onDone={() => { setChangingPassword(false); showOk("Fjalekalimi u ndryshua."); }}
+            onCancel={() => setChangingPassword(false)}
+          /></div>
+        ) : (
+          <SettingsRow icon={KeyRound} label="Ndrysho fjalekalimin" onClick={() => setChangingPassword(true)} />
+        )}
 
-          <GhostButton onClick={onLogout} className="max-w-[200px] mt-1">Dil nga llogaria</GhostButton>
-        </div>
+        <SettingsRow icon={LogOut} label="Dil nga llogaria" onClick={onLogout} danger />
       </div>
     </div>
+  );
+}
+
+function SettingsRow({ icon: Icon, label, onClick, danger }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-slate-50 dark:hover:bg-slate-900/40 transition ${danger ? "text-red-600 dark:text-red-400" : "text-slate-700 dark:text-slate-200"}`}
+    >
+      <Icon size={18} className={danger ? "text-red-500 dark:text-red-400" : "text-slate-400 dark:text-slate-500"} />
+      <span className="flex-1 text-sm font-medium">{label}</span>
+      {!danger && <ChevronRight size={16} className="text-slate-300 dark:text-slate-600" />}
+    </button>
   );
 }
 
