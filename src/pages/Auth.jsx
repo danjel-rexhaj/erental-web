@@ -316,37 +316,30 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
 
   return (
     <div className="max-w-lg mx-auto py-6 sm:py-8 flex flex-col gap-5">
-      <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-        <div className="h-20 sm:h-24 bg-gradient-to-r from-slate-800 to-slate-700 dark:from-slate-900 dark:to-slate-800" />
-        <div className="px-5 pb-5">
-          <div className="flex items-end justify-between -mt-10">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full ring-4 ring-white dark:ring-slate-800 bg-emerald-700 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
-                {user?.fotoProfili ? (
-                  <img src={user.fotoProfili} alt="Foto profili" className="w-full h-full object-cover" />
-                ) : (
-                  user?.emri?.[0]?.toUpperCase() || "?"
-                )}
-              </div>
-              <label className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center cursor-pointer ring-2 ring-white dark:ring-slate-800 hover:bg-slate-700 dark:hover:bg-white transition">
-                {uploadingPhoto ? <span className="text-[9px]">...</span> : <Camera size={13} />}
-                <input type="file" accept="image/*" className="hidden" onChange={uploadPhoto} disabled={uploadingPhoto} />
-              </label>
-            </div>
-            {user?.emailVerified && (
-              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full mb-1">
-                <ShieldCheck size={12} /> I verifikuar
-              </span>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-8 flex flex-col items-center text-center">
+        <div className="relative">
+          <div className="w-24 h-24 rounded-full bg-emerald-700 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+            {user?.fotoProfili ? (
+              <img src={user.fotoProfili} alt="Foto profili" className="w-full h-full object-cover" />
+            ) : (
+              user?.emri?.[0]?.toUpperCase() || "?"
             )}
           </div>
-          <div className="mt-3">
-            <p className="font-bold text-lg text-slate-900 dark:text-slate-100">{user?.emri} {user?.mbiemri}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{user?.role === "business" ? "Biznes" : "Klient"}</p>
-            <div className="flex items-center gap-3 flex-wrap text-xs text-slate-400 dark:text-slate-500 mt-2">
-              <span>{user?.email}</span>
-              {memberSince(user?.dataRegjistrimit) && <span>Anetar qe nga {memberSince(user.dataRegjistrimit)}</span>}
-            </div>
-          </div>
+          <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center cursor-pointer ring-4 ring-white dark:ring-slate-800 hover:bg-slate-700 dark:hover:bg-white transition">
+            {uploadingPhoto ? <span className="text-[9px]">...</span> : <Camera size={14} />}
+            <input type="file" accept="image/*" className="hidden" onChange={uploadPhoto} disabled={uploadingPhoto} />
+          </label>
+          {user?.emailVerified && (
+            <span className="absolute -bottom-0.5 -left-0.5 w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center ring-4 ring-white dark:ring-slate-800" title="I verifikuar">
+              <ShieldCheck size={14} className="text-white" />
+            </span>
+          )}
+        </div>
+        <p className="font-bold text-xl text-slate-900 dark:text-slate-100 mt-4">{user?.emri} {user?.mbiemri}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{user?.role === "business" ? "Biznes" : "Klient"}</p>
+        <div className="flex items-center justify-center gap-3 flex-wrap text-xs text-slate-400 dark:text-slate-500 mt-3">
+          <span>{user?.email}</span>
+          {memberSince(user?.dataRegjistrimit) && <span>Anetar qe nga {memberSince(user.dataRegjistrimit)}</span>}
         </div>
       </div>
 
