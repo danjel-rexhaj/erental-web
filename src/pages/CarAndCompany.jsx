@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, CheckCircle2, Download } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto, DateRangeCalendar } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
@@ -200,6 +200,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   const [method, setMethod] = useState("paypal_deposit");
   const [loading, setLoading] = useState(false);
   const [sdkError, setSdkError] = useState(null);
+  const [successInfo, setSuccessInfo] = useState(null);
   const paypalRef = useRef(null);
 
   useEffect(() => {
@@ -222,13 +223,12 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
           method: "POST",
           body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, method: paymentMethod, paypalOrderId: data.orderID }),
         });
-        await apiFetch("/Bookings", token, {
+        const booking = await apiFetch("/Bookings", token, {
           method: "POST",
           body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId }),
         });
-        showOk("Pagesa dhe rezervimi u kryen me sukses!");
-        onBooked();
-      } catch (e) { showError(e); setLoading(false); }
+        setSuccessInfo({ bookingId: booking.bookingId, amountPaid: cap.amountPaid, method });
+      } catch (e) { showError(e); } finally { setLoading(false); }
     }
 
     function renderButton() {
@@ -293,6 +293,70 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       ) : (
         <PrimaryButton onClick={needAuth}>Kyçu per te rezervuar</PrimaryButton>
       )}
+
+      {successInfo && (
+        <PaymentSuccessModal
+          car={car}
+          dataFillimit={dataFillimit}
+          dataPerfundimit={dataPerfundimit}
+          successInfo={successInfo}
+          onClose={() => { setSuccessInfo(null); showOk("Rezervimi u konfirmua."); onBooked(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, successInfo, onClose }) {
+  const confirmim = `ER-${String(successInfo.bookingId).padStart(6, "0")}`;
+
+  function downloadInvoice() {
+    const lines = [
+      "ERental — Fatura e pageses",
+      "",
+      `Numri i konfirmimit: ${confirmim}`,
+      `Makina: ${car.marka} ${car.modeli}`,
+      `Biznesi: ${car.company?.emri || ""}`,
+      `Marrja: ${dataFillimit}`,
+      `Dorezimi: ${dataPerfundimit}`,
+      `Menyra: ${successInfo.method === "paypal_full" ? "Pagese e plote" : "Depozite (1 dite)"}`,
+      `Shuma e paguar: ${successInfo.amountPaid}€`,
+      `Data e pageses: ${new Date().toLocaleDateString("sq-AL")}`,
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `fatura-${confirmim}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-3">
+          <CheckCircle2 size={28} className="text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <h3 className="text-lg font-bold text-center text-slate-900 dark:text-slate-100 mb-1">Pagesa u krye ✓</h3>
+        <p className="text-sm text-center text-slate-500 dark:text-slate-400 mb-4">Rezervimi yt per {car.marka} {car.modeli} u konfirmua.</p>
+
+        <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 mb-4 text-xs space-y-1.5">
+          <div className="flex justify-between"><span className="text-slate-400">Konfirmimi</span><span className="font-semibold text-slate-900 dark:text-slate-100">{confirmim}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Datat</span><span className="font-semibold text-slate-900 dark:text-slate-100">{dataFillimit} → {dataPerfundimit}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Shuma e paguar</span><span className="font-semibold text-emerald-700 dark:text-emerald-400">{successInfo.amountPaid}€</span></div>
+        </div>
+
+        <button
+          onClick={downloadInvoice}
+          className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 mb-2 hover:bg-slate-50 dark:hover:bg-slate-700"
+        >
+          <Download size={15} /> Shkarko faturen
+        </button>
+        <PrimaryButton onClick={onClose}>Kthehu</PrimaryButton>
+      </div>
     </div>
   );
 }
