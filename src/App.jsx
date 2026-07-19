@@ -198,6 +198,7 @@ export default function App() {
   function go(hashStr, hint) {
     window.history.pushState(null, "", "#" + hashStr.replace(/^#/, ""));
     applyRoute(hashStr, hint);
+    window.scrollTo(0, 0);
   }
 
   const applyRouteRef = useRef(applyRoute);
