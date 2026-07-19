@@ -267,7 +267,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 function RegisterCompanyForm({ token, onDone, showError, showOk }) {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "", allowCashPayment: true });
+  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "" });
   const [coords, setCoords] = useState(null);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -321,10 +321,6 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
           <Field label="Vendndodhja e sakte (per hartë tek klientët)">
             <LocationPicker adresa={form.adresa} qyteti={form.qyteti} coords={coords} onChange={setCoords} showError={showError} />
           </Field>
-          <label className="flex items-center gap-2 mb-3 text-xs text-slate-600 dark:text-slate-300">
-            <input type="checkbox" checked={form.allowCashPayment} onChange={(e) => setForm((f) => ({ ...f, allowCashPayment: e.target.checked }))} />
-            Prano pagesa cash (klientet mund te paguajne ne dorezim, jo vetem me karte)
-          </label>
           <Field label="NIPT"><input required className={inputClass} value={form.nipt} onChange={set("nipt")} placeholder="L12345678A" /></Field>
           <Field label="Certifikata e NIPT-it (foto/PDF)">
             <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className={inputClass} />
@@ -352,13 +348,6 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
       setCoords(null);
       reload();
     } catch (e) { showError(e); } finally { setSavingLocation(false); }
-  }
-
-  async function toggleCash() {
-    try {
-      await apiFetch("/Companies/my-company/cash-payment", token, { method: "PUT", body: JSON.stringify(!company.allowCashPayment) });
-      reload();
-    } catch (e) { showError(e); }
   }
 
   return (
@@ -389,11 +378,6 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
             <MapPin size={11} /> {company.latitude != null ? "Vendndodhja e saktë e vendosur — ndrysho" : "Vendos vendndodhjen e sakte per hartë"}
           </button>
         )}
-
-        <label className="flex items-center gap-2 mt-3 text-xs text-slate-600 dark:text-slate-300">
-          <input type="checkbox" checked={company.allowCashPayment !== false} onChange={toggleCash} />
-          Prano pagesa cash
-        </label>
       </div>
 
       <div className="flex items-center justify-between mb-3">

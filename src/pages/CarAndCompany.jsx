@@ -197,24 +197,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
 }
 
 function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth, showError, showOk, onBooked }) {
-  const allowCash = car.company?.allowCashPayment !== false;
-  const [method, setMethod] = useState(allowCash ? "cash" : "paypal_full");
+  const [method, setMethod] = useState("paypal_deposit");
   const [loading, setLoading] = useState(false);
   const [sdkError, setSdkError] = useState(null);
   const paypalRef = useRef(null);
 
-  async function bookCash() {
-    if (!token) return needAuth();
-    setLoading(true);
-    try {
-      await apiFetch("/Bookings", token, { method: "POST", body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, paymentMethod: "cash" }) });
-      showOk("Rezervimi u krijua. Shiko te 'Rezervimet' per ta konfirmuar.");
-      onBooked();
-    } catch (e) { showError(e); } finally { setLoading(false); }
-  }
-
   useEffect(() => {
-    if (method === "cash" || !token) return;
+    if (!token) return;
     let cancelled = false;
     const paymentMethod = method === "paypal_deposit" ? "deposit" : "full";
 
@@ -287,11 +276,6 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     <div>
       {token && (
         <div className="flex flex-col gap-1.5 mb-3">
-          {allowCash && (
-            <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-              <input type="radio" name="paymentMethod" checked={method === "cash"} onChange={() => setMethod("cash")} /> Cash ne dorezim
-            </label>
-          )}
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
             <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> Depozite ({car.cmimiDites}€) me karte, pjesa tjeter cash
           </label>
@@ -301,9 +285,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
         </div>
       )}
 
-      {method === "cash" ? (
-        <PrimaryButton onClick={bookCash} disabled={loading}>{loading ? "Duke rezervuar..." : token ? "Rezervo" : "Kyçu per te rezervuar"}</PrimaryButton>
-      ) : token ? (
+      {token ? (
         <div>
           <div ref={paypalRef} className={loading ? "opacity-60 pointer-events-none min-h-[45px]" : "min-h-[45px]"} />
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
