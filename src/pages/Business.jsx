@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard } from "lucide-react";
 import { apiFetch, toWhatsappNumber } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker } from "../components";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
@@ -72,6 +72,18 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
           : <CompanyDashboard token={token} company={company} cars={cars} reload={load} showError={showError} showOk={showOk} />
       )}
     </div>
+  );
+}
+
+function PaymentBadge({ b }) {
+  if (!b.paymentMethod || b.paymentMethod === "cash") return null;
+  return (
+    <p className="text-[11px] text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-0.5">
+      <CreditCard size={11} />
+      {b.paymentMethod === "paypal_full"
+        ? "Paguar plotesisht me PayPal"
+        : `Depozite ${b.payment?.shumaPaguarOnline ?? ""}€ e paguar me PayPal, pjesa tjeter cash`}
+    </p>
   );
 }
 
@@ -168,6 +180,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                   )}
                 </p>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
+                <PaymentBadge b={b} />
                 {rejectingId === b.bookingId ? (
                   <div className="mt-3">
                     <textarea
@@ -222,6 +235,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                   <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri}
                 </p>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
+                <PaymentBadge b={b} />
                 {b.arsyejaRefuzimit && (
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
                     <span className="font-semibold">Arsyeja:</span> {b.arsyejaRefuzimit}
@@ -253,7 +267,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 function RegisterCompanyForm({ token, onDone, showError, showOk }) {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "" });
+  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "", allowCashPayment: true });
   const [coords, setCoords] = useState(null);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -307,6 +321,10 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
           <Field label="Vendndodhja e sakte (per hartë tek klientët)">
             <LocationPicker adresa={form.adresa} qyteti={form.qyteti} coords={coords} onChange={setCoords} showError={showError} />
           </Field>
+          <label className="flex items-center gap-2 mb-3 text-xs text-slate-600 dark:text-slate-300">
+            <input type="checkbox" checked={form.allowCashPayment} onChange={(e) => setForm((f) => ({ ...f, allowCashPayment: e.target.checked }))} />
+            Prano pagesa cash (klientet mund te paguajne ne dorezim, jo vetem me PayPal)
+          </label>
           <Field label="NIPT"><input required className={inputClass} value={form.nipt} onChange={set("nipt")} placeholder="L12345678A" /></Field>
           <Field label="Certifikata e NIPT-it (foto/PDF)">
             <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className={inputClass} />
@@ -334,6 +352,13 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
       setCoords(null);
       reload();
     } catch (e) { showError(e); } finally { setSavingLocation(false); }
+  }
+
+  async function toggleCash() {
+    try {
+      await apiFetch("/Companies/my-company/cash-payment", token, { method: "PUT", body: JSON.stringify(!company.allowCashPayment) });
+      reload();
+    } catch (e) { showError(e); }
   }
 
   return (
@@ -364,6 +389,11 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
             <MapPin size={11} /> {company.latitude != null ? "Vendndodhja e saktë e vendosur — ndrysho" : "Vendos vendndodhjen e sakte per hartë"}
           </button>
         )}
+
+        <label className="flex items-center gap-2 mt-3 text-xs text-slate-600 dark:text-slate-300">
+          <input type="checkbox" checked={company.allowCashPayment !== false} onChange={toggleCash} />
+          Prano pagesa cash
+        </label>
       </div>
 
       <div className="flex items-center justify-between mb-3">

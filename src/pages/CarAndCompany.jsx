@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check } from "lucide-react";
 import { apiFetch, osmEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
 
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, showError, showOk, isBusinessOwner }) {
-  const [loading, setLoading] = useState(false);
   const [bookedRanges, setBookedRanges] = useState([]);
   const days = Math.max(1, Math.round((new Date(dataPerfundimit) - new Date(dataFillimit)) / 86400000));
   const total = (days * car.cmimiDites).toFixed(2);
@@ -38,16 +37,6 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
     if (photos.length < 2) return;
     const idx = photos.findIndex((p) => p.photoId === shown?.photoId);
     setActivePhoto(photos[(idx + dir + photos.length) % photos.length]);
-  }
-
-  async function book() {
-    if (!token) return needAuth();
-    setLoading(true);
-    try {
-      await apiFetch("/Bookings", token, { method: "POST", body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit }) });
-      showOk("Rezervimi u krijua. Shiko te 'Rezervimet' per ta konfirmuar.");
-      onBack();
-    } catch (e) { showError(e); } finally { setLoading(false); }
   }
 
   return (
@@ -156,7 +145,19 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               Llogarite e bizneseve nuk mund te bejne rezervime.
             </p>
           ) : (
-            <PrimaryButton onClick={book} disabled={loading} className="mt-4">{loading ? "Duke rezervuar..." : "Rezervo"}</PrimaryButton>
+            <div className="mt-4">
+              <BookingBox
+                car={car}
+                dataFillimit={dataFillimit}
+                dataPerfundimit={dataPerfundimit}
+                total={total}
+                token={token}
+                needAuth={needAuth}
+                showError={showError}
+                showOk={showOk}
+                onBooked={onBack}
+              />
+            </div>
           )}
         </div>
       </div>
@@ -193,6 +194,99 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <MapPin size={15} /> Merr udhezime
           </a>
         </div>
+      )}
+    </div>
+  );
+}
+
+function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth, showError, showOk, onBooked }) {
+  const allowCash = car.company?.allowCashPayment !== false;
+  const [method, setMethod] = useState(allowCash ? "cash" : "paypal_full");
+  const [loading, setLoading] = useState(false);
+  const paypalRef = useRef(null);
+
+  async function bookCash() {
+    if (!token) return needAuth();
+    setLoading(true);
+    try {
+      await apiFetch("/Bookings", token, { method: "POST", body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, paymentMethod: "cash" }) });
+      showOk("Rezervimi u krijua. Shiko te 'Rezervimet' per ta konfirmuar.");
+      onBooked();
+    } catch (e) { showError(e); } finally { setLoading(false); }
+  }
+
+  useEffect(() => {
+    if (method === "cash" || !token) return;
+    let cancelled = false;
+
+    function renderButtons() {
+      if (cancelled || !paypalRef.current || !window.paypal) return;
+      paypalRef.current.innerHTML = "";
+      window.paypal.Buttons({
+        style: { layout: "horizontal", height: 40 },
+        createOrder: (data, actions) => actions.order.create({
+          purchase_units: [{ amount: { value: (method === "paypal_deposit" ? car.cmimiDites : Number(total)).toFixed(2), currency_code: "EUR" } }],
+        }),
+        onApprove: async (data) => {
+          setLoading(true);
+          try {
+            const cap = await apiFetch("/Payments/paypal/capture", token, {
+              method: "POST",
+              body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, method: method === "paypal_deposit" ? "deposit" : "full", paypalOrderId: data.orderID }),
+            });
+            await apiFetch("/Bookings", token, {
+              method: "POST",
+              body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId }),
+            });
+            showOk("Pagesa dhe rezervimi u kryen me sukses!");
+            onBooked();
+          } catch (e) { showError(e); } finally { setLoading(false); }
+        },
+        onError: () => showError(new Error("Pagesa me PayPal deshtoi.")),
+      }).render(paypalRef.current);
+    }
+
+    if (window.paypal) {
+      renderButtons();
+      return () => { cancelled = true; };
+    }
+
+    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    let script = document.getElementById("paypal-sdk");
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "paypal-sdk";
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=EUR`;
+      document.body.appendChild(script);
+    }
+    script.addEventListener("load", renderButtons);
+    return () => { cancelled = true; script.removeEventListener("load", renderButtons); };
+  }, [method, token]);
+
+  return (
+    <div>
+      {token && (
+        <div className="flex flex-col gap-1.5 mb-3">
+          {allowCash && (
+            <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
+              <input type="radio" name="paymentMethod" checked={method === "cash"} onChange={() => setMethod("cash")} /> Cash ne dorezim
+            </label>
+          )}
+          <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
+            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => setMethod("paypal_deposit")} /> Depozite ({car.cmimiDites}€) me PayPal, pjesa tjeter cash
+          </label>
+          <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
+            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => setMethod("paypal_full")} /> Pagese e plote ({total}€) me PayPal
+          </label>
+        </div>
+      )}
+
+      {method === "cash" ? (
+        <PrimaryButton onClick={bookCash} disabled={loading}>{loading ? "Duke rezervuar..." : token ? "Rezervo" : "Kyçu per te rezervuar"}</PrimaryButton>
+      ) : token ? (
+        <div ref={paypalRef} className={loading ? "opacity-50 pointer-events-none" : ""} />
+      ) : (
+        <PrimaryButton onClick={needAuth}>Kyçu per te rezervuar</PrimaryButton>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, Clock, Star, Phone, MessageCircle, Mail, CheckCircle2 } from "lucide-react";
+import { Calendar, Clock, Star, Phone, MessageCircle, Mail, CheckCircle2, CreditCard } from "lucide-react";
 import { apiFetch, toWhatsappNumber } from "../api";
 import { GhostButton, PrimaryButton, StatusPill, inputClass } from "../components";
 
@@ -51,6 +51,15 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
             <StatusPill status={b.statusi} />
           </div>
           <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
+
+          {b.paymentMethod && b.paymentMethod !== "cash" && (
+            <p className="text-[11px] text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-0.5">
+              <CreditCard size={11} />
+              {b.paymentMethod === "paypal_full"
+                ? "Paguar plotesisht me PayPal"
+                : `Depozite ${b.payments?.[0]?.shumaPaguarOnline ?? ""}€ e paguar me PayPal, pjesa tjeter cash`}
+            </p>
+          )}
 
           {b.statusi === "pending" && (
             <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
