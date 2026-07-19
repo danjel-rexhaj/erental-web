@@ -409,6 +409,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
   const directionsUrl = hasCoords
     ? (isIOS ? `https://maps.apple.com/?daddr=${lat},${lng}` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`)
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.adresa ? company.adresa + ", " : ""}${company.qyteti || ""}, Shqiperi`)}`;
+  const mapEmbedUrl = hasCoords ? getMapEmbedUrl(lat, lng) : null;
 
   return (
     <div>
@@ -448,11 +449,25 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
             href={directionsUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-3 py-2 whitespace-nowrap"
+            className="lg:hidden inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-3 py-2 whitespace-nowrap"
           >
             <MapPin size={13} /> Merr udhezime
           </a>
         </div>
+
+        {mapEmbedUrl && (
+          <div className="hidden lg:block relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mt-3">
+            <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-56 border-0" loading="lazy" />
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-3 py-2 shadow-lg"
+            >
+              <MapPin size={13} /> Merr udhezime
+            </a>
+          </div>
+        )}
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
       </div>
 
