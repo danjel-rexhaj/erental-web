@@ -59,14 +59,14 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId }) {
       .finally(() => setLoading(false));
   }, [token, refreshKey, period, companyId]);
 
-  if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
+  if (loading && !data) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (!data) return null;
 
   const monthly = data.monthly.map((m) => ({ label: entryLabel(m), rezervime: m.rezervime, teArdhura: Math.round(m.teArdhura) }));
   const viewsChart = data.viewsPerCar.map((v) => ({ makina: v.makina, shikime: v.shikime }));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={`flex flex-col gap-6 transition-opacity ${loading ? "opacity-50" : ""}`}>
       <div className="flex justify-end">
         <PeriodSelect period={period} setPeriod={setPeriod} />
       </div>
@@ -144,14 +144,14 @@ export function AdminAnalytics({ token, showError, refreshKey }) {
     apiFetch("/Companies", null).then(setCompanies).catch(() => {});
   }, []);
 
-  if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
+  if (loading && !data) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (!data) return null;
 
   const activeMetric = METRICS.find((m) => m.key === metric) || METRICS[0];
   const series = (data.series?.[metric] || []).map((m) => ({ label: entryLabel(m), count: m.count }));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={`flex flex-col gap-6 transition-opacity ${loading ? "opacity-50" : ""}`}>
       <div className="flex justify-end">
         <PeriodSelect period={period} setPeriod={setPeriod} />
       </div>
