@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
@@ -125,9 +125,11 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           )}
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mt-5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2.5 py-1.5 w-fit">
+              <Calendar size={14} /> {activeFrom} → {activeTo}
+            </div>
+            <div className="flex items-center justify-between mt-2">
               <p className="text-xs text-slate-500 dark:text-slate-400">{days} dite × {car.cmimiDites}€</p>
-              <span className="text-[11px] text-slate-400">{activeFrom} → {activeTo}</span>
             </div>
             <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
           </div>

@@ -7,6 +7,7 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -25,6 +26,12 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
   async function cancelBooking(id) {
     setActingId(id);
     try { await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT" }); showOk("Rezervimi u anulua."); load(); }
+    catch (e) { showError(e); } finally { setActingId(null); }
+  }
+
+  async function removeBooking(id) {
+    setActingId(id);
+    try { await apiFetch(`/Bookings/${id}`, token, { method: "DELETE" }); showOk("Rezervimi u fshi."); setDeletingId(null); load(); }
     catch (e) { showError(e); } finally { setActingId(null); }
   }
 
@@ -122,6 +129,21 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
             )}
             {(b.statusi === "pending" || b.statusi === "confirmed") && (
               <p className="text-[10px] text-slate-400 dark:text-slate-500">Anulim me rimbursim te plote brenda 12 oresh nga rezervimi; pas kesaj varet nga biznesi.</p>
+            )}
+            {b.statusi === "cancelled" && (
+              deletingId === b.bookingId ? (
+                <div className="flex items-center gap-2">
+                  <button onClick={() => removeBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
+                    {actingId === b.bookingId ? "Duke fshire..." : "Po, fshije"}
+                  </button>
+                  <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">Anulo</button>
+                </div>
+              ) : (
+                <div>
+                  <button onClick={() => setDeletingId(b.bookingId)} className="text-xs text-slate-400 dark:text-slate-500 underline">Fshi</button>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Fshihet automatikisht brenda 24 oresh.</p>
+                </div>
+              )
             )}
           </div>
 
