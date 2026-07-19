@@ -93,7 +93,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
           </form>
         ) : (
           <form onSubmit={confirmReset}>
-            <Field label="Kodi"><input required className={`${inputClass} text-center text-lg tracking-[0.3em]`} value={forgotCode} onChange={(e) => setForgotCode(e.target.value)} maxLength={6} placeholder="123456" /></Field>
+            <Field label="Kodi"><input required autoComplete="one-time-code" inputMode="numeric" className={`${inputClass} text-center text-lg tracking-[0.3em]`} value={forgotCode} onChange={(e) => setForgotCode(e.target.value)} maxLength={6} placeholder="123456" /></Field>
             <Field label="Fjalekalimi i ri"><input required type="password" className={inputClass} value={forgotPassword} onChange={(e) => setForgotPassword(e.target.value)} placeholder="••••••••" /></Field>
             <PrimaryButton type="submit" disabled={forgotLoading} className="mt-2">{forgotLoading ? "Duke ndryshuar..." : "Ndrysho fjalekalimin"}</PrimaryButton>
           </form>
@@ -218,6 +218,8 @@ export function VerifyView({ initialData, onAuth, showError, showOk, goTo }) {
             placeholder="123456"
             maxLength={6}
             autoFocus
+            autoComplete="one-time-code"
+            inputMode="numeric"
           />
         </Field>
         <PrimaryButton type="submit" disabled={loading || code.length !== 6}>{loading ? "Duke verifikuar..." : "Verifiko"}</PrimaryButton>
@@ -356,6 +358,8 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
               onChange={(e) => setCode(e.target.value)}
               placeholder="123456"
               maxLength={6}
+              autoComplete="one-time-code"
+              inputMode="numeric"
             />
             <PrimaryButton type="submit" disabled={loading} className="mt-2">{loading ? "Duke verifikuar..." : "Verifiko"}</PrimaryButton>
           </form>
@@ -514,7 +518,7 @@ function ChangePasswordForm({ token, showError, onDone, onCancel }) {
         </>
       ) : (
         <form onSubmit={confirm}>
-          <Field label="Kodi"><input required className={`${inputClass} text-center tracking-[0.3em]`} value={code} onChange={(e) => setCode(e.target.value)} maxLength={6} placeholder="123456" /></Field>
+          <Field label="Kodi"><input required autoComplete="one-time-code" inputMode="numeric" className={`${inputClass} text-center tracking-[0.3em]`} value={code} onChange={(e) => setCode(e.target.value)} maxLength={6} placeholder="123456" /></Field>
           <Field label="Fjalekalimi i ri"><input required type="password" className={inputClass} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" /></Field>
           <div className="flex gap-2 mt-2">
             <PrimaryButton type="submit" disabled={loading}>{loading ? "Duke ruajtur..." : "Ndrysho"}</PrimaryButton>
