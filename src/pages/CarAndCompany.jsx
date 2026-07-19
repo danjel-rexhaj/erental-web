@@ -287,6 +287,9 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
             <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> Pagese e plote ({total}€) me karte
           </label>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
+            Anulim brenda 12 oresh nga rezervimi: rimbursim i plote i pageses online. Pas 12 oresh, rimbursimi i pageses online varet nga marreveshja mes teje dhe biznesit — ERental s'nderhyn me. Pjesa cash (nese zgjedh depozite) paguhet direkt te biznesi dhe s'ka lidhje me platformen.
+          </p>
         </div>
       )}
 
