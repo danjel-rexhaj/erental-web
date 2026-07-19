@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
-import { PrimaryButton, Spec, CarPhoto, DateRangeCalendar, PaymentSuccessModal } from "../components";
+import { PrimaryButton, Spec, CarPhoto, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
 
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, showError, showOk, isBusinessOwner }) {
@@ -471,13 +471,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar }) {
       <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Makinat e {company.emri} ({cars.length})</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cars.map((car) => (
-          <button key={car.carId} onClick={() => onSelectCar(car)} className="text-left rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:border-emerald-600 dark:hover:border-emerald-500 hover:shadow-md transition bg-white dark:bg-slate-800">
-            <CarPhoto car={car} />
-            <div className="p-3">
-              <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{car.marka} {car.modeli}</p>
-              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{car.cmimiDites}€/dite</span>
-            </div>
-          </button>
+          <CarCard key={car.carId} car={car} onSelectCar={onSelectCar} showCompany={false} />
         ))}
       </div>
 

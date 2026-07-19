@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock } from "lucide-react";
 
 const MUAJT_KAL = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
 const DITET_KAL = ["H", "M", "M", "E", "P", "S", "D"];
@@ -276,6 +276,63 @@ export function CarPhoto({ car }) {
     return <img src={main.urlFotos} alt={`${car.marka} ${car.modeli}`} className="w-full h-36 object-cover rounded-t-2xl bg-slate-100 dark:bg-slate-800" />;
   }
   return <div className="w-full h-36 rounded-t-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><CarIcon size={32} className="text-slate-300 dark:text-slate-600" /></div>;
+}
+
+export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLabel, showCompany = true }) {
+  return (
+    <div
+      onClick={() => onSelectCar(car)}
+      onKeyDown={(e) => { if (e.key === "Enter") onSelectCar(car); }}
+      role="button"
+      tabIndex={0}
+      className={`text-left rounded-2xl border overflow-hidden hover:shadow-md transition bg-white dark:bg-slate-800 cursor-pointer ${nearMiss ? "border-amber-200 dark:border-amber-800/60" : "border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500"}`}
+    >
+      <div className={`relative ${nearMiss ? "opacity-70 grayscale-[30%]" : ""}`}>
+        <CarPhoto car={car} />
+        <span className="absolute top-2 left-2 text-[10px] font-semibold uppercase tracking-wide bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg backdrop-blur-sm">
+          {car.kategoria}
+        </span>
+        {nearMiss && freeInLabel && (
+          <span className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-semibold bg-amber-500 text-white px-2 py-1 rounded-lg">
+            <Clock size={11} /> {freeInLabel}
+          </span>
+        )}
+      </div>
+      <div className="p-3">
+        <div className="flex items-start justify-between">
+          <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{car.marka} {car.modeli}</p>
+          <span className="text-xs font-bold text-white bg-slate-900 dark:bg-slate-700 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites}€/dite</span>
+        </div>
+        {showCompany && (
+          <span
+            onClick={(e) => { e.stopPropagation(); onSelectCompany(car.companyId); }}
+            className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:underline flex items-center gap-1 mt-1 w-fit cursor-pointer"
+          >
+            <Building2 size={11} /> {car.company?.emri}
+            {car.company?.eshteVerifikuar && <ShieldCheck size={11} className="text-emerald-600" />}
+            {car.company?.avgRating != null && (
+              <span className="flex items-center gap-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200 ml-1">
+                <Star size={11} className="text-amber-400 fill-amber-400" /> {car.company.avgRating} <span className="text-slate-400 dark:text-slate-500 font-normal">({car.company.reviewCount})</span>
+              </span>
+            )}
+          </span>
+        )}
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex gap-3 text-[11px] text-slate-400">
+            <span className="flex items-center gap-1"><Fuel size={12} />{car.karburanti}</span>
+            <span className="flex items-center gap-1"><Gauge size={12} />{car.transmisioni}</span>
+            <span className="flex items-center gap-1"><UsersIcon size={12} />{car.numriVendeve}</span>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onSelectCar(car); }}
+            className="text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1.5 rounded-lg transition"
+          >
+            Rezervo
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function StatusPill({ status }) {

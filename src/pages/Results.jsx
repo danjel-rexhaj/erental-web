@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ChevronLeft, Search, Building2, ShieldCheck, Fuel, Gauge, Users as UsersIcon, Car as CarIcon, SlidersHorizontal, Clock, Star } from "lucide-react";
-import { CarPhoto } from "../components";
+import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal } from "lucide-react";
+import { CarCard } from "../components";
 
 const selectClass = "text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition";
 
@@ -100,54 +100,16 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visibleCars.map((car) => {
-          const nearMiss = car.eshteELire === false;
-          return (
-          <button
+        {visibleCars.map((car) => (
+          <CarCard
             key={car.carId}
-            onClick={() => onSelectCar(car)}
-            className={`text-left rounded-2xl border overflow-hidden hover:shadow-md transition bg-white dark:bg-slate-800 ${nearMiss ? "border-amber-200 dark:border-amber-800/60" : "border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500"}`}
-          >
-            <div className={`relative ${nearMiss ? "opacity-70 grayscale-[30%]" : ""}`}>
-              <CarPhoto car={car} />
-              <span className="absolute top-2 left-2 text-[10px] font-semibold uppercase tracking-wide bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg backdrop-blur-sm">
-                {car.kategoria}
-              </span>
-              {nearMiss && (
-                <span className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-semibold bg-amber-500 text-white px-2 py-1 rounded-lg">
-                  <Clock size={11} /> {freeInLabel(car.lirohetMe, dataFillimit)}
-                </span>
-              )}
-            </div>
-            <div className="p-3">
-              <div className="flex items-start justify-between">
-                <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{car.marka} {car.modeli}</p>
-                <span className="text-xs font-bold text-white bg-slate-900 dark:bg-slate-700 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites}€/dite</span>
-              </div>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span
-                  onClick={(e) => { e.stopPropagation(); onSelectCompany(car.companyId); }}
-                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:underline flex items-center gap-1 w-fit cursor-pointer"
-                >
-                  <Building2 size={11} /> {car.company?.emri}
-                  {car.company?.eshteVerifikuar && <ShieldCheck size={11} className="text-emerald-600" />}
-                </span>
-                {car.company?.avgRating != null && (
-                  <span className="flex items-center gap-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-                    <Star size={11} className="text-amber-400 fill-amber-400" /> {car.company.avgRating}
-                    <span className="text-slate-400 dark:text-slate-500 font-normal">({car.company.reviewCount})</span>
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-3 mt-2 text-[11px] text-slate-400">
-                <span className="flex items-center gap-1"><Fuel size={12} />{car.karburanti}</span>
-                <span className="flex items-center gap-1"><Gauge size={12} />{car.transmisioni}</span>
-                <span className="flex items-center gap-1"><UsersIcon size={12} />{car.numriVendeve}</span>
-              </div>
-            </div>
-          </button>
-          );
-        })}
+            car={car}
+            onSelectCar={onSelectCar}
+            onSelectCompany={onSelectCompany}
+            nearMiss={car.eshteELire === false}
+            freeInLabel={car.eshteELire === false ? freeInLabel(car.lirohetMe, dataFillimit) : null}
+          />
+        ))}
       </div>
     </div>
   );
