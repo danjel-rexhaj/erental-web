@@ -67,7 +67,7 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
               <CreditCard size={11} />
               {b.paymentMethod === "paypal_full"
                 ? "Paguar plotesisht me karte"
-                : `Depozite ${b.payments?.[0]?.shumaPaguarOnline ?? ""}€ e paguar me karte, pjesa tjeter cash`}
+                : `Depozite ${b.payments?.[0]?.shumaPaguarOnline ?? ""}€ e paguar me karte, mbeten ${(b.cmimiTotal - (b.payments?.[0]?.shumaPaguarOnline ?? 0)).toFixed(2)}€ cash`}
             </p>
           )}
 

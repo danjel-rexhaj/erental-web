@@ -76,12 +76,14 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
 
 function PaymentBadge({ b }) {
   if (!b.paymentMethod || b.paymentMethod === "cash") return null;
+  const shumaPaguar = b.payment?.shumaPaguarOnline ?? 0;
+  const mbetetCash = (b.cmimiTotal - shumaPaguar).toFixed(2);
   return (
     <p className="text-[11px] text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-0.5">
       <CreditCard size={11} />
       {b.paymentMethod === "paypal_full"
         ? "Paguar plotesisht me karte"
-        : `Depozite ${b.payment?.shumaPaguarOnline ?? ""}€ e paguar me karte, pjesa tjeter cash`}
+        : `Depozite ${shumaPaguar}€ e paguar me karte, mbeten ${mbetetCash}€ cash`}
     </p>
   );
 }
