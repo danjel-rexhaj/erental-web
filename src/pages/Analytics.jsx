@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert } from "lucide-react";
+import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiFetch } from "../api";
 
@@ -111,6 +111,72 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId }) {
           </ResponsiveContainer>
         )}
       </div>
+
+      <div>
+        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-1.5"><Receipt size={15} /> Transaksionet</h3>
+        <TransactionsTable token={token} showError={showError} />
+      </div>
+    </div>
+  );
+}
+
+function TransactionsTable({ token, showError, admin = false }) {
+  const [payments, setPayments] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    apiFetch(admin ? "/Payments/admin" : "/Payments/my-company", token)
+      .then(setPayments)
+      .catch((e) => showError && showError(e))
+      .finally(() => setLoading(false));
+  }, [token, admin]);
+
+  if (loading && !payments) return <p className="text-sm text-slate-400 text-center py-8">Duke ngarkuar...</p>;
+  if (!payments || payments.length === 0) return <p className="text-sm text-slate-400 text-center py-8">Ende s'ka transaksione.</p>;
+
+  return (
+    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
+          <tr>
+            <th className="text-left px-4 py-2.5">Data</th>
+            <th className="text-left px-4 py-2.5">Referenca</th>
+            <th className="text-left px-4 py-2.5">Klienti</th>
+            <th className="text-left px-4 py-2.5">Makina</th>
+            {admin && <th className="text-left px-4 py-2.5">Biznesi</th>}
+            <th className="text-left px-4 py-2.5">Menyra</th>
+            <th className="text-right px-4 py-2.5">Paguar</th>
+            <th className="text-right px-4 py-2.5">Komisioni</th>
+            <th className="text-right px-4 py-2.5">Neto biznesit</th>
+            <th className="text-left px-4 py-2.5">Statusi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {payments.map((p) => (
+            <tr key={p.paymentId} className="border-t border-slate-100 dark:border-slate-800">
+              <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{p.dataPageses ? new Date(p.dataPageses).toLocaleDateString("sq-AL") : "-"}</td>
+              <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 font-mono text-xs">{p.paypalCaptureId ? `${p.paypalCaptureId.slice(0, 10)}…` : "-"}</td>
+              <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{p.klienti?.emri} {p.klienti?.mbiemri}</td>
+              <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{p.car?.marka} {p.car?.modeli}</td>
+              {admin && <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{p.biznesi?.emri}</td>}
+              <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{p.metodaPageses === "paypal_full" ? "E plote" : "Depozite"}</td>
+              <td className="px-4 py-2.5 text-right text-slate-900 dark:text-slate-100 font-semibold whitespace-nowrap">{p.shumaPaguarOnline != null ? `${p.shumaPaguarOnline}€` : "-"}</td>
+              <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400 whitespace-nowrap">{p.komisioni != null ? `${p.komisioni.toFixed(2)}€` : "-"}</td>
+              <td className="px-4 py-2.5 text-right text-slate-900 dark:text-slate-100 font-semibold whitespace-nowrap">{p.shumaBiznesit != null ? `${p.shumaBiznesit.toFixed(2)}€` : "-"}</td>
+              <td className="px-4 py-2.5">
+                {p.statusi === "completed" ? (
+                  <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">Sukses</span>
+                ) : p.statusi === "refunded" ? (
+                  <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">Rimbursuar</span>
+                ) : (
+                  <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full whitespace-nowrap">{p.statusi}</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -204,6 +270,11 @@ export function AdminAnalytics({ token, showError, refreshKey }) {
             ))}
           </div>
         )}
+      </div>
+
+      <div>
+        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-1.5"><Receipt size={15} /> Transaksionet e platformes (te gjitha bizneset)</h3>
+        <TransactionsTable token={token} showError={showError} admin />
       </div>
 
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
