@@ -257,8 +257,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   // scope when the button was last rendered. The button only re-renders on [method, token], so if
   // dataFillimit/dataPerfundimit/total aren't re-read from a ref, picking new dates in the calendar
   // without changing the payment method would silently submit the stale dates from initial render.
-  const latestRef = useRef();
-  latestRef.current = { dataFillimit, dataPerfundimit, total, carId: car.carId };
+  const latestRef = useRef({ dataFillimit, dataPerfundimit, total, carId: car.carId });
+  useEffect(() => {
+    latestRef.current = { dataFillimit, dataPerfundimit, total, carId: car.carId };
+  }, [dataFillimit, dataPerfundimit, total, car.carId]);
 
   useEffect(() => {
     if (!token) return;
