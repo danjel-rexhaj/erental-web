@@ -250,6 +250,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   const [sdkError, setSdkError] = useState(null);
   const [successInfo, setSuccessInfo] = useState(null);
   const [showRefundPolicy, setShowRefundPolicy] = useState(false);
+  const [buttonReady, setButtonReady] = useState(false);
   const buttonsRef = useRef(null);
 
   useEffect(() => {
@@ -296,17 +297,21 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
         return;
       }
       buttons.render(buttonsRef.current);
+      // Small artificial delay before revealing the button — rendering it the instant the SDK
+      // resolves (often near-instantaneous on a warm cache) reads as a jarring pop-in/flash;
+      // a brief "loading" beat feels more deliberate, especially right after switching the radio.
+      setTimeout(() => { if (!cancelled) setButtonReady(true); }, 450);
     }
 
     if (window.paypal) {
       renderButtons();
-      return () => { cancelled = true; };
+      return () => { cancelled = true; setButtonReady(false); };
     }
 
     const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
     if (!clientId) {
       const t = setTimeout(() => setSdkError("Pagesat nuk jane konfiguruar akoma."), 0);
-      return () => { cancelled = true; clearTimeout(t); };
+      return () => { cancelled = true; clearTimeout(t); setButtonReady(false); };
     }
 
     let script = document.getElementById("paypal-sdk");
@@ -321,6 +326,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     script.addEventListener("error", onScriptError);
     return () => {
       cancelled = true;
+      setButtonReady(false);
       script.removeEventListener("load", renderButtons);
       script.removeEventListener("error", onScriptError);
     };
@@ -381,7 +387,12 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
               <Loader2 size={16} className="animate-spin" /> Duke procesuar pagesen...
             </div>
           )}
-          <div className={loading || showRefundPolicy ? "hidden" : ""} ref={buttonsRef} />
+          {!loading && !buttonReady && !sdkError && (
+            <div className="flex items-center justify-center gap-2 py-4 text-sm font-medium text-slate-500 dark:text-slate-400">
+              <Loader2 size={16} className="animate-spin" /> Duke pergatitur pagesen...
+            </div>
+          )}
+          <div className={loading || showRefundPolicy || !buttonReady ? "hidden" : ""} ref={buttonsRef} />
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
         </div>
       ) : (
