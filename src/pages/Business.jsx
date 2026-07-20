@@ -51,9 +51,9 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       )}
       {tab === "admin" && <AdminPending token={token} showError={showError} showOk={showOk} />}
       {tab === "whatsapp" && <AdminWhatsapp token={token} showError={showError} showOk={showOk} />}
-      {tab === "admin-analytics" && <AdminAnalytics token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
+      {tab === "admin-analytics" && <AdminAnalytics token={token} showError={showError} showOk={showOk} refreshKey={analyticsRefreshKey} onGoPending={() => setTab("admin")} />}
       {tab === "admin-logins" && <AdminLogins token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
-      {tab === "analytics" && <BusinessAnalytics token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
+      {tab === "analytics" && <BusinessAnalytics token={token} showError={showError} refreshKey={analyticsRefreshKey} onGoBookings={() => setTab("bookings")} />}
       {tab === "bookings" && (
         <CompanyBookings
           token={token}
