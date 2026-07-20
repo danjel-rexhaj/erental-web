@@ -92,7 +92,7 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
           {b.statusi === "confirmed" && (
             b.idVerifikuar ? (
               <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
-                <CheckCircle2 size={12} /> Identiteti u verifikua — gati per te marre makinen
+                <CheckCircle2 size={12} /> Identiteti u verifikua — kontrata e qerase u dergua ne email
               </p>
             ) : (
               <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 rounded-lg px-2 py-1.5 mt-2">

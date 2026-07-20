@@ -137,7 +137,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     setActingId(id);
     try {
       await apiFetch(`/Bookings/${id}/verify-id`, token, { method: "PUT" });
-      showOk("Identiteti u verifikua.");
+      showOk("Identiteti u verifikua, kontrata u dergua ne email.");
       setLicenseModalId(null);
       load();
     } catch (e) { showError(e); } finally { setActingId(null); }
