@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, Clock, Star, Phone, MessageCircle, Mail, CheckCircle2, CreditCard, ChevronDown } from "lucide-react";
-import { apiFetch, toWhatsappNumber } from "../api";
+import { Calendar, Clock, Star, Phone, MessageCircle, Mail, CheckCircle2, CreditCard, ChevronDown, Download } from "lucide-react";
+import { apiFetch, toWhatsappNumber, decodeJwt } from "../api";
 import { GhostButton, PrimaryButton, StatusPill, inputClass } from "../components";
+import { generateInvoicePdf } from "../invoicePdf";
 
 export default function Bookings({ token, showError, showOk, highlightBookingId, refreshKey }) {
   const [bookings, setBookings] = useState([]);
@@ -38,6 +39,22 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
 
   const days = (b) => Math.max(1, Math.round((new Date(b.dataPerfundimit) - new Date(b.dataFillimit)) / 86400000));
 
+  async function downloadInvoice(b) {
+    await generateInvoicePdf({
+      bookingId: b.bookingId,
+      carMakeModel: `${b.car?.marka} ${b.car?.modeli}`,
+      dataFillimit: b.dataFillimit,
+      dataPerfundimit: b.dataPerfundimit,
+      cmimiPerDite: b.car?.cmimiDites,
+      dite: days(b),
+      totalPrice: b.cmimiTotal,
+      amountPaid: b.payments?.[0]?.shumaPaguarOnline ?? 0,
+      eshtePagesePlote: b.paymentMethod === "paypal_full",
+      clientLabel: decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
+      company: b.car?.company,
+    });
+  }
+
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Ende s'ke asnje rezervim.</p></div>;
 
@@ -63,12 +80,21 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
           <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
 
           {b.paymentMethod && b.paymentMethod !== "cash" && (
-            <p className="text-[11px] text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-0.5">
-              <CreditCard size={11} />
-              {b.paymentMethod === "paypal_full"
-                ? "Paguar plotesisht me karte"
-                : `Depozite ${b.payments?.[0]?.shumaPaguarOnline ?? ""}€ e paguar me karte, mbeten ${(b.cmimiTotal - (b.payments?.[0]?.shumaPaguarOnline ?? 0)).toFixed(2)}€ cash`}
-            </p>
+            <>
+              <p className="text-[11px] text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-0.5">
+                <CreditCard size={11} />
+                {b.paymentMethod === "paypal_full"
+                  ? "Paguar plotesisht me karte"
+                  : `Depozite ${b.payments?.[0]?.shumaPaguarOnline ?? ""}€ e paguar me karte, mbeten ${(b.cmimiTotal - (b.payments?.[0]?.shumaPaguarOnline ?? 0)).toFixed(2)}€ cash`}
+              </p>
+              <button
+                type="button"
+                onClick={() => downloadInvoice(b)}
+                className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 mt-1"
+              >
+                <Download size={11} /> Shkarko faturen
+              </button>
+            </>
           )}
 
           {b.statusi === "pending" && (

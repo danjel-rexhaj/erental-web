@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart } from "lucide-react";
 import { decodeJwt } from "./api";
+import { generateInvoicePdf } from "./invoicePdf";
 
 const MUAJT_KAL = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
 const DITET_KAL = ["H", "M", "M", "E", "P", "S", "D"];
@@ -220,156 +221,20 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
   const confirmim = `ER-${String(successInfo.bookingId).padStart(6, "0")}`;
 
   async function downloadInvoice() {
-    const { jsPDF } = await import("jspdf");
-
-    const eshtePagesePlote = successInfo.method === "paypal_full";
     const dite = Math.max(1, Math.round((new Date(dataPerfundimit) - new Date(dataFillimit)) / 86400000));
-    const cmimiPerDite = car.cmimiDites;
-    const totalPrice = dite * cmimiPerDite;
-    const mbetetCash = eshtePagesePlote ? 0 : Math.max(0, totalPrice - successInfo.amountPaid);
-    const emailKlienti = decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "";
-    const sot = new Date().toLocaleDateString("sq-AL");
-
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();
-    const mx = 50;
-    const rightX = pageW - mx;
-    let y = 65;
-
-    // Header: bold wordmark + circular mark
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(30);
-    doc.setTextColor(17, 17, 17);
-    doc.text("ERENTAL", mx, y);
-
-    doc.setFillColor(17, 17, 17);
-    doc.circle(rightX - 15, y - 10, 15, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.text("ER", rightX - 15, y - 6, { align: "center" });
-
-    y += 40;
-    doc.setDrawColor(230, 230, 230);
-    doc.line(mx, y, rightX, y);
-    y += 32;
-
-    // Billed to / date / invoice no
-    doc.setTextColor(17, 17, 17);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("FATURA PËR", mx, y);
-    doc.text("DATA", rightX, y, { align: "right" });
-    y += 15;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.text(emailKlienti || "Klient ERental", mx, y);
-    doc.text(sot, rightX, y, { align: "right" });
-
-    y += 22;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("NUMRI I FATURËS", rightX, y, { align: "right" });
-    y += 15;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.text(confirmim, rightX, y, { align: "right" });
-
-    y += 36;
-
-    // Table header (dark bar)
-    const tableW = rightX - mx;
-    const colQty = rightX - 190, colPrice = rightX - 110, colTotal = rightX;
-    doc.setFillColor(17, 17, 17);
-    doc.rect(mx, y, tableW, 26, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("PËRSHKRIMI", mx + 12, y + 17);
-    doc.text("DITË", colQty, y + 17, { align: "right" });
-    doc.text("ÇMIM/DITË", colPrice, y + 17, { align: "right" });
-    doc.text("SHUMA", colTotal - 12, y + 17, { align: "right" });
-    y += 26;
-
-    // Line item row
-    doc.setFillColor(247, 247, 247);
-    doc.rect(mx, y, tableW, 42, "F");
-    doc.setTextColor(17, 17, 17);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Qera — ${car.marka} ${car.modeli}`, mx + 12, y + 17);
-    doc.setFontSize(8);
-    doc.setTextColor(140, 140, 140);
-    doc.text(`${dataFillimit} → ${dataPerfundimit}`, mx + 12, y + 30);
-    doc.setTextColor(17, 17, 17);
-    doc.setFontSize(10);
-    doc.text(`${dite}`, colQty, y + 24, { align: "right" });
-    doc.text(`${cmimiPerDite}€`, colPrice, y + 24, { align: "right" });
-    doc.text(`${totalPrice}€`, colTotal - 12, y + 24, { align: "right" });
-    y += 42 + 26;
-
-    // Totals block
-    const labelX = colTotal - 220;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(110, 110, 110);
-    doc.text("Nëntotali:", labelX, y);
-    doc.setTextColor(17, 17, 17);
-    doc.text(`${totalPrice}€`, colTotal - 12, y, { align: "right" });
-    y += 20;
-
-    doc.setTextColor(110, 110, 110);
-    doc.text(`Paguar me kartë (${eshtePagesePlote ? "pagesë e plotë" : "depozitë"}):`, labelX, y);
-    doc.setTextColor(15, 118, 110);
-    doc.text(`${successInfo.amountPaid}€`, colTotal - 12, y, { align: "right" });
-    y += 20;
-
-    if (mbetetCash > 0) {
-      doc.setTextColor(110, 110, 110);
-      doc.text("Mbetet për t'u paguar cash:", labelX, y);
-      doc.setTextColor(180, 83, 9);
-      doc.text(`${mbetetCash}€`, colTotal - 12, y, { align: "right" });
-      y += 20;
-    }
-
-    y += 4;
-    doc.setFillColor(17, 17, 17);
-    doc.rect(labelX - 12, y - 16, colTotal - (labelX - 12), 28, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("Totali:", labelX, y + 3);
-    doc.text(`${totalPrice}€`, colTotal - 12, y + 3, { align: "right" });
-
-    // Footer: business details
-    const footerY = doc.internal.pageSize.getHeight() - 120;
-    doc.setDrawColor(230, 230, 230);
-    doc.line(mx, footerY, rightX, footerY);
-
-    let fy = footerY + 24;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(17, 17, 17);
-    doc.text("TË DHËNAT E BIZNESIT", mx, fy);
-    doc.setTextColor(140, 140, 140);
-    doc.text("erental.store", rightX, fy, { align: "right" });
-
-    fy += 16;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(60, 60, 60);
-    doc.text(car.company?.emri || "", mx, fy);
-    doc.setTextColor(140, 140, 140);
-    doc.setFontSize(9);
-    doc.text("info@erental.store", rightX, fy, { align: "right" });
-
-    if (car.company?.nipt) {
-      fy += 14;
-      doc.setFontSize(9);
-      doc.setTextColor(110, 110, 110);
-      doc.text(`NIPT ${car.company.nipt}`, mx, fy);
-    }
-
-    doc.save(`fatura-${confirmim}.pdf`);
+    await generateInvoicePdf({
+      bookingId: successInfo.bookingId,
+      carMakeModel: `${car.marka} ${car.modeli}`,
+      dataFillimit,
+      dataPerfundimit,
+      cmimiPerDite: car.cmimiDites,
+      dite,
+      totalPrice: dite * car.cmimiDites,
+      amountPaid: successInfo.amountPaid,
+      eshtePagesePlote: successInfo.method === "paypal_full",
+      clientLabel: decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
+      company: car.company,
+    });
   }
 
   return (

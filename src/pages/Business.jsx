@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download } from "lucide-react";
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
+import { generateInvoicePdf } from "../invoicePdf";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
@@ -60,7 +61,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
           showError={showError}
           showOk={showOk}
           highlightBookingId={highlightBookingId}
-          companyName={company?.emri}
+          company={company}
           refreshKey={refreshKey}
           onChanged={() => setLocalRefresh((k) => k + 1)}
         />
@@ -88,7 +89,7 @@ function PaymentBadge({ b }) {
   );
 }
 
-function CompanyBookings({ token, showError, showOk, highlightBookingId, companyName, refreshKey, onChanged }) {
+function CompanyBookings({ token, showError, showOk, highlightBookingId, company, refreshKey, onChanged }) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState(null);
@@ -146,6 +147,22 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   const days = (b) => Math.max(1, Math.round((new Date(b.dataPerfundimit) - new Date(b.dataFillimit)) / 86400000));
   const confirmim = (b) => `ER-${String(b.bookingId).padStart(6, "0")}`;
 
+  async function downloadInvoice(b) {
+    await generateInvoicePdf({
+      bookingId: b.bookingId,
+      carMakeModel: `${b.car.marka} ${b.car.modeli}`,
+      dataFillimit: b.dataFillimit,
+      dataPerfundimit: b.dataPerfundimit,
+      cmimiPerDite: b.car.cmimiDites,
+      dite: days(b),
+      totalPrice: b.cmimiTotal,
+      amountPaid: b.payment?.shumaPaguarOnline ?? 0,
+      eshtePagesePlote: b.paymentMethod === "paypal_full",
+      clientLabel: `${b.klienti.emri} ${b.klienti.mbiemri}`,
+      company,
+    });
+  }
+
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Ende s'ke asnje rezervim per makinat e tua.</p></div>;
 
@@ -181,6 +198,15 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
       </p>
       <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
       <PaymentBadge b={b} />
+      {b.paymentMethod && b.paymentMethod !== "cash" && (
+        <button
+          type="button"
+          onClick={() => downloadInvoice(b)}
+          className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 mt-1"
+        >
+          <Download size={11} /> Shkarko faturen
+        </button>
+      )}
       {b.statusi === "confirmed" && (
         b.idVerifikuar ? (
           <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
@@ -245,7 +271,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                   )}
                   {b.klienti.email && (
                     <a
-                      href={`mailto:${b.klienti.email}?subject=${encodeURIComponent(`Rezervimi juaj prane ${companyName || "nesh"}`)}&body=${encodeURIComponent(`Pershendetje ${b.klienti.emri},\n\nJu kontaktojme lidhur me rezervimin tuaj per ${b.car.marka} ${b.car.modeli} (${b.dataFillimit} - ${b.dataPerfundimit}) prane ${companyName || "nesh"}.\n\n`)}`}
+                      href={`mailto:${b.klienti.email}?subject=${encodeURIComponent(`Rezervimi juaj prane ${company?.emri || "nesh"}`)}&body=${encodeURIComponent(`Pershendetje ${b.klienti.emri},\n\nJu kontaktojme lidhur me rezervimin tuaj per ${b.car.marka} ${b.car.modeli} (${b.dataFillimit} - ${b.dataPerfundimit}) prane ${company?.emri || "nesh"}.\n\n`)}`}
                       onClick={(e) => e.stopPropagation()}
                       className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                       title="Shkruaj email"
@@ -256,6 +282,15 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                 </p>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
                 <PaymentBadge b={b} />
+                {b.paymentMethod && b.paymentMethod !== "cash" && (
+                  <button
+                    type="button"
+                    onClick={() => downloadInvoice(b)}
+                    className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 mt-1"
+                  >
+                    <Download size={11} /> Shkarko faturen
+                  </button>
+                )}
                 {b.idVerifikuar && (
                   <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
                     <CheckCircle2 size={12} /> Identiteti u verifikua
