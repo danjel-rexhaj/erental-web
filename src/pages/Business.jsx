@@ -262,6 +262,11 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                 </p>
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
                 <PaymentBadge b={b} />
+                {b.idVerifikuar && (
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
+                    <CheckCircle2 size={12} /> Identiteti u verifikua
+                  </p>
+                )}
                 {rejectingId === b.bookingId ? (
                   <div className="mt-3">
                     <textarea
@@ -281,10 +286,19 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                       </GhostButton>
                     </div>
                   </div>
-                ) : (
+                ) : b.idVerifikuar ? (
                   <div className="flex gap-2 mt-3">
                     <PrimaryButton onClick={() => confirm(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2">
                       Mirato
+                    </PrimaryButton>
+                    <GhostButton onClick={() => { setRejectingId(b.bookingId); setReason(""); }} disabled={actingId === b.bookingId} className="text-xs py-2">
+                      Refuzo
+                    </GhostButton>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 mt-3">
+                    <PrimaryButton onClick={() => setLicenseModalId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2">
+                      Shiko patenten per verifikim
                     </PrimaryButton>
                     <GhostButton onClick={() => { setRejectingId(b.bookingId); setReason(""); }} disabled={actingId === b.bookingId} className="text-xs py-2">
                       Refuzo
