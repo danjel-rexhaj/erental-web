@@ -144,6 +144,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   }
 
   const days = (b) => Math.max(1, Math.round((new Date(b.dataPerfundimit) - new Date(b.dataFillimit)) / 86400000));
+  const confirmim = (b) => `ER-${String(b.bookingId).padStart(6, "0")}`;
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
   if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Ende s'ke asnje rezervim per makinat e tua.</p></div>;
@@ -162,6 +163,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
         <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
         <StatusPill status={b.statusi} />
       </div>
+      <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">{confirmim(b)}</p>
       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
       <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
         <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri}
@@ -214,15 +216,6 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 
   return (
     <div className="flex flex-col gap-8">
-      {confirmedGroup.length > 0 && (
-        <div>
-          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Konfirmuar ({confirmedGroup.length})</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {confirmedGroup.map(renderHistoryCard)}
-          </div>
-        </div>
-      )}
-
       {pending.length > 0 && (
         <div>
           <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Ne pritje te miratimit ({pending.length})</h3>
@@ -234,6 +227,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                 className={`border bg-amber-50/40 dark:bg-amber-900/20 rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/40" : "border-amber-200 dark:border-amber-800/60"}`}
               >
                 <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
+                <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500">{confirmim(b)}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
                 <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
                   <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri} · {b.klienti.telefoni}
@@ -307,6 +301,15 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {confirmedGroup.length > 0 && (
+        <div>
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Konfirmuar ({confirmedGroup.length})</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {confirmedGroup.map(renderHistoryCard)}
           </div>
         </div>
       )}
