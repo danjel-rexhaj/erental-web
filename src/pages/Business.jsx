@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X } from "lucide-react";
-import { apiFetch, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
+import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
@@ -321,14 +321,31 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 }
 
 function LicenseModal({ bookingId, token, showError, verifying, onVerify, onClose }) {
-  const [license, setLicense] = useState(null);
+  const [imgs, setImgs] = useState({ para: null, mbrapa: null });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiFetch(`/Bookings/${bookingId}/license`, token)
-      .then(setLicense)
-      .catch((e) => { showError(e); onClose(); })
-      .finally(() => setLoading(false));
+    let paraUrl = null, mbrapaUrl = null, cancelled = false;
+    (async () => {
+      try {
+        const [p, m] = await Promise.all([
+          apiFetchBlob(`/Bookings/${bookingId}/license/para`, token),
+          apiFetchBlob(`/Bookings/${bookingId}/license/mbrapa`, token),
+        ]);
+        paraUrl = p; mbrapaUrl = m;
+        if (!cancelled) setImgs({ para: p, mbrapa: m });
+      } catch (e) {
+        showError(e);
+        onClose();
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (paraUrl) URL.revokeObjectURL(paraUrl);
+      if (mbrapaUrl) URL.revokeObjectURL(mbrapaUrl);
+    };
   }, [bookingId, token]);
 
   return (
@@ -340,11 +357,11 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onClos
         </div>
         {loading ? (
           <p className="text-xs text-slate-400 text-center py-6">Duke ngarkuar...</p>
-        ) : license && (
+        ) : imgs.para && imgs.mbrapa && (
           <>
             <div className="grid grid-cols-2 gap-2 mb-3">
-              <img src={license.patentaFotoPara} alt="Para" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700" />
-              <img src={license.patentaFotoMbrapa} alt="Mbrapa" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700" />
+              <img src={imgs.para} alt="Para" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700" />
+              <img src={imgs.mbrapa} alt="Mbrapa" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700" />
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-lg p-2.5 mb-3 leading-relaxed">
               Kjo eshte nje e dhene personale e mbrojtur me ligj. Perdore vetem per te pergatitur kontraten e qerase se ketij rezervimi — ruajtja, ndarja ose perdorimi per cdo qellim tjeter eshte i ndaluar dhe i ndjekshem penalisht.

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload } from "lucide-react";
-import { apiFetch } from "../api";
+import { apiFetch, apiFetchBlob } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass } from "../components";
 
 const MUAJT = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
@@ -246,6 +246,8 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingLicense, setUploadingLicense] = useState(null);
   const [showLicenseForm, setShowLicenseForm] = useState(false);
+  const [licenseVersion, setLicenseVersion] = useState(0);
+  const [licenseImgs, setLicenseImgs] = useState({ para: null, mbrapa: null });
 
   useEffect(() => {
     apiFetch("/Bookings", token).then((b) => setBookingCount(b.length)).catch(() => {});
@@ -319,12 +321,33 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
       const fd = new FormData();
       fd.append(side, file);
       const res = await apiFetch("/Users/me/license", token, { method: "POST", body: fd });
-      onUpdated && onUpdated({ patentaFotoPara: res.patentaFotoPara, patentaFotoMbrapa: res.patentaFotoMbrapa });
+      onUpdated && onUpdated({ hasLicensePara: res.hasLicensePara, hasLicenseMbrapa: res.hasLicenseMbrapa });
+      setLicenseVersion((v) => v + 1);
       showOk("Patenta u ngarkua.");
     } catch (e) { showError(e); } finally { setUploadingLicense(null); }
   }
 
-  const hasLicense = !!user?.patentaFotoPara && !!user?.patentaFotoMbrapa;
+  const hasLicense = !!user?.hasLicensePara && !!user?.hasLicenseMbrapa;
+
+  useEffect(() => {
+    if (!showLicenseForm) return;
+    let paraUrl = null, mbrapaUrl = null, cancelled = false;
+    (async () => {
+      if (user?.hasLicensePara) {
+        try { paraUrl = await apiFetchBlob("/Users/me/license/para", token); if (!cancelled) setLicenseImgs((s) => ({ ...s, para: paraUrl })); }
+        catch (e) { console.error(e); }
+      }
+      if (user?.hasLicenseMbrapa) {
+        try { mbrapaUrl = await apiFetchBlob("/Users/me/license/mbrapa", token); if (!cancelled) setLicenseImgs((s) => ({ ...s, mbrapa: mbrapaUrl })); }
+        catch (e) { console.error(e); }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (paraUrl) URL.revokeObjectURL(paraUrl);
+      if (mbrapaUrl) URL.revokeObjectURL(mbrapaUrl);
+    };
+  }, [showLicenseForm, user?.hasLicensePara, user?.hasLicenseMbrapa, token, licenseVersion]);
 
   const waLink = waRequest
     ? `https://wa.me/355688208868?text=${encodeURIComponent(`Verifikim ERental: ${waRequest.code} - ${user?.email}`)}`
@@ -380,8 +403,8 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
                 {hasLicense ? "Mund ta ndryshosh me poshte." : "Duhet ta shtosh (para dhe mbrapa) para se te mund te rezervosh nje makine."}
               </p>
               <div className="grid grid-cols-2 gap-3">
-                <LicenseSlot label="Para" url={user?.patentaFotoPara} uploading={uploadingLicense === "para"} onUpload={(f) => uploadLicensePart("para", f)} />
-                <LicenseSlot label="Mbrapa" url={user?.patentaFotoMbrapa} uploading={uploadingLicense === "mbrapa"} onUpload={(f) => uploadLicensePart("mbrapa", f)} />
+                <LicenseSlot label="Para" url={licenseImgs.para} uploading={uploadingLicense === "para"} onUpload={(f) => uploadLicensePart("para", f)} />
+                <LicenseSlot label="Mbrapa" url={licenseImgs.mbrapa} uploading={uploadingLicense === "mbrapa"} onUpload={(f) => uploadLicensePart("mbrapa", f)} />
               </div>
             </div>
           )}

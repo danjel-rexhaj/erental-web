@@ -29,6 +29,15 @@ export function todayPlus(days) {
   return d.toISOString().split("T")[0];
 }
 
+// For images served through an authenticated, byte-streaming endpoint (never a public URL) — the
+// license photo endpoints. Returns an object URL good only in this tab; caller must revoke it.
+export async function apiFetchBlob(path, token) {
+  const res = await fetch(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error(`Gabim ${res.status}`);
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
 export async function apiFetch(path, token, options = {}) {
   const headers = { ...(options.headers || {}) };
   if (token) headers["Authorization"] = `Bearer ${token}`;

@@ -31,7 +31,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   useEffect(() => {
     if (!token) return;
     apiFetch("/Users/me", token)
-      .then((u) => setHasLicense(!!u.patentaFotoPara && !!u.patentaFotoMbrapa))
+      .then((u) => setHasLicense(!!u.hasLicensePara && !!u.hasLicenseMbrapa))
       .catch(() => {});
   }, [token]);
 
