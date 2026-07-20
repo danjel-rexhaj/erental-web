@@ -219,23 +219,72 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
   const confirmim = `ER-${String(successInfo.bookingId).padStart(6, "0")}`;
 
   function downloadInvoice() {
-    const lines = [
-      "ERental — Fatura e pageses",
-      "",
-      `Numri i konfirmimit: ${confirmim}`,
-      `Makina: ${car.marka} ${car.modeli}`,
-      `Biznesi: ${car.company?.emri || ""}`,
-      `Marrja: ${dataFillimit}`,
-      `Dorezimi: ${dataPerfundimit}`,
-      `Menyra: ${successInfo.method === "paypal_full" ? "Pagese e plote" : "Depozite (1 dite)"}`,
-      `Shuma e paguar: ${successInfo.amountPaid}€`,
-      `Data e pageses: ${new Date().toLocaleDateString("sq-AL")}`,
-    ];
-    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const eshtePagesePlote = successInfo.method === "paypal_full";
+    const dite = Math.max(1, Math.round((new Date(dataPerfundimit) - new Date(dataFillimit)) / 86400000));
+    const cmimiPerDite = car.cmimiDites;
+    const totalPrice = dite * cmimiPerDite;
+    const mbetetCash = eshtePagesePlote ? 0 : Math.max(0, totalPrice - successInfo.amountPaid);
+    const sot = new Date().toLocaleDateString("sq-AL");
+
+    const row = (label, value, strong) => `
+      <tr>
+        <td style="padding:10px 0;border-top:1px solid #ebebeb;color:#717171;font-size:13px;">${label}</td>
+        <td style="padding:10px 0;border-top:1px solid #ebebeb;text-align:right;font-size:13px;${strong ? "font-weight:700;color:#111111;" : "color:#111111;"}">${value}</td>
+      </tr>`;
+
+    const html = `<!doctype html>
+<html lang="sq"><head><meta charset="utf-8"><title>Fatura ${confirmim}</title></head>
+<body style="margin:0;background:#f7f7f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;">
+    <div style="height:5px;background:linear-gradient(90deg,#2dd4bf,#0f766e);"></div>
+    <div style="padding:32px 40px;">
+      <div style="display:table;width:100%;margin-bottom:24px;">
+        <div style="display:table-cell;vertical-align:top;">
+          <div style="width:30px;height:30px;border-radius:50%;background:#0f766e;color:#fff;text-align:center;line-height:30px;font-weight:800;font-size:13px;display:inline-block;">ER</div>
+          <span style="font-size:18px;font-weight:800;color:#111111;margin-left:8px;">ERental</span>
+        </div>
+      </div>
+
+      <h1 style="color:#111111;font-size:21px;font-weight:800;margin:0 0 2px 0;">Faturë</h1>
+      <p style="color:#a3a3a3;font-size:12px;margin:0 0 24px 0;">Nr. ${confirmim} · ${sot}</p>
+
+      <div style="display:table;width:100%;margin-bottom:20px;">
+        <div style="display:table-cell;width:50%;vertical-align:top;padding-right:12px;">
+          <p style="color:#a3a3a3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 4px 0;">Qeradhënësi</p>
+          <p style="font-size:14px;font-weight:700;color:#111111;margin:0 0 2px 0;">${car.company?.emri || ""}</p>
+          ${car.company?.nipt ? `<p style="font-size:12px;color:#717171;margin:0;">NIPT ${car.company.nipt}</p>` : ""}
+        </div>
+        <div style="display:table-cell;width:50%;vertical-align:top;padding-left:12px;border-left:1px solid #ebebeb;">
+          <p style="color:#a3a3a3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 4px 0;">Objekti</p>
+          <p style="font-size:14px;font-weight:700;color:#111111;margin:0 0 2px 0;">${car.marka} ${car.modeli}</p>
+          <p style="font-size:12px;color:#717171;margin:0;">${dataFillimit} → ${dataPerfundimit}</p>
+        </div>
+      </div>
+
+      <div style="border:1px solid #ebebeb;border-radius:16px;padding:20px 24px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
+          <tr>
+            <td style="padding-bottom:6px;color:#a3a3a3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Përshkrimi</td>
+            <td style="padding-bottom:6px;color:#a3a3a3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;text-align:right;">Shuma</td>
+          </tr>
+          ${row(`Qera — ${dite} ditë × ${cmimiPerDite}€`, `${totalPrice}€`)}
+          ${row(`Paguar me kartë (${eshtePagesePlote ? "pagesë e plotë" : "depozitë"})`, `${successInfo.amountPaid}€`, true)}
+          ${mbetetCash > 0 ? row("Mbetet për t'u paguar cash", `${mbetetCash}€`, true) : ""}
+        </table>
+      </div>
+
+      <p style="color:#a3a3a3;font-size:11px;line-height:1.6;margin:24px 0 0 0;text-align:center;">
+        Ky dokument u gjenerua automatikisht nga ERental — marketplace që lidh biznese qeraje makinash me klientë.
+      </p>
+    </div>
+  </div>
+</body></html>`;
+
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `fatura-${confirmim}.txt`;
+    a.download = `fatura-${confirmim}.html`;
     document.body.appendChild(a);
     a.click();
     a.remove();
