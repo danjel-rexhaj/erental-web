@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut } from "lucide-react";
+import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass } from "../components";
 
@@ -244,6 +244,7 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
   const [company, setCompany] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingLicense, setUploadingLicense] = useState(null);
 
   useEffect(() => {
     apiFetch("/Bookings", token).then((b) => setBookingCount(b.length)).catch(() => {});
@@ -311,6 +312,19 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
     } catch (e) { showError(e); } finally { setUploadingLogo(false); e.target.value = ""; }
   }
 
+  async function uploadLicensePart(side, file) {
+    setUploadingLicense(side);
+    try {
+      const fd = new FormData();
+      fd.append(side, file);
+      const res = await apiFetch("/Users/me/license", token, { method: "POST", body: fd });
+      onUpdated && onUpdated({ patentaFotoPara: res.patentaFotoPara, patentaFotoMbrapa: res.patentaFotoMbrapa });
+      showOk("Patenta u ngarkua.");
+    } catch (e) { showError(e); } finally { setUploadingLicense(null); }
+  }
+
+  const hasLicense = !!user?.patentaFotoPara && !!user?.patentaFotoMbrapa;
+
   const waLink = waRequest
     ? `https://wa.me/355688208868?text=${encodeURIComponent(`Verifikim ERental: ${waRequest.code} - ${user?.email}`)}`
     : null;
@@ -344,6 +358,21 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
           {memberSince(user?.dataRegjistrimit) && <span>Anetar qe nga {memberSince(user.dataRegjistrimit)}</span>}
         </div>
       </div>
+
+      {user?.role !== "business" && (
+        <div className={`border rounded-2xl p-4 text-left ${hasLicense ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" : "border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20"}`}>
+          <p className={`flex items-center gap-1.5 text-sm font-semibold mb-1 ${hasLicense ? "text-slate-800 dark:text-slate-100" : "text-amber-800 dark:text-amber-300"}`}>
+            {hasLicense ? <ShieldCheck size={15} /> : <AlertTriangle size={15} />} Patenta e drejtimit
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            {hasLicense ? "E ngarkuar — mund ta ndryshosh me poshte." : "Duhet ta shtosh (para dhe mbrapa) para se te mund te rezervosh nje makine."}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <LicenseSlot label="Para" url={user?.patentaFotoPara} uploading={uploadingLicense === "para"} onUpload={(f) => uploadLicensePart("para", f)} />
+            <LicenseSlot label="Mbrapa" url={user?.patentaFotoMbrapa} uploading={uploadingLicense === "mbrapa"} onUpload={(f) => uploadLicensePart("mbrapa", f)} />
+          </div>
+        </div>
+      )}
 
       {!user?.emailVerified && (
         <div className="border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 rounded-2xl p-4 text-left">
@@ -467,6 +496,32 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
         <SettingsRow icon={LogOut} label="Dil nga llogaria" onClick={onLogout} danger />
       </div>
     </div>
+  );
+}
+
+function LicenseSlot({ label, url, uploading, onUpload }) {
+  return (
+    <label className={`relative flex flex-col items-center justify-center gap-1 h-24 rounded-xl border-2 border-dashed cursor-pointer overflow-hidden transition ${url ? "border-emerald-300 dark:border-emerald-700" : "border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500"}`}>
+      {url ? (
+        <>
+          <img src={url} alt={label} className="absolute inset-0 w-full h-full object-cover" />
+          <span className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[9px] text-center py-0.5">{label} — ndrysho</span>
+        </>
+      ) : (
+        <>
+          <Upload size={16} className="text-slate-400" />
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">{label}</span>
+        </>
+      )}
+      {uploading && <span className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-[10px]">Duke ngarkuar...</span>}
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        disabled={uploading}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = ""; }}
+      />
+    </label>
   );
 }
 

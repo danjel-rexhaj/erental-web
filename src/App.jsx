@@ -333,6 +333,7 @@ export default function App() {
           onGoToBookings={() => go("/rezervimet")}
           token={token}
           needAuth={() => go("/profili")}
+          goToProfile={() => go("/profili")}
           showError={showError}
           showOk={showOk}
           isBusinessOwner={user?.role === "business"}

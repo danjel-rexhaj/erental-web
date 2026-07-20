@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
 
-export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, showError, showOk, isBusinessOwner }) {
+export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner }) {
   const [bookedRanges, setBookedRanges] = useState([]);
+  const [hasLicense, setHasLicense] = useState(null);
   const [selFrom, setSelFrom] = useState(dataFillimit);
   const [selTo, setSelTo] = useState(dataPerfundimit);
   const activeFrom = selTo ? selFrom : dataFillimit;
@@ -26,6 +27,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   useEffect(() => {
     apiFetch(`/Cars/${car.carId}/availability`, null).then(setBookedRanges).catch(() => {});
   }, [car.carId]);
+
+  useEffect(() => {
+    if (!token) return;
+    apiFetch("/Users/me", token)
+      .then((u) => setHasLicense(!!u.patentaFotoPara && !!u.patentaFotoMbrapa))
+      .catch(() => {});
+  }, [token]);
 
   const lat = car.company?.latitude;
   const lng = car.company?.longitude;
@@ -159,6 +167,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 total={total}
                 token={token}
                 needAuth={needAuth}
+                goToProfile={goToProfile}
+                hasLicense={hasLicense}
                 showError={showError}
                 showOk={showOk}
                 onBooked={onBack}
@@ -244,7 +254,7 @@ function memberSince(raw) {
   return `${MUAJT[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth, showError, showOk, onBooked }) {
+function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth, goToProfile, hasLicense, showError, showOk, onBooked }) {
   const [method, setMethod] = useState("paypal_deposit");
   const [loading, setLoading] = useState(false);
   const [sdkError, setSdkError] = useState(null);
@@ -263,7 +273,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   }, [dataFillimit, dataPerfundimit, total, car.carId]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || hasLicense !== true) return;
     let cancelled = false;
     const paymentMethod = method === "paypal_deposit" ? "deposit" : "full";
 
@@ -341,11 +351,23 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       script.removeEventListener("load", renderButtons);
       script.removeEventListener("error", onScriptError);
     };
-  }, [method, token]);
+  }, [method, token, hasLicense]);
 
   return (
     <div>
-      {token && (
+      {token && hasLicense === false && (
+        <div className="border border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/20 rounded-2xl p-3 mb-3">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">
+            <AlertTriangle size={13} /> Nuk e ke shtuar patenten
+          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">Duhet te ngarkosh foton e patentes (para dhe mbrapa) ne profilin tend para se te rezervosh.</p>
+          <button type="button" onClick={goToProfile} className="text-xs font-semibold text-amber-800 dark:text-amber-300 underline">
+            Shto tani ne profil
+          </button>
+        </div>
+      )}
+
+      {token && hasLicense === true && (
         <div className="flex flex-col gap-1.5 mb-3">
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
             <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> Depozite ({car.cmimiDites}€) me karte, pjesa tjeter cash
@@ -388,7 +410,13 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
         </div>
       )}
 
-      {token ? (
+      {!token && <PrimaryButton onClick={needAuth}>Kyçu per te rezervuar</PrimaryButton>}
+
+      {token && hasLicense === null && (
+        <p className="text-xs text-slate-400 py-2">Duke kontrolluar te dhenat...</p>
+      )}
+
+      {token && hasLicense === true && (
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3 bg-slate-50/60 dark:bg-slate-900/40">
           <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-2">
             <Lock size={11} /> Pagese e sigurte, e procesuar direkt nga PayPal
@@ -406,8 +434,6 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
           <div className={loading || showRefundPolicy || !buttonReady ? "hidden" : ""} ref={buttonsRef} />
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
         </div>
-      ) : (
-        <PrimaryButton onClick={needAuth}>Kyçu per te rezervuar</PrimaryButton>
       )}
 
       {successInfo && (
