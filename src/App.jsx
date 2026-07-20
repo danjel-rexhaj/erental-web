@@ -420,7 +420,7 @@ export default function App() {
         {view === "terms" && <Terms />}
         {view === "careers" && <Careers showError={showError} />}
         {view === "about" && <About />}
-        {view === "contact" && <Contact loggedIn={!!token} showError={showError} />}
+        {view === "contact" && <Contact />}
       </div>
       <Footer setView={(v) => go(viewToHash(v))} />
       {paymentSuccessInfo && (

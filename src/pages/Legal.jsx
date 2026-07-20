@@ -40,65 +40,32 @@ export function About() {
   );
 }
 
-export function Contact({ loggedIn, showError }) {
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ emri: "", email: "", mesazhi: "" });
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  async function submit(e) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await apiFetch("/Contact", null, {
-        method: "POST",
-        body: JSON.stringify({ emri: form.emri, email: form.email, subjekti: "Kontakt nga faqja", mesazhi: form.mesazhi }),
-      });
-      setSent(true);
-    } catch (e) { showError && showError(e); } finally { setLoading(false); }
-  }
-
+export function Contact() {
   return (
-    <div className="max-w-md mx-auto py-8">
-      <div className="flex items-center gap-2 mb-1"><Mail size={20} className="text-emerald-700 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Na kontakto</h1></div>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Kemi ndonje pyetje ose problem? Na shkruaj.</p>
+    <div className="max-w-sm mx-auto py-12 text-center">
+      <div className="flex items-center justify-center gap-2 mb-1"><Mail size={20} className="text-emerald-700 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Na kontakto</h1></div>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">Kemi ndonje pyetje ose problem? Na shkruaj direkt.</p>
 
-      <div className="flex gap-2 mb-6">
-        {loggedIn && (
-          <a
-            href={`https://wa.me/${SUPPORT_WHATSAPP}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-sm font-semibold py-2.5 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition"
-          >
-            <MessageCircle size={16} /> WhatsApp
-          </a>
-        )}
+      <div className="flex flex-col gap-4">
+        <a
+          href={`https://wa.me/${SUPPORT_WHATSAPP}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex flex-col items-center gap-1.5 rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 py-8 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition"
+        >
+          <MessageCircle size={28} />
+          <span className="text-base font-bold">WhatsApp</span>
+          <span className="text-xs text-emerald-600 dark:text-emerald-400">Pergjigje me e shpejte</span>
+        </a>
         <a
           href={`mailto:${SUPPORT_EMAIL}`}
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold py-2.5 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+          className="flex flex-col items-center gap-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-8 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
         >
-          <Mail size={16} /> {SUPPORT_EMAIL}
+          <Mail size={28} />
+          <span className="text-base font-bold">Email</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{SUPPORT_EMAIL}</span>
         </a>
       </div>
-
-      {sent ? (
-        <div className="text-center py-10">
-          <CheckCircle2 size={28} className="mx-auto text-emerald-600 dark:text-emerald-400 mb-2" />
-          <p className="text-sm text-slate-600 dark:text-slate-300">Mesazhi u dergua. Do te te pergjigjemi shpejt.</p>
-        </div>
-      ) : (
-        <form onSubmit={submit}>
-          <Field label="Emri"><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="Emri Mbiemri" /></Field>
-          <Field label="Email"><input required type="email" className={inputClass} value={form.email} onChange={set("email")} placeholder="ti@email.com" /></Field>
-          <Field label="Mesazhi">
-            <textarea required className={inputClass} rows={5} value={form.mesazhi} onChange={set("mesazhi")} placeholder="Si mund te te ndihmojme?" />
-          </Field>
-          <PrimaryButton type="submit" disabled={loading} className="flex items-center justify-center gap-2">
-            <Send size={14} /> {loading ? "Duke derguar..." : "Dergo mesazhin"}
-          </PrimaryButton>
-        </form>
-      )}
     </div>
   );
 }
