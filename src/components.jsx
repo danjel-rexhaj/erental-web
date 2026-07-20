@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart } from "lucide-react";
+import { decodeJwt } from "./api";
 
 const MUAJT_KAL = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
 const DITET_KAL = ["H", "M", "M", "E", "P", "S", "D"];
@@ -215,80 +216,160 @@ export function GhostButton({ children, className = "", ...props }) {
   return <button {...props} className={`w-full rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.99] transition disabled:opacity-50 ${className}`}>{children}</button>;
 }
 
-export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, successInfo, onClose }) {
+export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, successInfo, token, onClose }) {
   const confirmim = `ER-${String(successInfo.bookingId).padStart(6, "0")}`;
 
-  function downloadInvoice() {
+  async function downloadInvoice() {
+    const { jsPDF } = await import("jspdf");
+
     const eshtePagesePlote = successInfo.method === "paypal_full";
     const dite = Math.max(1, Math.round((new Date(dataPerfundimit) - new Date(dataFillimit)) / 86400000));
     const cmimiPerDite = car.cmimiDites;
     const totalPrice = dite * cmimiPerDite;
     const mbetetCash = eshtePagesePlote ? 0 : Math.max(0, totalPrice - successInfo.amountPaid);
+    const emailKlienti = decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "";
     const sot = new Date().toLocaleDateString("sq-AL");
 
-    const row = (label, value, strong) => `
-      <tr>
-        <td style="padding:10px 0;border-top:1px solid #ebebeb;color:#717171;font-size:13px;">${label}</td>
-        <td style="padding:10px 0;border-top:1px solid #ebebeb;text-align:right;font-size:13px;${strong ? "font-weight:700;color:#111111;" : "color:#111111;"}">${value}</td>
-      </tr>`;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const mx = 50;
+    const rightX = pageW - mx;
+    let y = 65;
 
-    const html = `<!doctype html>
-<html lang="sq"><head><meta charset="utf-8"><title>Fatura ${confirmim}</title></head>
-<body style="margin:0;background:#f7f7f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <div style="max-width:560px;margin:0 auto;background:#ffffff;">
-    <div style="height:5px;background:linear-gradient(90deg,#2dd4bf,#0f766e);"></div>
-    <div style="padding:32px 40px;">
-      <div style="display:table;width:100%;margin-bottom:24px;">
-        <div style="display:table-cell;vertical-align:top;">
-          <div style="width:30px;height:30px;border-radius:50%;background:#0f766e;color:#fff;text-align:center;line-height:30px;font-weight:800;font-size:13px;display:inline-block;">ER</div>
-          <span style="font-size:18px;font-weight:800;color:#111111;margin-left:8px;">ERental</span>
-        </div>
-      </div>
+    // Header: bold wordmark + circular mark
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(30);
+    doc.setTextColor(17, 17, 17);
+    doc.text("ERENTAL", mx, y);
 
-      <h1 style="color:#111111;font-size:21px;font-weight:800;margin:0 0 2px 0;">Faturë</h1>
-      <p style="color:#a3a3a3;font-size:12px;margin:0 0 24px 0;">Nr. ${confirmim} · ${sot}</p>
+    doc.setFillColor(17, 17, 17);
+    doc.circle(rightX - 15, y - 10, 15, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.text("ER", rightX - 15, y - 6, { align: "center" });
 
-      <div style="display:table;width:100%;margin-bottom:20px;">
-        <div style="display:table-cell;width:50%;vertical-align:top;padding-right:12px;">
-          <p style="color:#a3a3a3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 4px 0;">Qeradhënësi</p>
-          <p style="font-size:14px;font-weight:700;color:#111111;margin:0 0 2px 0;">${car.company?.emri || ""}</p>
-          ${car.company?.nipt ? `<p style="font-size:12px;color:#717171;margin:0;">NIPT ${car.company.nipt}</p>` : ""}
-        </div>
-        <div style="display:table-cell;width:50%;vertical-align:top;padding-left:12px;border-left:1px solid #ebebeb;">
-          <p style="color:#a3a3a3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 4px 0;">Objekti</p>
-          <p style="font-size:14px;font-weight:700;color:#111111;margin:0 0 2px 0;">${car.marka} ${car.modeli}</p>
-          <p style="font-size:12px;color:#717171;margin:0;">${dataFillimit} → ${dataPerfundimit}</p>
-        </div>
-      </div>
+    y += 40;
+    doc.setDrawColor(230, 230, 230);
+    doc.line(mx, y, rightX, y);
+    y += 32;
 
-      <div style="border:1px solid #ebebeb;border-radius:16px;padding:20px 24px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">
-          <tr>
-            <td style="padding-bottom:6px;color:#a3a3a3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Përshkrimi</td>
-            <td style="padding-bottom:6px;color:#a3a3a3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;text-align:right;">Shuma</td>
-          </tr>
-          ${row(`Qera — ${dite} ditë × ${cmimiPerDite}€`, `${totalPrice}€`)}
-          ${row(`Paguar me kartë (${eshtePagesePlote ? "pagesë e plotë" : "depozitë"})`, `${successInfo.amountPaid}€`, true)}
-          ${mbetetCash > 0 ? row("Mbetet për t'u paguar cash", `${mbetetCash}€`, true) : ""}
-        </table>
-      </div>
+    // Billed to / date / invoice no
+    doc.setTextColor(17, 17, 17);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("FATURA PËR", mx, y);
+    doc.text("DATA", rightX, y, { align: "right" });
+    y += 15;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text(emailKlienti || "Klient ERental", mx, y);
+    doc.text(sot, rightX, y, { align: "right" });
 
-      <p style="color:#a3a3a3;font-size:11px;line-height:1.6;margin:24px 0 0 0;text-align:center;">
-        Ky dokument u gjenerua automatikisht nga ERental — marketplace që lidh biznese qeraje makinash me klientë.
-      </p>
-    </div>
-  </div>
-</body></html>`;
+    y += 22;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("NUMRI I FATURËS", rightX, y, { align: "right" });
+    y += 15;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text(confirmim, rightX, y, { align: "right" });
 
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `fatura-${confirmim}.html`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    y += 36;
+
+    // Table header (dark bar)
+    const tableW = rightX - mx;
+    const colQty = rightX - 190, colPrice = rightX - 110, colTotal = rightX;
+    doc.setFillColor(17, 17, 17);
+    doc.rect(mx, y, tableW, 26, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("PËRSHKRIMI", mx + 12, y + 17);
+    doc.text("DITË", colQty, y + 17, { align: "right" });
+    doc.text("ÇMIM/DITË", colPrice, y + 17, { align: "right" });
+    doc.text("SHUMA", colTotal - 12, y + 17, { align: "right" });
+    y += 26;
+
+    // Line item row
+    doc.setFillColor(247, 247, 247);
+    doc.rect(mx, y, tableW, 42, "F");
+    doc.setTextColor(17, 17, 17);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Qera — ${car.marka} ${car.modeli}`, mx + 12, y + 17);
+    doc.setFontSize(8);
+    doc.setTextColor(140, 140, 140);
+    doc.text(`${dataFillimit} → ${dataPerfundimit}`, mx + 12, y + 30);
+    doc.setTextColor(17, 17, 17);
+    doc.setFontSize(10);
+    doc.text(`${dite}`, colQty, y + 24, { align: "right" });
+    doc.text(`${cmimiPerDite}€`, colPrice, y + 24, { align: "right" });
+    doc.text(`${totalPrice}€`, colTotal - 12, y + 24, { align: "right" });
+    y += 42 + 26;
+
+    // Totals block
+    const labelX = colTotal - 220;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(110, 110, 110);
+    doc.text("Nëntotali:", labelX, y);
+    doc.setTextColor(17, 17, 17);
+    doc.text(`${totalPrice}€`, colTotal - 12, y, { align: "right" });
+    y += 20;
+
+    doc.setTextColor(110, 110, 110);
+    doc.text(`Paguar me kartë (${eshtePagesePlote ? "pagesë e plotë" : "depozitë"}):`, labelX, y);
+    doc.setTextColor(15, 118, 110);
+    doc.text(`${successInfo.amountPaid}€`, colTotal - 12, y, { align: "right" });
+    y += 20;
+
+    if (mbetetCash > 0) {
+      doc.setTextColor(110, 110, 110);
+      doc.text("Mbetet për t'u paguar cash:", labelX, y);
+      doc.setTextColor(180, 83, 9);
+      doc.text(`${mbetetCash}€`, colTotal - 12, y, { align: "right" });
+      y += 20;
+    }
+
+    y += 4;
+    doc.setFillColor(17, 17, 17);
+    doc.rect(labelX - 12, y - 16, colTotal - (labelX - 12), 28, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("Totali:", labelX, y + 3);
+    doc.text(`${totalPrice}€`, colTotal - 12, y + 3, { align: "right" });
+
+    // Footer: business details
+    const footerY = doc.internal.pageSize.getHeight() - 120;
+    doc.setDrawColor(230, 230, 230);
+    doc.line(mx, footerY, rightX, footerY);
+
+    let fy = footerY + 24;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(17, 17, 17);
+    doc.text("TË DHËNAT E BIZNESIT", mx, fy);
+    doc.setTextColor(140, 140, 140);
+    doc.text("erental.store", rightX, fy, { align: "right" });
+
+    fy += 16;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text(car.company?.emri || "", mx, fy);
+    doc.setTextColor(140, 140, 140);
+    doc.setFontSize(9);
+    doc.text("info@erental.store", rightX, fy, { align: "right" });
+
+    if (car.company?.nipt) {
+      fy += 14;
+      doc.setFontSize(9);
+      doc.setTextColor(110, 110, 110);
+      doc.text(`NIPT ${car.company.nipt}`, mx, fy);
+    }
+
+    doc.save(`fatura-${confirmim}.pdf`);
   }
 
   return (

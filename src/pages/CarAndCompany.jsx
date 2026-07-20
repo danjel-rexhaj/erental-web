@@ -442,6 +442,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
           dataFillimit={dataFillimit}
           dataPerfundimit={dataPerfundimit}
           successInfo={successInfo}
+          token={token}
           onClose={() => { setSuccessInfo(null); showOk("Rezervimi u konfirmua."); onBooked(); }}
         />
       )}
