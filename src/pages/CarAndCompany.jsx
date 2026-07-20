@@ -253,15 +253,23 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   const [buttonReady, setButtonReady] = useState(false);
   const buttonsRef = useRef(null);
 
+  // createOrder/onApprove run from PayPal SDK callbacks, which capture whatever closure was in
+  // scope when the button was last rendered. The button only re-renders on [method, token], so if
+  // dataFillimit/dataPerfundimit/total aren't re-read from a ref, picking new dates in the calendar
+  // without changing the payment method would silently submit the stale dates from initial render.
+  const latestRef = useRef();
+  latestRef.current = { dataFillimit, dataPerfundimit, total, carId: car.carId };
+
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
     const paymentMethod = method === "paypal_deposit" ? "deposit" : "full";
 
     async function createOrder() {
+      const { carId, dataFillimit, dataPerfundimit } = latestRef.current;
       const res = await apiFetch("/Payments/paypal/create-order", token, {
         method: "POST",
-        body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, method: paymentMethod }),
+        body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod }),
       });
       return res.orderId;
     }
@@ -269,13 +277,14 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     async function onApprove(data) {
       setLoading(true);
       try {
+        const { carId, dataFillimit, dataPerfundimit } = latestRef.current;
         const cap = await apiFetch("/Payments/paypal/capture", token, {
           method: "POST",
-          body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, method: paymentMethod, paypalOrderId: data.orderID }),
+          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod, paypalOrderId: data.orderID }),
         });
         const booking = await apiFetch("/Bookings", token, {
           method: "POST",
-          body: JSON.stringify({ carId: car.carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId }),
+          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId }),
         });
         setSuccessInfo({ bookingId: booking.bookingId, amountPaid: cap.amountPaid, method });
       } catch (e) { showError(e); } finally { setLoading(false); }
