@@ -11,7 +11,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const [selTo, setSelTo] = useState(dataPerfundimit);
   const activeFrom = selTo ? selFrom : dataFillimit;
   const activeTo = selTo ? selTo : dataPerfundimit;
-  const days = Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000));
+  const days = activeFrom && activeTo ? Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000)) : 0;
   const total = (days * car.cmimiDites).toFixed(2);
 
   const photos = (car.carPhotos || []).filter(Boolean);
