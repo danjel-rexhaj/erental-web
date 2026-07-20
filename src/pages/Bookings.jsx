@@ -96,7 +96,7 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
               </p>
             ) : (
               <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 rounded-lg px-2 py-1.5 mt-2">
-                Dergo ne WhatsApp te biznesit foto te patentes dhe ID se shoferit per verifikim, para se te shkosh ta marresh makinen.
+                Biznesi do te shikoje patenten tende te ngarkuar ne profil dhe do te pergatise kontraten para se te marresh makinen.
               </p>
             )
           )}

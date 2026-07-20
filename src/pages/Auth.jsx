@@ -245,6 +245,7 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingLicense, setUploadingLicense] = useState(null);
+  const [showLicenseForm, setShowLicenseForm] = useState(false);
 
   useEffect(() => {
     apiFetch("/Bookings", token).then((b) => setBookingCount(b.length)).catch(() => {});
@@ -360,17 +361,30 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
       </div>
 
       {user?.role !== "business" && (
-        <div className={`border rounded-2xl p-4 text-left ${hasLicense ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" : "border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20"}`}>
-          <p className={`flex items-center gap-1.5 text-sm font-semibold mb-1 ${hasLicense ? "text-slate-800 dark:text-slate-100" : "text-amber-800 dark:text-amber-300"}`}>
-            {hasLicense ? <ShieldCheck size={15} /> : <AlertTriangle size={15} />} Patenta e drejtimit
-          </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-            {hasLicense ? "E ngarkuar — mund ta ndryshosh me poshte." : "Duhet ta shtosh (para dhe mbrapa) para se te mund te rezervosh nje makine."}
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <LicenseSlot label="Para" url={user?.patentaFotoPara} uploading={uploadingLicense === "para"} onUpload={(f) => uploadLicensePart("para", f)} />
-            <LicenseSlot label="Mbrapa" url={user?.patentaFotoMbrapa} uploading={uploadingLicense === "mbrapa"} onUpload={(f) => uploadLicensePart("mbrapa", f)} />
-          </div>
+        <div className={`border rounded-2xl bg-white dark:bg-slate-800 overflow-hidden text-left ${hasLicense ? "border-slate-200 dark:border-slate-700" : "border-amber-200 dark:border-amber-800"}`}>
+          <button
+            type="button"
+            onClick={() => setShowLicenseForm((s) => !s)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-slate-50 dark:hover:bg-slate-900/40 transition"
+          >
+            {hasLicense ? <ShieldCheck size={18} className="text-emerald-600 dark:text-emerald-400" /> : <AlertTriangle size={18} className="text-amber-500" />}
+            <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200">Patenta e drejtimit</span>
+            <span className={`text-xs font-semibold ${hasLicense ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+              {hasLicense ? "E verifikuar" : "Mungon"}
+            </span>
+            <ChevronRight size={16} className={`text-slate-300 dark:text-slate-600 transition-transform ${showLicenseForm ? "rotate-90" : ""}`} />
+          </button>
+          {showLicenseForm && (
+            <div className="px-4 pb-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                {hasLicense ? "Mund ta ndryshosh me poshte." : "Duhet ta shtosh (para dhe mbrapa) para se te mund te rezervosh nje makine."}
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <LicenseSlot label="Para" url={user?.patentaFotoPara} uploading={uploadingLicense === "para"} onUpload={(f) => uploadLicensePart("para", f)} />
+                <LicenseSlot label="Mbrapa" url={user?.patentaFotoMbrapa} uploading={uploadingLicense === "mbrapa"} onUpload={(f) => uploadLicensePart("mbrapa", f)} />
+              </div>
+            </div>
+          )}
         </div>
       )}
 

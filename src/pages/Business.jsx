@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2 } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X } from "lucide-react";
 import { apiFetch, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
@@ -95,6 +95,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   const [rejectingId, setRejectingId] = useState(null);
   const [reason, setReason] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [licenseModalId, setLicenseModalId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -134,8 +135,12 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   }
   async function verifyId(id) {
     setActingId(id);
-    try { await apiFetch(`/Bookings/${id}/verify-id`, token, { method: "PUT" }); showOk("Identiteti u verifikua."); load(); }
-    catch (e) { showError(e); } finally { setActingId(null); }
+    try {
+      await apiFetch(`/Bookings/${id}/verify-id`, token, { method: "PUT" });
+      showOk("Identiteti u verifikua.");
+      setLicenseModalId(null);
+      load();
+    } catch (e) { showError(e); } finally { setActingId(null); }
   }
 
   const days = (b) => Math.max(1, Math.round((new Date(b.dataPerfundimit) - new Date(b.dataFillimit)) / 86400000));
@@ -180,8 +185,8 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
             <CheckCircle2 size={12} /> Identiteti u verifikua
           </p>
         ) : (
-          <GhostButton type="button" onClick={() => verifyId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 mt-2">
-            Verifiko ID (patente + karte identiteti ne WhatsApp)
+          <GhostButton type="button" onClick={() => setLicenseModalId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 mt-2">
+            Shiko patenten per verifikim
           </GhostButton>
         )
       )}
@@ -300,6 +305,56 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
           </div>
         </div>
       )}
+
+      {licenseModalId && (
+        <LicenseModal
+          bookingId={licenseModalId}
+          token={token}
+          showError={showError}
+          verifying={actingId === licenseModalId}
+          onVerify={() => verifyId(licenseModalId)}
+          onClose={() => setLicenseModalId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function LicenseModal({ bookingId, token, showError, verifying, onVerify, onClose }) {
+  const [license, setLicense] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiFetch(`/Bookings/${bookingId}/license`, token)
+      .then(setLicense)
+      .catch((e) => { showError(e); onClose(); })
+      .finally(() => setLoading(false));
+  }, [bookingId, token]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-3">
+          <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Patenta e klientit</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={16} /></button>
+        </div>
+        {loading ? (
+          <p className="text-xs text-slate-400 text-center py-6">Duke ngarkuar...</p>
+        ) : license && (
+          <>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <img src={license.patentaFotoPara} alt="Para" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700" />
+              <img src={license.patentaFotoMbrapa} alt="Mbrapa" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700" />
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-lg p-2.5 mb-3 leading-relaxed">
+              Kjo eshte nje e dhene personale e mbrojtur me ligj. Perdore vetem per te pergatitur kontraten e qerase se ketij rezervimi — ruajtja, ndarja ose perdorimi per cdo qellim tjeter eshte i ndaluar dhe i ndjekshem penalisht.
+            </p>
+            <PrimaryButton type="button" onClick={onVerify} disabled={verifying} className="w-full text-xs py-2">
+              {verifying ? "Duke ruajtur..." : "Konfirmo verifikimin"}
+            </PrimaryButton>
+          </>
+        )}
+      </div>
     </div>
   );
 }
