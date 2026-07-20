@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard, Pencil } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2 } from "lucide-react";
 import { apiFetch, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
-import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, AvailabilityCalendar } from "../components";
+import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
@@ -683,12 +683,43 @@ function BusinessCarCard({ car, token, reload, showError, showOk }) {
   const [managingPhotos, setManagingPhotos] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [ranges, setRanges] = useState([]);
+  const [blocks, setBlocks] = useState([]);
+  const [blockFrom, setBlockFrom] = useState(null);
+  const [blockTo, setBlockTo] = useState(null);
+  const [blockNote, setBlockNote] = useState("");
+  const [savingBlock, setSavingBlock] = useState(false);
+
+  function loadBlocks() {
+    apiFetch(`/Cars/${car.carId}/blocks`, token).then(setBlocks).catch(() => {});
+  }
 
   function toggleCalendar() {
     const next = !showCalendar;
     setShowCalendar(next);
-    if (next) apiFetch(`/Cars/${car.carId}/availability`, null).then(setRanges).catch(() => {});
+    if (next) loadBlocks();
+  }
+
+  async function submitBlock() {
+    if (!blockFrom || !blockTo) return;
+    setSavingBlock(true);
+    try {
+      await apiFetch(`/Cars/${car.carId}/blocks`, token, {
+        method: "POST",
+        body: JSON.stringify({ dataFillimit: blockFrom, dataPerfundimit: blockTo, shenim: blockNote }),
+      });
+      showOk("Datat u bllokuan.");
+      setBlockFrom(null);
+      setBlockTo(null);
+      setBlockNote("");
+      loadBlocks();
+    } catch (e) { showError(e); } finally { setSavingBlock(false); }
+  }
+
+  async function removeBlock(blockId) {
+    try {
+      await apiFetch(`/Cars/${car.carId}/blocks/${blockId}`, token, { method: "DELETE" });
+      loadBlocks();
+    } catch (e) { showError(e); }
   }
 
   return (
@@ -723,8 +754,55 @@ function BusinessCarCard({ car, token, reload, showError, showOk }) {
           <Calendar size={13} />{showCalendar ? "Mbyll kalendarin" : "Kalendari i rezervimeve"}
         </button>
         {showCalendar && (
-          <div className="mt-3">
-            <AvailabilityCalendar ranges={ranges} />
+          <div className="mt-3 space-y-3">
+            <div>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                <Ban size={12} /> Bllokoje per rezervime jashte platformes
+              </p>
+              <DateRangeCalendar
+                ranges={blocks}
+                selFrom={blockFrom}
+                selTo={blockTo}
+                onSelect={(from, to) => { setBlockFrom(from); setBlockTo(to); }}
+              />
+              {blockFrom && blockTo && (
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="text"
+                    value={blockNote}
+                    onChange={(e) => setBlockNote(e.target.value)}
+                    placeholder="Shenim (opsionale)"
+                    className={inputClass + " text-xs py-1.5"}
+                  />
+                  <button
+                    type="button"
+                    onClick={submitBlock}
+                    disabled={savingBlock}
+                    className="shrink-0 text-xs font-medium text-white bg-slate-900 dark:bg-slate-700 rounded-xl px-3 py-1.5 disabled:opacity-50"
+                  >
+                    {savingBlock ? "Duke ruajtur..." : "Bllokoje"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {blocks.length > 0 && (
+              <div className="space-y-1.5">
+                {blocks.map((b) => (
+                  <div key={b.blockId} className="flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5">
+                    <div>
+                      <span className="font-medium text-slate-700 dark:text-slate-200">{b.dataFillimit} → {b.dataPerfundimit}</span>
+                      <span className="text-slate-400 ml-1.5">{b.eshteRezervimPlatforme ? "Rezervim nga platforma" : (b.shenim || "Jashte platformes")}</span>
+                    </div>
+                    {!b.eshteRezervimPlatforme && (
+                      <button type="button" onClick={() => removeBlock(b.blockId)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 shrink-0 ml-2">
+                        <Trash2 size={13} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {editing && (
