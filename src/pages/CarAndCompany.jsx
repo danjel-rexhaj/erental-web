@@ -13,6 +13,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const activeTo = selTo ? selTo : dataPerfundimit;
   const days = activeFrom && activeTo ? Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000)) : 0;
   const total = (days * car.cmimiDites).toFixed(2);
+  // Results shows near-miss cars (free in X days) using the searched dates, which for this car
+  // may already be taken — don't let the payment flow start until those dates are changed.
+  const hasDateConflict = activeFrom && activeTo && bookedRanges.some((r) => {
+    const s = new Date(r.dataFillimit);
+    const e = new Date(r.dataPerfundimit);
+    return new Date(activeFrom) < e && s < new Date(activeTo);
+  });
 
   const photos = (car.carPhotos || []).filter(Boolean);
   const mainPhoto = photos.find((p) => p.eshteKryesore) || photos[0];
@@ -168,6 +175,10 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <p className="mt-4 text-xs text-slate-400 text-center bg-slate-50 dark:bg-slate-800 rounded-xl py-2.5 px-3">
               Llogarite e bizneseve nuk mund te bejne rezervime.
             </p>
+          ) : hasDateConflict ? (
+            <div className="mt-4 flex items-center gap-2 text-xs font-medium text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl py-2.5 px-3">
+              <AlertTriangle size={14} className="shrink-0" /> Keto data jane te zena per kete makine. Ndrysho daten ne kalendar per te vazhduar me pagesen.
+            </div>
           ) : (
             <div className="mt-4">
               <BookingBox
