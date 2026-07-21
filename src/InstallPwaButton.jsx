@@ -64,17 +64,17 @@ export function InstallPwaButton() {
               <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Shto ERental ne ekranin kryesor</h3>
               <button onClick={() => setShowIosHelp(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0"><X size={16} /></button>
             </div>
-            <ol className="text-sm text-slate-600 dark:text-slate-300 space-y-4">
-              <li className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center justify-center mt-0.5">1</span>
-                <span>Shtyp ikonen <Share size={15} className="inline mx-0.5 -mt-0.5" /> "Share" poshte ne Safari.</span>
+            <ol className="text-sm text-slate-700 dark:text-slate-200 space-y-4">
+              <li className="flex items-center gap-3">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">1</span>
+                <span className="flex items-center gap-1.5 flex-wrap">Shtyp ikonen <Share size={16} className="text-emerald-700 dark:text-emerald-400" /> "Share" poshte ne Safari.</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center justify-center mt-0.5">2</span>
-                <span>Zgjidh <PlusSquare size={15} className="inline mx-0.5 -mt-0.5" /> "Add to Home Screen".</span>
+              <li className="flex items-center gap-3">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">2</span>
+                <span className="flex items-center gap-1.5 flex-wrap">Zgjidh <PlusSquare size={16} className="text-emerald-700 dark:text-emerald-400" /> "Add to Home Screen".</span>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center justify-center mt-0.5">3</span>
+              <li className="flex items-center gap-3">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">3</span>
                 <span>Shtyp "Add" — gati, ikona ERental del ne ekranin tend.</span>
               </li>
             </ol>
