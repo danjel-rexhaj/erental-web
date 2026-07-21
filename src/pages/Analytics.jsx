@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet } from "lucide-react";
+import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronDown } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiFetch } from "../api";
 import { inputClass, StatusPill } from "../components";
@@ -150,9 +150,13 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
   );
 }
 
+const PAGE_SIZE = 15;
+
 function TransactionsTable({ token, showError, admin = false }) {
   const [payments, setPayments] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     setLoading(true);
@@ -165,8 +169,30 @@ function TransactionsTable({ token, showError, admin = false }) {
   if (loading && !payments) return <p className="text-sm text-slate-400 text-center py-8">Duke ngarkuar...</p>;
   if (!payments || payments.length === 0) return <p className="text-sm text-slate-400 text-center py-8">Ende s'ka transaksione.</p>;
 
+  if (!expanded) {
+    return (
+      <button
+        onClick={() => setExpanded(true)}
+        className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+      >
+        <ChevronDown size={16} />
+        Shfaq transaksionet ({payments.length})
+      </button>
+    );
+  }
+
+  const visible = payments.slice(0, visibleCount);
+
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
+    <div>
+      <button
+        onClick={() => { setExpanded(false); setVisibleCount(PAGE_SIZE); }}
+        className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 mb-3"
+      >
+        <ChevronDown size={16} className="rotate-180" />
+        Fshih transaksionet ({payments.length})
+      </button>
+      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
           <tr>
@@ -183,7 +209,7 @@ function TransactionsTable({ token, showError, admin = false }) {
           </tr>
         </thead>
         <tbody>
-          {payments.map((p) => (
+          {visible.map((p) => (
             <tr key={p.paymentId} className="border-t border-slate-100 dark:border-slate-800">
               <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{p.dataPageses ? new Date(p.dataPageses).toLocaleDateString("sq-AL") : "-"}</td>
               <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 font-mono text-xs">{p.paypalCaptureId ? `${p.paypalCaptureId.slice(0, 10)}…` : "-"}</td>
@@ -211,6 +237,15 @@ function TransactionsTable({ token, showError, admin = false }) {
           ))}
         </tbody>
       </table>
+      </div>
+      {visibleCount < payments.length && (
+        <button
+          onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+          className="w-full text-center text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 mt-3"
+        >
+          Shfaq me shume ({payments.length - visibleCount} te tjera)
+        </button>
+      )}
     </div>
   );
 }
