@@ -503,6 +503,27 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
   const [coords, setCoords] = useState(null);
   const [savingLocation, setSavingLocation] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
+  const [confirmingDeactivate, setConfirmingDeactivate] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
+
+  async function deactivate() {
+    setDeactivating(true);
+    try {
+      await apiFetch("/Companies/my-company/deactivate", token, { method: "POST" });
+      showOk("Llogaria u caktivizua.");
+      setConfirmingDeactivate(false);
+      reload();
+    } catch (e) { showError(e); } finally { setDeactivating(false); }
+  }
+
+  async function reactivate() {
+    setDeactivating(true);
+    try {
+      await apiFetch("/Companies/my-company/reactivate", token, { method: "POST" });
+      showOk("Llogaria u riaktivizua.");
+      reload();
+    } catch (e) { showError(e); } finally { setDeactivating(false); }
+  }
 
   async function saveLocation() {
     if (!coords) return;
@@ -608,6 +629,40 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cars.map((car) => <BusinessCarCard key={car.carId} car={car} token={token} reload={reload} showError={showError} showOk={showOk} />)}
       </div>
+
+      {company.statusi === "inactive" ? (
+        <div className="mt-8 border border-amber-200 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-900/20 rounded-2xl p-4">
+          <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">Llogaria eshte e caktivizuar</p>
+          <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">Makinat e tua nuk shfaqen ne kerkim dhe s'mund te marresh rezervime te reja. Rezervimet ekzistuese s'preken.</p>
+          <PrimaryButton type="button" onClick={reactivate} disabled={deactivating} className="text-xs py-2 w-fit">
+            {deactivating ? "Duke riaktivizuar..." : "Riaktivizo llogarine"}
+          </PrimaryButton>
+        </div>
+      ) : (
+        <div className="mt-8 border border-red-200 dark:border-red-800/60 rounded-2xl p-4">
+          <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Zona e rrezikut</p>
+          {confirmingDeactivate ? (
+            <>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
+                Makinat e tua do te fshihen nga kerkimi dhe s'do mund te marresh rezervime te reja. Faturat, kontratat dhe historiku i rezervimeve ekzistuese mbeten te paprekura. Mund ta riaktivizosh llogarine kurdo qe te duash.
+              </p>
+              <div className="flex gap-2">
+                <button onClick={deactivate} disabled={deactivating} className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
+                  {deactivating ? "Duke caktivizuar..." : "Po, fshi llogarine"}
+                </button>
+                <GhostButton type="button" onClick={() => setConfirmingDeactivate(false)} className="text-xs py-2">Anulo</GhostButton>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Caktivizon llogarine e biznesit — makinat s'do shfaqen me per rezervime te reja.</p>
+              <button onClick={() => setConfirmingDeactivate(true)} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
+                Fshi llogarine
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

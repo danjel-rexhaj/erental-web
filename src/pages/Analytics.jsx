@@ -199,6 +199,10 @@ function TransactionsTable({ token, showError, admin = false }) {
                   <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">Sukses</span>
                 ) : p.statusi === "refunded" ? (
                   <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">Rimbursuar</span>
+                ) : p.statusi === "refund_failed" ? (
+                  <span className="text-[11px] font-semibold text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full whitespace-nowrap">Rimbursimi dështoi</span>
+                ) : p.statusi === "not_refunded" ? (
+                  <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">Pa rimbursim</span>
                 ) : (
                   <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full whitespace-nowrap">{p.statusi}</span>
                 )}
@@ -460,6 +464,7 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
                   <td className="px-4 py-2">
                     <select className={inputClass + " text-xs py-1"} value={form.statusi} onChange={(e) => setForm((f) => ({ ...f, statusi: e.target.value }))}>
                       <option value="active">active</option>
+                      <option value="inactive">inactive</option>
                       <option value="suspended">suspended</option>
                     </select>
                   </td>

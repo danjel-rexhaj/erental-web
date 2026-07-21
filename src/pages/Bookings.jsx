@@ -9,6 +9,9 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelInfo, setCancelInfo] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
   const [showCancelled, setShowCancelled] = useState(false);
 
   const load = useCallback(async () => {
@@ -26,9 +29,31 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
   }, [highlightBookingId, bookings]);
 
   async function cancelBooking(id) {
+    if (!cancelReason.trim()) { showError(new Error("Duhet te shkruash nje arsye per anulimin.")); return; }
     setActingId(id);
-    try { await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT" }); showOk("Rezervimi u anulua."); load(); }
-    catch (e) { showError(e); } finally { setActingId(null); }
+    try {
+      await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT", body: JSON.stringify({ reason: cancelReason }) });
+      showOk("Rezervimi u anulua.");
+      setCancellingId(null);
+      setCancelInfo(null);
+      setCancelReason("");
+      load();
+    } catch (e) { showError(e); } finally { setActingId(null); }
+  }
+
+  // Mirrors BookingsController.CancelBooking's rule: refund window counts from business
+  // confirmation, not booking creation — a pending booking is always fully refundable.
+  // Computed once when the cancel form opens (not inline in render) since it reads the clock.
+  function computeRefundInfo(b) {
+    if (!b.paymentMethod || b.paymentMethod === "cash") return null;
+    if (b.statusi === "pending") return { ok: true, text: "Rimbursim i plote — rezervimi ende s'eshte miratuar nga biznesi." };
+    if (b.statusi === "confirmed" && b.dataKonfirmimit) {
+      const oreQeKaluan = (Date.now() - new Date(b.dataKonfirmimit).getTime()) / 3600000;
+      if (oreQeKaluan <= 12) return { ok: true, text: "Rimbursim i plote — je brenda 12 oreve nga miratimi." };
+      if (b.paymentMethod === "paypal_deposit") return { ok: false, text: "Kane kaluar 12 ore nga miratimi — depozita e paguar online nuk rimbursohet." };
+      return { ok: false, text: "Kane kaluar 12 ore nga miratimi — kontakto biznesin direkt per rimbursim." };
+    }
+    return null;
   }
 
   async function removeBooking(id) {
@@ -153,12 +178,33 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
 
           <div className="flex flex-col gap-1 mt-3">
             {(b.statusi === "pending" || b.statusi === "confirmed") && (
-              <GhostButton onClick={() => cancelBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2">
-                Anulo
-              </GhostButton>
-            )}
-            {(b.statusi === "pending" || b.statusi === "confirmed") && (
-              <p className="text-[10px] text-slate-400 dark:text-slate-500">Anulim me rimbursim te plote brenda 12 oresh nga rezervimi; pas kesaj varet nga biznesi.</p>
+              cancellingId === b.bookingId ? (
+                <div>
+                  {cancelInfo && (
+                    <p className={`text-[11px] rounded-lg px-2 py-1.5 mb-2 ${cancelInfo.ok ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30" : "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30"}`}>
+                      {cancelInfo.text}
+                    </p>
+                  )}
+                  <textarea
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Arsyeja e anulimit..."
+                    rows={2}
+                    autoFocus
+                    className="w-full text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 mb-2 outline-none focus:border-red-500"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => cancelBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
+                      {actingId === b.bookingId ? "Duke anuluar..." : "Konfirmo anulimin"}
+                    </button>
+                    <GhostButton onClick={() => { setCancellingId(null); setCancelInfo(null); setCancelReason(""); }} className="text-xs py-2">Mos e anulo</GhostButton>
+                  </div>
+                </div>
+              ) : (
+                <GhostButton onClick={() => { setCancellingId(b.bookingId); setCancelInfo(computeRefundInfo(b)); }} className="text-xs py-2">
+                  Anulo
+                </GhostButton>
+              )
             )}
             {b.statusi === "cancelled" && (
               deletingId === b.bookingId ? (
