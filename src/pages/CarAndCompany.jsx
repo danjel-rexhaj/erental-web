@@ -308,7 +308,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
           method: "POST",
           body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId }),
         });
-        setSuccessInfo({ bookingId: booking.bookingId, amountPaid: cap.amountPaid, method });
+        setSuccessInfo({ bookingId: booking.bookingId, amountPaid: cap.amountPaid, method, cardLast4: cap.cardLast4 });
       } catch (e) { showError(e); } finally { setLoading(false); }
     }
 

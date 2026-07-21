@@ -1,7 +1,7 @@
 // Shared by PaymentSuccessModal (right after paying) and the per-booking "Fatura" buttons in
 // Bookings.jsx / Business.jsx (CompanyBookings) — an invoice needs to stay retrievable long after
 // the payment moment, not just in a modal that's gone once closed.
-export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit, dataPerfundimit, cmimiPerDite, dite, totalPrice, amountPaid, eshtePagesePlote, clientLabel, company }) {
+export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit, dataPerfundimit, cmimiPerDite, dite, totalPrice, amountPaid, eshtePagesePlote, clientLabel, company, cardLast4 }) {
   const { jsPDF } = await import("jspdf");
 
   const confirmim = `ER-${String(bookingId).padStart(6, "0")}`;
@@ -153,6 +153,30 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.setFontSize(15);
   doc.text(`${totalPrice}€`, pillX + pillW - 22, pillY + 27, { align: "right" });
 
+  // ---- cancellation terms (fills the space above the footer with something useful) ----
+  const termsY = pillY + pillH + 44;
+  doc.setDrawColor(230, 224, 210);
+  doc.setLineWidth(0.6);
+  doc.line(mx, termsY, rightX, termsY);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(...NAVY);
+  doc.text("Kushtet e anulimit dhe rimbursimit", mx, termsY + 26);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...GREY);
+  const terms = [
+    "Anulimi brenda 12 orëve nga rezervimi rimbursohet plotësisht, automatikisht, në të njëjtën",
+    "kartë me të cilën u krye pagesa online.",
+    "Pas 12 orëve, rimbursimi i pjesës së paguar online varet nga marrëveshja mes klientit dhe",
+    "biznesit — ERental si marketplace nuk ndërhyn më në këtë vendim.",
+    "Pjesa e paguar cash (nëse ka) paguhet direkt te biznesi dhe nuk kalon nga ERental.",
+  ];
+  let termsLineY = termsY + 44;
+  terms.forEach((line) => { doc.text(line, mx, termsLineY); termsLineY += 14; });
+
   // ---- footer band ----
   const footH = 150;
   const footY = pageH - footH;
@@ -169,6 +193,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
     ["Menyra", eshtePagesePlote ? "Kartë — pagesë e plotë" : "Kartë — depozitë", CREAM],
     ["Paguar online", `${amountPaid}€`, PAID],
   ];
+  if (cardLast4) paymentLines.push(["Karta", `•••• •••• •••• ${cardLast4}`, CREAM]);
   if (mbetetCash > 0) paymentLines.push(["Mbetet cash", `${mbetetCash}€`, CASH]);
 
   fy += 22;

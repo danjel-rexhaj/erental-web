@@ -234,6 +234,7 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
       eshtePagesePlote: successInfo.method === "paypal_full",
       clientLabel: decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
       company: car.company,
+      cardLast4: successInfo.cardLast4,
     });
   }
 
