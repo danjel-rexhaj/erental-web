@@ -198,6 +198,11 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
         )}
       </p>
       <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
+      {b.payment?.komisioni != null && (
+        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+          Komisioni ynë {b.payment.komisioni.toFixed(2)}€ · Neto për ty {b.payment.shumaBiznesit.toFixed(2)}€
+        </p>
+      )}
       <PaymentBadge b={b} />
       {b.paymentMethod && b.paymentMethod !== "cash" && (
         <button
@@ -432,7 +437,7 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onClos
 function RegisterCompanyForm({ token, onDone, showError, showOk }) {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "" });
+  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "", iban: "" });
   const [coords, setCoords] = useState(null);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -487,6 +492,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
             <LocationPicker adresa={form.adresa} qyteti={form.qyteti} coords={coords} onChange={setCoords} showError={showError} />
           </Field>
           <Field label="NIPT"><input required className={inputClass} value={form.nipt} onChange={set("nipt")} placeholder="L12345678A" /></Field>
+          <Field label="IBAN (per te marre pagesat, pas komisionit)"><input required className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
           <Field label="Certifikata e NIPT-it (foto/PDF)">
             <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className={inputClass} />
           </Field>
@@ -546,6 +552,12 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
 
   return (
     <div>
+      {!company.iban && (
+        <div className="border border-amber-200 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-900/20 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-xs text-amber-800 dark:text-amber-300">Nuk ke vendosur ende IBAN-in e biznesit — pa te s'mund te marresh pagesat pas komisionit.</p>
+          <button onClick={() => setEditingDetails(true)} className="text-xs font-semibold text-amber-800 dark:text-amber-300 underline shrink-0">Shto IBAN</button>
+        </div>
+      )}
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6">
         <div className="flex flex-col lg:flex-row lg:items-stretch gap-4">
           <div className="flex items-center gap-4 min-w-0">
@@ -583,6 +595,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
                 <>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{company.qyteti} · NIPT {company.nipt}</p>
                   <p className="text-[11px] text-slate-400 mt-1">Modeli i faturimit: {company.billingModel === "commission" ? `Komision ${company.commissionRate}%` : "Abonim mujor"}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">IBAN: {company.iban || "i pavendosur"}</p>
                 </>
               )}
 
@@ -674,6 +687,7 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
     telefoni: company.telefoni || "",
     adresa: company.adresa || "",
     qyteti: company.qyteti || "",
+    iban: company.iban || "",
   });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -692,6 +706,7 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
       <Field label="Telefoni"><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} /></Field>
       <Field label="Adresa"><input className={inputClass} value={form.adresa} onChange={set("adresa")} /></Field>
       <Field label="Qyteti"><input className={inputClass} value={form.qyteti} onChange={set("qyteti")} /></Field>
+      <Field label="IBAN (per te marre pagesat, pas komisionit)"><input className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
       <div className="flex gap-2">
         <PrimaryButton type="submit" disabled={loading} className="text-xs py-2">{loading ? "Duke ruajtur..." : "Ruaj"}</PrimaryButton>
         <GhostButton type="button" onClick={onCancel} className="text-xs py-2">Anulo</GhostButton>
