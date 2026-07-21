@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check } from "lucide-react";
+import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiFetch } from "../api";
 import { inputClass, StatusPill } from "../components";
@@ -86,7 +86,7 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={Eye} label="Shikime gjithsej" value={data.totals.totalViews} active={showViews} onClick={() => setShowViews((s) => !s)} />
         <StatCard icon={CalendarIcon} label="Rezervime gjithsej" value={data.totals.totalBookings} onClick={onGoBookings} />
-        <StatCard icon={TrendingUp} label="Te ardhura gjithsej" value={`${data.totals.totalRevenue.toFixed(2)}€`} onClick={() => transactionsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+        <StatCard icon={TrendingUp} label="Te ardhura gjithsej (pas komisionit)" value={`${data.totals.totalRevenue.toFixed(2)}€`} onClick={() => transactionsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} />
       </div>
 
       {showViews && (
@@ -269,6 +269,11 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
         <StatCard icon={Clock} label="Ne pritje verifikimi" value={data.totals.pendingVerifications} onClick={onGoPending} />
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <StatCard icon={TrendingUp} label="Te ardhura komplet ne platforme" value={`${data.totals.totalPlatformRevenue.toFixed(2)}€`} />
+        <StatCard icon={Wallet} label="Fitimi yne (komisioni 10%)" value={`${data.totals.totalPlatformProfit.toFixed(2)}€`} />
+      </div>
+
       {activePanel === "users" && <AdminUsersPanel token={token} showError={showError} showOk={showOk} />}
       {activePanel === "companies" && <AdminCompaniesPanel token={token} showError={showError} showOk={showOk} />}
       {activePanel === "cars" && <AdminCarsPanel token={token} showError={showError} showOk={showOk} />}
@@ -312,6 +317,35 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
                 <span className="font-semibold text-slate-900 dark:text-slate-100">{c.rezervime} rezervime</span>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-1">Fitimet sipas biznesit</h3>
+        <p className="text-xs text-slate-400 mb-4">Sa qera ka bere secili biznes gjithsej, dhe sa prej saj eshte fitimi yne (komisioni).</p>
+        {(!data.companyBreakdown || data.companyBreakdown.length === 0) ? (
+          <p className="text-sm text-slate-400 text-center py-4">Ende s'ka transaksione te perfunduara.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-slate-500 dark:text-slate-400 text-xs uppercase">
+                <tr>
+                  <th className="text-left py-2">Biznesi</th>
+                  <th className="text-right py-2">Qeraja gjithsej</th>
+                  <th className="text-right py-2">Fitimi yne</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.companyBreakdown.map((c, i) => (
+                  <tr key={i} className="border-t border-slate-50 dark:border-slate-800">
+                    <td className="py-2 text-slate-700 dark:text-slate-300">{c.emri}</td>
+                    <td className="py-2 text-right text-slate-700 dark:text-slate-300">{c.teArdhura.toFixed(2)}€</td>
+                    <td className="py-2 text-right font-semibold text-emerald-700 dark:text-emerald-400">{c.fitimi.toFixed(2)}€</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
