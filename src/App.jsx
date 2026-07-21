@@ -606,6 +606,9 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
 
       {menuOpen && (
         <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 flex flex-col gap-1">
+          <div className="mb-1">
+            <InstallPwaButton />
+          </div>
           {[...links, ...moreLinks].map((l, i) => (
             <span key={l.key + (l.tab || "")}>
               {i > 0 && " "}

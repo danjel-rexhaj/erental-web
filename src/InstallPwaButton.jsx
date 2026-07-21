@@ -51,10 +51,10 @@ export function InstallPwaButton() {
     <>
       <button
         onClick={handleClick}
-        className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 rounded-full px-2.5 sm:px-3 py-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition whitespace-nowrap"
+        className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 rounded-full px-3 py-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition whitespace-nowrap shrink-0"
         title="Shkarko ERental si aplikacion"
       >
-        <Download size={13} /> <span className="hidden sm:inline">Shkarko App</span>
+        <Download size={13} /> Shkarko App
       </button>
 
       {showIosHelp && (
