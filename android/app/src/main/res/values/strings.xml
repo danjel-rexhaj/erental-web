@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ERental</string>
+    <string name="title_activity_main">ERental</string>
+    <string name="package_name">com.erental.app</string>
+    <string name="custom_url_scheme">com.erental.app</string>
+</resources>
