@@ -198,7 +198,6 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   title="Vendndodhja e biznesit"
                   src={mapEmbedUrl}
                   className="w-full h-64 border-0"
-                  loading="lazy"
                 />
               </div>
             )}
@@ -271,6 +270,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   const [successInfo, setSuccessInfo] = useState(null);
   const [showRefundPolicy, setShowRefundPolicy] = useState(false);
   const [buttonReady, setButtonReady] = useState(false);
+  const [openingCard, setOpeningCard] = useState(false);
   const buttonsRef = useRef(null);
 
   // createOrder/onApprove run from PayPal SDK callbacks, which capture whatever closure was in
@@ -297,6 +297,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     }
 
     async function onApprove(data) {
+      setOpeningCard(false);
       setLoading(true);
       try {
         const { carId, dataFillimit, dataPerfundimit } = latestRef.current;
@@ -318,10 +319,16 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       const buttons = window.paypal.Buttons({
         fundingSource: window.paypal.FUNDING.CARD,
         style: { layout: "vertical", color: "black", shape: "rect", label: "pay" },
+        // PayPal's own card-entry overlay can take a beat to render after the click — without
+        // this the button area just goes blank/unresponsive-looking until it shows up.
+        onClick: () => {
+          setOpeningCard(true);
+          setTimeout(() => setOpeningCard(false), 2500);
+        },
         createOrder,
         onApprove,
-        onCancel: () => setLoading(false),
-        onError: () => { showError(new Error("Pagesa deshtoi. Provo perseri.")); setLoading(false); },
+        onCancel: () => { setOpeningCard(false); setLoading(false); },
+        onError: () => { setOpeningCard(false); showError(new Error("Pagesa deshtoi. Provo perseri.")); setLoading(false); },
       });
       if (!buttons.isEligible()) {
         setSdkError("Pagesa me karte nuk eshte e disponueshme aktualisht.");
@@ -441,6 +448,11 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
               <Loader2 size={16} className="animate-spin" /> Duke pergatitur pagesen...
             </div>
           )}
+          {!loading && buttonReady && openingCard && (
+            <div className="flex items-center justify-center gap-2 py-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <Loader2 size={14} className="animate-spin" /> Duke hapur formularin e pageses...
+            </div>
+          )}
           <div className={loading || showRefundPolicy || !buttonReady ? "hidden" : ""} ref={buttonsRef} />
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
         </div>
@@ -522,7 +534,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
               title="Merr udhezime"
               className="hidden lg:block relative flex-1 min-h-20 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
             >
-              <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" loading="lazy" tabIndex={-1} />
+              <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" tabIndex={-1} />
               <span className="absolute inset-0 bg-black/0 hover:bg-black/10 transition" />
             </a>
           )}
