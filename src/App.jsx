@@ -337,6 +337,8 @@ export default function App() {
           showError={showError}
           showOk={showOk}
           isBusinessOwner={user?.role === "business"}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={toggleFavorite}
         />
       );
     }

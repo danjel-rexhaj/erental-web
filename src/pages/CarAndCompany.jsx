@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
 
-export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner }) {
+export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner, favoriteIds, onToggleFavorite }) {
   const [bookedRanges, setBookedRanges] = useState([]);
   const [hasLicense, setHasLicense] = useState(null);
   const [selFrom, setSelFrom] = useState(dataFillimit);
@@ -79,6 +79,16 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   <ChevronRight size={18} />
                 </button>
               </>
+            )}
+            {onToggleFavorite && (
+              <button
+                type="button"
+                onClick={() => onToggleFavorite(car)}
+                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition"
+                title={favoriteIds?.has(car.carId) ? "Hiq nga te preferuarat" : "Shto te preferuarat"}
+              >
+                <Heart size={16} className={favoriteIds?.has(car.carId) ? "text-red-500 fill-red-500" : "text-slate-500 dark:text-slate-300"} />
+              </button>
             )}
           </div>
           {photos.length > 1 && (
