@@ -250,6 +250,10 @@ export default function App() {
       go("/biznesi?tab=bookings");
     } else if (n.target === "client_booking" || n.target === "leave_review") {
       go("/rezervimet");
+    } else if (n.target === "admin_company_verification") {
+      go("/biznesi?tab=admin");
+    } else if (n.target === "admin_whatsapp_verification") {
+      go("/biznesi?tab=whatsapp");
     }
   }
 
