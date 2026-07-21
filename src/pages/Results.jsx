@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal } from "lucide-react";
 import { CarCard } from "../components";
 
@@ -11,9 +10,7 @@ function freeInLabel(lirohetMe, dataFillimit) {
   return `Lirohet pas ${days} ditesh`;
 }
 
-export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite }) {
-  const [filters, setFilters] = useState({ search: "", marka: "", biznesi: "", karburanti: "", kategoria: "", sort: "" });
-  const [showFilters, setShowFilters] = useState(false);
+export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters }) {
 
   const brands = [...new Set(cars.map((c) => c.marka).filter(Boolean))].sort();
   const categories = [...new Set(cars.map((c) => c.kategoria).filter(Boolean))].sort();

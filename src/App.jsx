@@ -3,6 +3,7 @@ import { LogOut, Menu, X, Bell, Sun, Moon } from "lucide-react";
 import { apiFetch, decodeJwt } from "./api";
 import { useNotifications } from "./notifications";
 import { Logo } from "./Logo";
+import { InstallPwaButton } from "./InstallPwaButton";
 import { Notice, PaymentSuccessModal } from "./components";
 import Home from "./pages/Home";
 import Results from "./pages/Results";
@@ -59,6 +60,9 @@ export default function App() {
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
   const [paymentSuccessInfo, setPaymentSuccessInfo] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+  // Also lives here (not in Results.jsx) so it survives leaving for a car's detail page and coming back.
+  const [resultFilters, setResultFilters] = useState({ search: "", marka: "", biznesi: "", karburanti: "", kategoria: "", sort: "" });
+  const [showResultFilters, setShowResultFilters] = useState(false);
 
   useEffect(() => {
     if (!token) { const t = setTimeout(() => setFavoriteIds(new Set()), 0); return () => clearTimeout(t); }
@@ -357,6 +361,10 @@ export default function App() {
           onSelectCompany={(id) => go(`/kompania/${id}`, { cars })}
           favoriteIds={favoriteIds}
           onToggleFavorite={toggleFavorite}
+          filters={resultFilters}
+          setFilters={setResultFilters}
+          showFilters={showResultFilters}
+          setShowFilters={setShowResultFilters}
         />
       );
     }
@@ -511,6 +519,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <InstallPwaButton />
           <button
             onClick={toggleTheme}
             className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
