@@ -519,7 +519,6 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
           </nav>
         </div>
         <div className="flex items-center gap-3">
-          <InstallPwaButton />
           <button
             onClick={toggleTheme}
             className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
