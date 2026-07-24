@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ShieldCheck, Calendar, ArrowRight } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton } from "../components";
+import { useLang } from "../useLang";
 
 const today = () => new Date().toISOString().split("T")[0];
 const dayAfter = (dateStr) => {
@@ -11,6 +12,7 @@ const dayAfter = (dateStr) => {
 };
 
 export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, setDataPerfundimit, onSearch, loading }) {
+  const { t } = useLang();
   const [companies, setCompanies] = useState([]);
 
   useEffect(() => {
@@ -42,18 +44,18 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
         <div className="relative flex flex-col justify-end min-h-[560px] sm:min-h-[520px] p-6 sm:p-12">
           <span className="inline-flex items-center gap-1.5 text-white text-xs font-semibold tracking-wide uppercase bg-gradient-to-r from-teal-500 to-emerald-600 rounded-full px-3 py-1.5 w-fit mb-4 shadow-lg shadow-teal-900/30">
-            ERental Albania
+            {t("home.badge")}
           </span>
           <h1 className="text-white text-3xl sm:text-5xl font-bold tracking-tight max-w-xl">
-            Merr makinen qe te duhet, kur te duhet.
+            {t("home.title")}
           </h1>
           <p className="text-slate-300 text-sm sm:text-base mt-3 max-w-lg">
-            Platforma e pare shqiptare ku krahason dhe rezervon makinen tende me qera brenda sekondave — pa kosto te fshehura.
+            {t("home.subtitle")}
           </p>
 
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 mt-8 w-full max-w-2xl flex flex-col sm:flex-row sm:items-end gap-3 shadow-2xl">
             <div className="flex-1 min-w-0">
-              <Field label="Nga">
+              <Field label={t("home.from")}>
                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-emerald-100 dark:focus-within:ring-emerald-900/40 transition">
                   <Calendar size={15} className="text-emerald-600 shrink-0 pointer-events-none" />
                   <input
@@ -68,7 +70,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             </div>
             <ArrowRight size={18} className="hidden sm:block text-slate-300 mb-3 shrink-0" />
             <div className="flex-1 min-w-0">
-              <Field label="Deri">
+              <Field label={t("home.to")}>
                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-emerald-100 dark:focus-within:ring-emerald-900/40 transition">
                   <Calendar size={15} className="text-emerald-600 shrink-0 pointer-events-none" />
                   <input
@@ -81,7 +83,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
                 </div>
               </Field>
             </div>
-            <PrimaryButton onClick={onSearch} disabled={loading} className="sm:w-48 mb-3">{loading ? "Duke kerkuar..." : "Kerko makina"}</PrimaryButton>
+            <PrimaryButton onClick={onSearch} disabled={loading} className="sm:w-48 mb-3">{loading ? t("home.searching") : t("home.search")}</PrimaryButton>
           </div>
         </div>
       </div>
@@ -91,7 +93,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
           <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-teal-950/40 dark:via-slate-800 dark:to-emerald-950/30" />
 
           <div className="relative p-6 sm:p-8">
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">Bizneset e verifikuara ne ERental</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">{t("home.verifiedBusinesses")}</p>
             <div className="overflow-hidden">
               <div className="flex gap-3 animate-marquee w-max">
                 {loop.map((c, i) => (

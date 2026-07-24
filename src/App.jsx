@@ -4,6 +4,7 @@ import { apiFetch, decodeJwt } from "./api";
 import { useNotifications } from "./notifications";
 import { Logo } from "./Logo";
 import { InstallPwaButton } from "./InstallPwaButton";
+import { useLang } from "./useLang";
 import { Notice, PaymentSuccessModal } from "./components";
 import Home from "./pages/Home";
 import Results from "./pages/Results";
@@ -448,26 +449,27 @@ export default function App() {
 }
 
 function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, notifications, unreadCount, markAllRead, onNotificationClick, dismissNotification, clearAllNotifications, theme, toggleTheme }) {
+  const { lang, setLang, t } = useLang();
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const links = user?.role === "business"
     ? [
-        { key: "browse", label: "Makina" },
-        { key: "business", tab: "dashboard", label: "Biznesi" },
-        { key: "business", tab: "bookings", label: "Rezervimet" },
-        { key: "business", tab: "analytics", label: "Statistikat" },
+        { key: "browse", label: t("nav.cars") },
+        { key: "business", tab: "dashboard", label: t("nav.business") },
+        { key: "business", tab: "bookings", label: t("nav.bookings") },
+        { key: "business", tab: "analytics", label: t("nav.stats") },
       ]
     : [
-        { key: "browse", label: "Makina" },
-        { key: "favorites", label: "Te preferuarat" },
-        { key: "bookings", label: "Rezervimet" },
-        { key: "business", label: "Biznesi" },
+        { key: "browse", label: t("nav.cars") },
+        { key: "favorites", label: t("nav.favorites") },
+        { key: "bookings", label: t("nav.bookings") },
+        { key: "business", label: t("nav.business") },
       ];
   const moreLinks = [
-    { key: "about", label: "Rreth nesh" },
-    { key: "contact", label: "Kontakt" },
-    { key: "careers", label: "Karriere" },
+    { key: "about", label: t("nav.about") },
+    { key: "contact", label: t("nav.contact") },
+    { key: "careers", label: t("nav.careers") },
   ];
   return (
     <div className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-20 transition-colors">
@@ -498,7 +500,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
                   moreLinks.some((l) => l.key === view) ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
-                Me shume
+                {t("nav.more")}
               </button>
               {moreOpen && (
                 <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 w-40 z-30">
@@ -519,6 +521,13 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
           </nav>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setLang(lang === "sq" ? "en" : "sq")}
+            className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-full w-7 h-7 flex items-center justify-center shrink-0"
+            title={lang === "sq" ? "Switch to English" : "Kalo ne shqip"}
+          >
+            {lang === "sq" ? "EN" : "SQ"}
+          </button>
           <button
             onClick={toggleTheme}
             className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
@@ -594,7 +603,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
               onClick={() => setView("auth")}
               className="hidden md:block rounded-xl bg-emerald-700 text-white text-sm font-semibold px-4 py-1.5 hover:bg-emerald-800 transition"
             >
-              Kyçu
+              {t("nav.login")}
             </button>
           )}
           <button onClick={() => setMenuOpen((s) => !s)} className="md:hidden text-slate-600 dark:text-slate-300">
@@ -625,15 +634,15 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
           {loggedIn ? (
             <>
               <button onClick={() => { setView("auth"); setMenuOpen(false); }} className="text-sm font-medium px-3 py-2 rounded-lg text-left text-slate-600">
-                Profili ({user?.emri})
+                {t("nav.profile")} ({user?.emri})
               </button>
               <button onClick={() => { onLogout(); setMenuOpen(false); }} className="text-sm font-medium px-3 py-2 rounded-lg text-left text-red-600">
-                Dil nga llogaria
+                {t("nav.logout")}
               </button>
             </>
           ) : (
             <button onClick={() => { setView("auth"); setMenuOpen(false); }} className="text-sm font-semibold px-3 py-2 rounded-lg text-left text-emerald-700">
-              Kyçu / Regjistrohu
+              {t("nav.loginRegister")}
             </button>
           )}
         </div>
