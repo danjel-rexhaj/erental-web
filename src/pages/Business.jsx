@@ -3,7 +3,7 @@ import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, Us
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
-import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES } from "../carData";
+import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
 
@@ -851,7 +851,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
         <Field label="Targa"><input required className={inputClass} value={form.targa} onChange={set("targa")} placeholder="AA123BB" /></Field>
         <Field label="Kategoria">
           <select className={inputClass} value={form.kategoria} onChange={set("kategoria")}>
-            <option value="economy">Economy</option><option value="suv">SUV</option><option value="luxury">Luxury</option><option value="van">Van</option>
+            {CAR_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
           </select>
         </Field>
         <Field label="Vende"><input type="number" className={inputClass} value={form.numriVendeve} onChange={set("numriVendeve")} /></Field>

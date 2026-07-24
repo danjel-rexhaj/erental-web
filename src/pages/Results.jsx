@@ -1,5 +1,8 @@
 import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal } from "lucide-react";
 import { CarCard } from "../components";
+import { CAR_CATEGORIES } from "../carData";
+
+const categoryLabel = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
 
 const selectClass = "text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition";
 
@@ -87,9 +90,9 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
               <option value="hybrid">Hybrid</option>
               <option value="elektrik">Elektrik</option>
             </select>
-            <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={`${selectClass} capitalize`}>
+            <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={selectClass}>
               <option value="">Te gjitha kategorite</option>
-              {categories.map((k) => <option key={k} value={k} className="capitalize">{k}</option>)}
+              {categories.map((k) => <option key={k} value={k}>{categoryLabel(k)}</option>)}
             </select>
             <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={selectClass}>
               <option value="">Rendit sipas</option>

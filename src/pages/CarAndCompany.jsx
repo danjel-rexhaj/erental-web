@@ -4,6 +4,13 @@ import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
 import { PHOTO_SLOTS, AMENITIES } from "../carData";
 
+const MUAJT_SHKURTER = ["Jan", "Shk", "Mar", "Pri", "Maj", "Qer", "Kor", "Gsh", "Sht", "Tet", "Nen", "Dhj"];
+function formatShortDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return `${d.getDate()} ${MUAJT_SHKURTER[d.getMonth()]}`;
+}
+
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner, favoriteIds, onToggleFavorite }) {
   const [bookedRanges, setBookedRanges] = useState([]);
   const [hasLicense, setHasLicense] = useState(null);
@@ -151,7 +158,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mt-5">
             <div className="flex items-center gap-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2.5 py-1.5 w-fit">
-              <Calendar size={14} /> {activeFrom} → {activeTo}
+              <Calendar size={14} /> {formatShortDate(activeFrom)} → {formatShortDate(activeTo)}
             </div>
             <div className="flex items-center justify-between mt-2">
               <p className="text-xs text-slate-500 dark:text-slate-400">{days} dite × {car.cmimiDites}€</p>

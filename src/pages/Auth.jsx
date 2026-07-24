@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload } from "lucide-react";
 import { apiFetch, apiFetchBlob } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass } from "../components";
+import { NATIONALITIES } from "../carData";
 
 const MUAJT = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
 function memberSince(raw) {
@@ -31,7 +32,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
   const [loading, setLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [hasWhatsapp, setHasWhatsapp] = useState(false);
-  const [form, setForm] = useState({ emri: "", mbiemri: "", email: "", password: "", telefoni: "" });
+  const [form, setForm] = useState({ emri: "", mbiemri: "", email: "", password: "", telefoni: "", kombesia: "Shqiperi" });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const [forgotStep, setForgotStep] = useState("request");
@@ -122,6 +123,13 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
         )}
         <Field label="Email"><input required type="email" className={inputClass} value={form.email} onChange={set("email")} placeholder="ti@email.com" /></Field>
         {mode === "register" && <Field label="Telefoni"><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder="0691234567" /></Field>}
+        {mode === "register" && (
+          <Field label="Kombesia">
+            <select className={inputClass} value={form.kombesia} onChange={set("kombesia")}>
+              {NATIONALITIES.map((n) => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </Field>
+        )}
         {mode === "register" && form.telefoni && !looksAlbanian(form.telefoni) && (
           <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 mb-3">
             Ky numer nuk duket shqiptar — sigurohu qe ka WhatsApp aktiv, pasi biznesi mund te te kontaktoje vetem aty.

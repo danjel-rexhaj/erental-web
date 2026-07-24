@@ -45,9 +45,25 @@ export const AMENITIES = [
   { key: "sedilje_lekuri", label: "Sedilje lekuri" },
   { key: "sunroof", label: "Sunroof" },
   { key: "usb", label: "USB / Karikim" },
+  { key: "sedilje_bebe", label: "Sedilje per bebe" },
   { key: "sedilje_femije", label: "Sedilje per femije" },
   { key: "traksion_4x4", label: "Traksion 4x4" },
   { key: "bagazh_i_madh", label: "Bagazh i madh" },
+];
+
+export const CAR_CATEGORIES = [
+  { key: "economy", label: "Ekonomike" },
+  { key: "compact", label: "E vogel / Kompakte" },
+  { key: "sedan", label: "Sedan" },
+  { key: "suv", label: "SUV" },
+  { key: "luxury", label: "Luks" },
+  { key: "van", label: "Van / Minibus" },
+];
+
+export const NATIONALITIES = [
+  "Shqiperi", "Kosove", "Maqedoni e Veriut", "Mal i Zi", "Greqi", "Itali", "Gjermani",
+  "Zvicer", "Austri", "Spanje", "Franc", "Mbreteri e Bashkuar", "Belgjike", "Holande",
+  "Suedi", "Turqi", "SHBA", "Tjeter",
 ];
 
 export const PHOTO_SLOTS = [
