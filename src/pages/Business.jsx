@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon } from "lucide-react";
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
@@ -900,6 +900,15 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
   );
 }
 
+function CarStatusBadge({ statusi }) {
+  const active = statusi === "active";
+  return (
+    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${active ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300" : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"}`}>
+      {active ? "Aktive" : "Joaktive"}
+    </span>
+  );
+}
+
 function BusinessCarCard({ car, onOpen }) {
   return (
     <button
@@ -911,7 +920,7 @@ function BusinessCarCard({ car, onOpen }) {
       <div className="p-3">
         <div className="flex items-start justify-between">
           <div><p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</p><p className="text-xs text-slate-500 dark:text-slate-400">{car.targa} · {car.cmimiDites}€/dite</p></div>
-          <StatusPill status={car.statusi === "active" ? "confirmed" : car.statusi} />
+          <CarStatusBadge statusi={car.statusi} />
         </div>
         <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-3">Shiko detajet →</p>
       </div>
@@ -920,6 +929,8 @@ function BusinessCarCard({ car, onOpen }) {
 }
 
 function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
+  const photos = (car.carPhotos || []).filter(Boolean);
+  const mainPhoto = photos.find((p) => p.eshteKryesore) || photos[0];
   const [managingPhotos, setManagingPhotos] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -993,11 +1004,22 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <CarPhoto car={car} />
+          <div className="rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+            {mainPhoto ? (
+              <img src={mainPhoto.urlFotos} alt={`${car.marka} ${car.modeli}`} className="w-full h-64 object-cover" />
+            ) : (
+              <div className="w-full h-64 flex items-center justify-center text-slate-300 dark:text-slate-600"><CarIcon size={40} /></div>
+            )}
+          </div>
           {car.carPhotos?.length > 1 && (
             <div className="grid grid-cols-4 gap-2 mt-2">
               {car.carPhotos.map((p) => (
-                <img key={p.photoId} src={p.urlFotos} alt="" className="w-full h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
+                <img
+                  key={p.photoId}
+                  src={p.urlFotos}
+                  alt=""
+                  className={`w-full h-16 object-cover rounded-xl border-2 ${p.photoId === mainPhoto?.photoId ? "border-emerald-500" : "border-transparent"}`}
+                />
               ))}
             </div>
           )}
@@ -1006,33 +1028,33 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
         <div>
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</h1>
-            <StatusPill status={car.statusi === "active" ? "confirmed" : car.statusi} />
+            <CarStatusBadge statusi={car.statusi} />
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{car.targa} · {car.viti} · {car.cmimiDites}€/dite</p>
 
           <div className="flex gap-2 mt-4">
-            <button
+            <GhostButton
               type="button"
               onClick={() => setEditing((s) => !s)}
-              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl py-2 hover:bg-slate-50 dark:hover:bg-slate-800"
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${editing ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
             >
-              {editing ? "Mbyll editimin" : "Edito detajet"}
-            </button>
-            <button
+              <Pencil size={13} />{editing ? "Mbyll editimin" : "Edito detajet"}
+            </GhostButton>
+            <GhostButton
               type="button"
               onClick={() => setManagingPhotos((s) => !s)}
-              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 border border-dashed border-emerald-300 dark:border-emerald-700 rounded-xl py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${managingPhotos ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
             >
               <Upload size={13} />{managingPhotos ? "Mbyll fotot" : "Menaxho fotot"}
-            </button>
+            </GhostButton>
           </div>
-          <button
+          <GhostButton
             type="button"
             onClick={toggleCalendar}
-            className="flex items-center justify-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400 border border-dashed border-teal-300 dark:border-teal-700 rounded-xl py-2 mt-2 w-full hover:bg-teal-50 dark:hover:bg-teal-900/20"
+            className={`flex items-center justify-center gap-1.5 py-2 mt-2 ${showCalendar ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
           >
             <Calendar size={13} />{showCalendar ? "Mbyll kalendarin" : "Kalendari i rezervimeve"}
-          </button>
+          </GhostButton>
 
           {showCalendar && (
             <div className="mt-3 space-y-3">
