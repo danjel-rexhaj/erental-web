@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, XCircle, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download } from "lucide-react";
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
-import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES } from "../carData";
+import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
 
@@ -487,7 +487,12 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
           <Field label="Emri i biznesit"><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="AutoRent Tirana" /></Field>
           <Field label="Telefoni"><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder="0691234567" /></Field>
           <Field label="Adresa"><input className={inputClass} value={form.adresa} onChange={set("adresa")} placeholder="Rruga..." /></Field>
-          <Field label="Qyteti"><input className={inputClass} value={form.qyteti} onChange={set("qyteti")} placeholder="Tirane" /></Field>
+          <Field label="Qyteti / Zona">
+            <select required className={inputClass} value={form.qyteti} onChange={set("qyteti")}>
+              <option value="">Zgjidh...</option>
+              {ALBANIAN_LOCATIONS.map((z) => <option key={z} value={z}>{z}</option>)}
+            </select>
+          </Field>
           <Field label="Vendndodhja e sakte (per hartë tek klientët)">
             <LocationPicker adresa={form.adresa} qyteti={form.qyteti} coords={coords} onChange={setCoords} showError={showError} />
           </Field>
@@ -511,6 +516,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
   const [editingDetails, setEditingDetails] = useState(false);
   const [confirmingDeactivate, setConfirmingDeactivate] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
+  const [managingCarId, setManagingCarId] = useState(null);
 
   async function deactivate() {
     setDeactivating(true);
@@ -632,18 +638,31 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">Makinat e mia ({cars.length})</h3>
-        <button onClick={() => setShowAddCar((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 underline"><Plus size={14} /> Shto makine</button>
-      </div>
+      {cars.find((c) => c.carId === managingCarId) ? (
+        <BusinessCarDetail
+          car={cars.find((c) => c.carId === managingCarId)}
+          token={token}
+          reload={reload}
+          showError={showError}
+          showOk={showOk}
+          onBack={() => setManagingCarId(null)}
+        />
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">Makinat e mia ({cars.length})</h3>
+            <button onClick={() => setShowAddCar((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 underline"><Plus size={14} /> Shto makine</button>
+          </div>
 
-      {showAddCar && <div className="max-w-xl"><AddCarForm token={token} companyId={company.companyId} onDone={() => { setShowAddCar(false); reload(); }} showError={showError} showOk={showOk} /></div>}
+          {showAddCar && <div className="max-w-xl"><AddCarForm token={token} companyId={company.companyId} onDone={() => { setShowAddCar(false); reload(); }} showError={showError} showOk={showOk} /></div>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cars.map((car) => <BusinessCarCard key={car.carId} car={car} token={token} reload={reload} showError={showError} showOk={showOk} />)}
-      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {cars.map((car) => <BusinessCarCard key={car.carId} car={car} onOpen={setManagingCarId} />)}
+          </div>
+        </>
+      )}
 
-      {company.statusi === "inactive" ? (
+      {!managingCarId && (company.statusi === "inactive" ? (
         <div className="mt-8 border border-amber-200 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-900/20 rounded-2xl p-4">
           <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">Llogaria eshte e caktivizuar</p>
           <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">Makinat e tua nuk shfaqen ne kerkim dhe s'mund te marresh rezervime te reja. Rezervimet ekzistuese s'preken.</p>
@@ -675,7 +694,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
             </>
           )}
         </div>
-      )}
+      ))}
     </div>
   );
 }
@@ -705,7 +724,12 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
       <Field label="Emri i biznesit"><input required className={inputClass} value={form.emri} onChange={set("emri")} /></Field>
       <Field label="Telefoni"><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} /></Field>
       <Field label="Adresa"><input className={inputClass} value={form.adresa} onChange={set("adresa")} /></Field>
-      <Field label="Qyteti"><input className={inputClass} value={form.qyteti} onChange={set("qyteti")} /></Field>
+      <Field label="Qyteti / Zona">
+        <select className={inputClass} value={form.qyteti} onChange={set("qyteti")}>
+          <option value="">Zgjidh...</option>
+          {ALBANIAN_LOCATIONS.map((z) => <option key={z} value={z}>{z}</option>)}
+        </select>
+      </Field>
       <Field label="IBAN (per te marre pagesat, pas komisionit)"><input className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
       <div className="flex gap-2">
         <PrimaryButton type="submit" disabled={loading} className="text-xs py-2">{loading ? "Duke ruajtur..." : "Ruaj"}</PrimaryButton>
@@ -876,7 +900,26 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }
   );
 }
 
-function BusinessCarCard({ car, token, reload, showError, showOk }) {
+function BusinessCarCard({ car, onOpen }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(car.carId)}
+      className="text-left border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-sm transition"
+    >
+      <CarPhoto car={car} />
+      <div className="p-3">
+        <div className="flex items-start justify-between">
+          <div><p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</p><p className="text-xs text-slate-500 dark:text-slate-400">{car.targa} · {car.cmimiDites}€/dite</p></div>
+          <StatusPill status={car.statusi === "active" ? "confirmed" : car.statusi} />
+        </div>
+        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-3">Shiko detajet →</p>
+      </div>
+    </button>
+  );
+}
+
+function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
   const [managingPhotos, setManagingPhotos] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -885,6 +928,9 @@ function BusinessCarCard({ car, token, reload, showError, showOk }) {
   const [blockTo, setBlockTo] = useState(null);
   const [blockNote, setBlockNote] = useState("");
   const [savingBlock, setSavingBlock] = useState(false);
+  const [togglingStatus, setTogglingStatus] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   function loadBlocks() {
     apiFetch(`/Cars/${car.carId}/blocks`, token).then(setBlocks).catch(() => {});
@@ -919,106 +965,177 @@ function BusinessCarCard({ car, token, reload, showError, showOk }) {
     } catch (e) { showError(e); }
   }
 
+  async function toggleStatus() {
+    setTogglingStatus(true);
+    try {
+      const next = car.statusi === "active" ? "inactive" : "active";
+      await apiFetch(`/Cars/${car.carId}/status`, token, { method: "PUT", body: JSON.stringify({ statusi: next }) });
+      showOk(next === "active" ? "Makina u aktivizua." : "Makina u caktivizua.");
+      reload();
+    } catch (e) { showError(e); } finally { setTogglingStatus(false); }
+  }
+
+  async function deleteCar() {
+    setDeleting(true);
+    try {
+      await apiFetch(`/Cars/${car.carId}`, token, { method: "DELETE" });
+      showOk("Makina u fshi.");
+      reload();
+      onBack();
+    } catch (e) { showError(e); } finally { setDeleting(false); }
+  }
+
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
-      <CarPhoto car={car} />
-      <div className="p-3">
-        <div className="flex items-start justify-between">
-          <div><p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</p><p className="text-xs text-slate-500 dark:text-slate-400">{car.targa} · {car.cmimiDites}€/dite</p></div>
-          <StatusPill status={car.statusi === "active" ? "confirmed" : car.statusi} />
+    <div>
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
+        <ChevronLeft size={16} /> Prapa te makinat
+      </button>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <CarPhoto car={car} />
+          {car.carPhotos?.length > 1 && (
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              {car.carPhotos.map((p) => (
+                <img key={p.photoId} src={p.urlFotos} alt="" className="w-full h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
+              ))}
+            </div>
+          )}
         </div>
-        <div className="flex gap-2 mt-3">
+
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</h1>
+            <StatusPill status={car.statusi === "active" ? "confirmed" : car.statusi} />
+          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{car.targa} · {car.viti} · {car.cmimiDites}€/dite</p>
+
+          <div className="flex gap-2 mt-4">
+            <button
+              type="button"
+              onClick={() => setEditing((s) => !s)}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl py-2 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              {editing ? "Mbyll editimin" : "Edito detajet"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setManagingPhotos((s) => !s)}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 border border-dashed border-emerald-300 dark:border-emerald-700 rounded-xl py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+            >
+              <Upload size={13} />{managingPhotos ? "Mbyll fotot" : "Menaxho fotot"}
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => setEditing((s) => !s)}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl py-2 hover:bg-slate-50 dark:hover:bg-slate-800"
+            onClick={toggleCalendar}
+            className="flex items-center justify-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400 border border-dashed border-teal-300 dark:border-teal-700 rounded-xl py-2 mt-2 w-full hover:bg-teal-50 dark:hover:bg-teal-900/20"
           >
-            {editing ? "Mbyll" : "Edito"}
+            <Calendar size={13} />{showCalendar ? "Mbyll kalendarin" : "Kalendari i rezervimeve"}
           </button>
-          <button
-            type="button"
-            onClick={() => setManagingPhotos((s) => !s)}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 border border-dashed border-emerald-300 dark:border-emerald-700 rounded-xl py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-          >
-            <Upload size={13} />{managingPhotos ? "Mbyll" : "Fotot"}
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={toggleCalendar}
-          className="flex items-center justify-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400 border border-dashed border-teal-300 dark:border-teal-700 rounded-xl py-2 mt-2 w-full hover:bg-teal-50 dark:hover:bg-teal-900/20"
-        >
-          <Calendar size={13} />{showCalendar ? "Mbyll kalendarin" : "Kalendari i rezervimeve"}
-        </button>
-        {showCalendar && (
-          <div className="mt-3 space-y-3">
-            <div>
-              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1">
-                <Ban size={12} /> Bllokoje per rezervime jashte platformes
-              </p>
-              <DateRangeCalendar
-                ranges={blocks}
-                selFrom={blockFrom}
-                selTo={blockTo}
-                onSelect={(from, to) => { setBlockFrom(from); setBlockTo(to); }}
-              />
-              {blockFrom && blockTo && (
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    type="text"
-                    value={blockNote}
-                    onChange={(e) => setBlockNote(e.target.value)}
-                    placeholder="Shenim (opsionale)"
-                    className={inputClass + " text-xs py-1.5"}
-                  />
-                  <button
-                    type="button"
-                    onClick={submitBlock}
-                    disabled={savingBlock}
-                    className="shrink-0 text-xs font-medium text-white bg-slate-900 dark:bg-slate-700 rounded-xl px-3 py-1.5 disabled:opacity-50"
-                  >
-                    {savingBlock ? "Duke ruajtur..." : "Bllokoje"}
-                  </button>
+
+          {showCalendar && (
+            <div className="mt-3 space-y-3">
+              <div>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                  <Ban size={12} /> Bllokoje per rezervime jashte platformes
+                </p>
+                <DateRangeCalendar
+                  ranges={blocks}
+                  selFrom={blockFrom}
+                  selTo={blockTo}
+                  onSelect={(from, to) => { setBlockFrom(from); setBlockTo(to); }}
+                />
+                {blockFrom && blockTo && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={blockNote}
+                      onChange={(e) => setBlockNote(e.target.value)}
+                      placeholder="Shenim (opsionale)"
+                      className={inputClass + " text-xs py-1.5"}
+                    />
+                    <button
+                      type="button"
+                      onClick={submitBlock}
+                      disabled={savingBlock}
+                      className="shrink-0 text-xs font-medium text-white bg-slate-900 dark:bg-slate-700 rounded-xl px-3 py-1.5 disabled:opacity-50"
+                    >
+                      {savingBlock ? "Duke ruajtur..." : "Bllokoje"}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {blocks.length > 0 && (
+                <div className="space-y-1.5">
+                  {blocks.map((b) => (
+                    <div key={b.blockId} className="flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5">
+                      <div>
+                        <span className="font-medium text-slate-700 dark:text-slate-200">{b.dataFillimit} → {b.dataPerfundimit}</span>
+                        <span className="text-slate-400 ml-1.5">{b.eshteRezervimPlatforme ? "Rezervim nga platforma" : (b.shenim || "Jashte platformes")}</span>
+                      </div>
+                      {!b.eshteRezervimPlatforme && (
+                        <button type="button" onClick={() => removeBlock(b.blockId)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 shrink-0 ml-2">
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
+          )}
+          {editing && (
+            <div className="mt-3">
+              <AddCarForm
+                token={token}
+                companyId={car.companyId}
+                existingCar={car}
+                onDone={() => { setEditing(false); reload(); }}
+                showError={showError}
+                showOk={showOk}
+              />
+            </div>
+          )}
+          {managingPhotos && (
+            <div className="mt-3">
+              <CarPhotoManager carId={car.carId} token={token} photos={car.carPhotos} showError={showError} onChanged={reload} />
+            </div>
+          )}
 
-            {blocks.length > 0 && (
-              <div className="space-y-1.5">
-                {blocks.map((b) => (
-                  <div key={b.blockId} className="flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5">
-                    <div>
-                      <span className="font-medium text-slate-700 dark:text-slate-200">{b.dataFillimit} → {b.dataPerfundimit}</span>
-                      <span className="text-slate-400 ml-1.5">{b.eshteRezervimPlatforme ? "Rezervim nga platforma" : (b.shenim || "Jashte platformes")}</span>
-                    </div>
-                    {!b.eshteRezervimPlatforme && (
-                      <button type="button" onClick={() => removeBlock(b.blockId)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 shrink-0 ml-2">
-                        <Trash2 size={13} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
+          <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={toggleStatus}
+              disabled={togglingStatus}
+              className="text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
+            >
+              {togglingStatus ? "Duke perditesuar..." : car.statusi === "active" ? "Caktivizo makinen (fshihet nga kerkimi)" : "Aktivizo makinen"}
+            </button>
+          </div>
+
+          <div className="mt-4 border border-red-200 dark:border-red-800/60 rounded-2xl p-4">
+            <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Zona e rrezikut</p>
+            {confirmingDelete ? (
+              <>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
+                  Kjo do ta fshije makinen perfundimisht. Nese ka rezervime ne histori, fshirja do te refuzohet — caktivizoje ne vend te kesaj.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={deleteCar} disabled={deleting} className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
+                    {deleting ? "Duke fshire..." : "Po, fshije perfundimisht"}
+                  </button>
+                  <GhostButton type="button" onClick={() => setConfirmingDelete(false)} className="text-xs py-2">Anulo</GhostButton>
+                </div>
+              </>
+            ) : (
+              <button onClick={() => setConfirmingDelete(true)} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
+                Fshi makinen perfundimisht
+              </button>
             )}
           </div>
-        )}
-        {editing && (
-          <div className="mt-3">
-            <AddCarForm
-              token={token}
-              companyId={car.companyId}
-              existingCar={car}
-              onDone={() => { setEditing(false); reload(); }}
-              showError={showError}
-              showOk={showOk}
-            />
-          </div>
-        )}
-        {managingPhotos && (
-          <div className="mt-3">
-            <CarPhotoManager carId={car.carId} token={token} photos={car.carPhotos} showError={showError} onChanged={reload} />
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

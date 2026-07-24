@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarPhoto, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
-import { PHOTO_SLOTS, AMENITIES } from "../carData";
+import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES } from "../carData";
 
 const MUAJT_SHKURTER = ["Jan", "Shk", "Mar", "Pri", "Maj", "Qer", "Kor", "Gsh", "Sht", "Tet", "Nen", "Dhj"];
 function formatShortDate(iso) {
@@ -10,6 +10,9 @@ function formatShortDate(iso) {
   if (isNaN(d)) return iso;
   return `${d.getDate()} ${MUAJT_SHKURTER[d.getMonth()]}`;
 }
+
+const companySelectClass = "text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition";
+const categoryLabelCompany = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
 
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner, favoriteIds, onToggleFavorite }) {
   const [bookedRanges, setBookedRanges] = useState([]);
@@ -490,7 +493,12 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   );
 }
 
+const COMPANY_FILTERS_DEFAULT = { marka: "", modeli: "", kategoria: "", karburanti: "", viti: "", cmimiMax: "", amenities: [], sort: "" };
+
 export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds, onToggleFavorite }) {
+  const [filters, setFilters] = useState(COMPANY_FILTERS_DEFAULT);
+  const [showFilters, setShowFilters] = useState(false);
+
   if (!company) return null;
 
   const lat = company.latitude;
@@ -501,6 +509,31 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
     ? (isIOS ? `https://maps.apple.com/?daddr=${lat},${lng}` : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`)
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.adresa ? company.adresa + ", " : ""}${company.qyteti || ""}, Shqiperi`)}`;
   const mapEmbedUrl = hasCoords ? getMapEmbedUrl(lat, lng) : null;
+
+  const brands = [...new Set(cars.map((c) => c.marka).filter(Boolean))].sort();
+  const models = [...new Set(cars.map((c) => c.modeli).filter(Boolean))].sort();
+  const categories = [...new Set(cars.map((c) => c.kategoria).filter(Boolean))].sort();
+  const years = [...new Set(cars.map((c) => c.viti).filter(Boolean))].sort((a, b) => b - a);
+
+  function toggleAmenity(key) {
+    setFilters((f) => ({
+      ...f,
+      amenities: f.amenities.includes(key) ? f.amenities.filter((k) => k !== key) : [...f.amenities, key],
+    }));
+  }
+
+  let visibleCars = cars.filter((c) =>
+    (!filters.marka || c.marka === filters.marka) &&
+    (!filters.modeli || c.modeli === filters.modeli) &&
+    (!filters.kategoria || c.kategoria === filters.kategoria) &&
+    (!filters.karburanti || c.karburanti === filters.karburanti) &&
+    (!filters.viti || String(c.viti) === filters.viti) &&
+    (!filters.cmimiMax || c.cmimiDites <= Number(filters.cmimiMax)) &&
+    filters.amenities.every((key) => c.amenities?.includes(key))
+  );
+  if (filters.sort === "asc") visibleCars = [...visibleCars].sort((a, b) => a.cmimiDites - b.cmimiDites);
+  if (filters.sort === "desc") visibleCars = [...visibleCars].sort((a, b) => b.cmimiDites - a.cmimiDites);
+  const activeFilterCount = ["marka", "modeli", "kategoria", "karburanti", "viti", "cmimiMax", "sort"].filter((k) => filters[k]).length + filters.amenities.length;
 
   return (
     <div>
@@ -559,12 +592,92 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
         </div>
       </div>
 
-      <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">Makinat e {company.emri} ({cars.length})</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cars.map((car) => (
-          <CarCard key={car.carId} car={car} onSelectCar={onSelectCar} showCompany={false} isFavorited={favoriteIds?.has(car.carId)} onToggleFavorite={onToggleFavorite} />
-        ))}
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">Makinat e {company.emri} ({visibleCars.length}{visibleCars.length !== cars.length ? ` nga ${cars.length}` : ""})</h2>
+        <button
+          type="button"
+          onClick={() => setShowFilters((s) => !s)}
+          className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition ${
+            showFilters || activeFilterCount > 0
+              ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20"
+              : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+          }`}
+        >
+          <SlidersHorizontal size={13} /> Filtro{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+        </button>
       </div>
+
+      {showFilters && (
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-4 flex flex-wrap items-center gap-2">
+          <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value }))} className={companySelectClass}>
+            <option value="">Te gjitha markat</option>
+            {brands.map((b) => <option key={b} value={b}>{b}</option>)}
+          </select>
+          <select value={filters.modeli} onChange={(e) => setFilters((f) => ({ ...f, modeli: e.target.value }))} className={companySelectClass}>
+            <option value="">Te gjitha modelet</option>
+            {models.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${companySelectClass} capitalize`}>
+            <option value="">Te gjitha karburantet</option>
+            <option value="diesel">Diesel</option>
+            <option value="benzine">Benzine</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="elektrik">Elektrik</option>
+          </select>
+          <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={companySelectClass}>
+            <option value="">Te gjitha kategorite</option>
+            {categories.map((k) => <option key={k} value={k}>{categoryLabelCompany(k)}</option>)}
+          </select>
+          <select value={filters.viti} onChange={(e) => setFilters((f) => ({ ...f, viti: e.target.value }))} className={companySelectClass}>
+            <option value="">Te gjitha vitet</option>
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <input
+            type="number"
+            min={0}
+            value={filters.cmimiMax}
+            onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
+            placeholder="Cmimi max/dite €"
+            className={`${companySelectClass} w-32`}
+          />
+          <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={companySelectClass}>
+            <option value="">Rendit sipas</option>
+            <option value="asc">Cmimi: me i ulet</option>
+            <option value="desc">Cmimi: me i larte</option>
+          </select>
+          {activeFilterCount > 0 && (
+            <button onClick={() => setFilters(COMPANY_FILTERS_DEFAULT)} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-2 hover:text-slate-800 dark:hover:text-slate-200">
+              Pastro filtrat
+            </button>
+          )}
+          <div className="w-full flex flex-wrap gap-1.5 pt-1">
+            {AMENITIES.map((a) => (
+              <button
+                key={a.key}
+                type="button"
+                onClick={() => toggleAmenity(a.key)}
+                className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition ${
+                  filters.amenities.includes(a.key)
+                    ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20"
+                    : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                {filters.amenities.includes(a.key) && <Check size={11} />} {a.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {visibleCars.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-10">Asnje makine nuk perputhet me filtrat.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {visibleCars.map((car) => (
+            <CarCard key={car.carId} car={car} onSelectCar={onSelectCar} showCompany={false} isFavorited={favoriteIds?.has(car.carId)} onToggleFavorite={onToggleFavorite} />
+          ))}
+        </div>
+      )}
 
       <h2 className="font-semibold text-slate-900 dark:text-slate-100 mt-10 mb-4">Vleresime</h2>
       <CompanyReviews companyId={company.companyId} />

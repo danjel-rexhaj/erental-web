@@ -24,11 +24,15 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
   const loop = companies.length > 0 ? [...companies, ...companies] : [];
 
   function changeFrom(value) {
+    // The native <input type="date" min=...> attribute isn't reliably enforced on every
+    // mobile browser/WebView when a date is typed rather than picked, so re-validate here too.
+    if (value < today()) return;
     setDataFillimit(value);
     if (dataPerfundimit && value >= dataPerfundimit) setDataPerfundimit(dayAfter(value));
   }
 
   function changeTo(value) {
+    if (value < today()) return;
     if (dataFillimit && value <= dataFillimit) return;
     setDataPerfundimit(value);
   }

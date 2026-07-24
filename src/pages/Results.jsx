@@ -1,6 +1,6 @@
-import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal, Check } from "lucide-react";
 import { CarCard } from "../components";
-import { CAR_CATEGORIES } from "../carData";
+import { CAR_CATEGORIES, AMENITIES } from "../carData";
 
 const categoryLabel = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
 
@@ -16,15 +16,30 @@ function freeInLabel(lirohetMe, dataFillimit) {
 export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters }) {
 
   const brands = [...new Set(cars.map((c) => c.marka).filter(Boolean))].sort();
+  const models = [...new Set(cars.map((c) => c.modeli).filter(Boolean))].sort();
   const categories = [...new Set(cars.map((c) => c.kategoria).filter(Boolean))].sort();
+  const zones = [...new Set(cars.map((c) => c.company?.qyteti).filter(Boolean))].sort();
+  const years = [...new Set(cars.map((c) => c.viti).filter(Boolean))].sort((a, b) => b - a);
   const businesses = [...new Map(cars.filter((c) => c.company).map((c) => [c.companyId, c.company.emri])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+
+  function toggleAmenity(key) {
+    setFilters((f) => ({
+      ...f,
+      amenities: f.amenities.includes(key) ? f.amenities.filter((k) => k !== key) : [...f.amenities, key],
+    }));
+  }
 
   const term = filters.search.trim().toLowerCase();
   let visibleCars = cars.filter((c) =>
     (!filters.marka || c.marka === filters.marka) &&
+    (!filters.modeli || c.modeli === filters.modeli) &&
     (!filters.biznesi || String(c.companyId) === filters.biznesi) &&
     (!filters.karburanti || c.karburanti === filters.karburanti) &&
     (!filters.kategoria || c.kategoria === filters.kategoria) &&
+    (!filters.zona || c.company?.qyteti === filters.zona) &&
+    (!filters.viti || String(c.viti) === filters.viti) &&
+    (!filters.cmimiMax || c.cmimiDites <= Number(filters.cmimiMax)) &&
+    filters.amenities.every((key) => c.amenities?.includes(key)) &&
     (!term ||
       c.marka?.toLowerCase().includes(term) ||
       c.modeli?.toLowerCase().includes(term) ||
@@ -39,7 +54,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
     return acc;
   }, {});
   const companyGroups = Object.values(grouped);
-  const activeFilterCount = ["marka", "biznesi", "karburanti", "kategoria", "sort"].filter((k) => filters[k]).length;
+  const activeFilterCount = ["marka", "modeli", "biznesi", "karburanti", "kategoria", "zona", "viti", "cmimiMax", "sort"].filter((k) => filters[k]).length + filters.amenities.length;
 
   return (
     <div>
@@ -79,9 +94,17 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
               <option value="">Te gjitha markat</option>
               {brands.map((b) => <option key={b} value={b}>{b}</option>)}
             </select>
+            <select value={filters.modeli} onChange={(e) => setFilters((f) => ({ ...f, modeli: e.target.value }))} className={selectClass}>
+              <option value="">Te gjitha modelet</option>
+              {models.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
             <select value={filters.biznesi} onChange={(e) => setFilters((f) => ({ ...f, biznesi: e.target.value }))} className={selectClass}>
               <option value="">Te gjitha bizneset</option>
               {businesses.map(([id, emri]) => <option key={id} value={id}>{emri}</option>)}
+            </select>
+            <select value={filters.zona} onChange={(e) => setFilters((f) => ({ ...f, zona: e.target.value }))} className={selectClass}>
+              <option value="">Te gjitha zonat</option>
+              {zones.map((z) => <option key={z} value={z}>{z}</option>)}
             </select>
             <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${selectClass} capitalize`}>
               <option value="">Te gjitha karburantet</option>
@@ -94,16 +117,44 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
               <option value="">Te gjitha kategorite</option>
               {categories.map((k) => <option key={k} value={k}>{categoryLabel(k)}</option>)}
             </select>
+            <select value={filters.viti} onChange={(e) => setFilters((f) => ({ ...f, viti: e.target.value }))} className={selectClass}>
+              <option value="">Te gjitha vitet</option>
+              {years.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <input
+              type="number"
+              min={0}
+              value={filters.cmimiMax}
+              onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
+              placeholder="Cmimi max/dite €"
+              className={`${selectClass} w-32`}
+            />
             <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={selectClass}>
               <option value="">Rendit sipas</option>
               <option value="asc">Cmimi: me i ulet</option>
               <option value="desc">Cmimi: me i larte</option>
             </select>
             {activeFilterCount > 0 && (
-              <button onClick={() => setFilters((f) => ({ ...f, marka: "", biznesi: "", karburanti: "", kategoria: "", sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-2 hover:text-slate-800 dark:hover:text-slate-200">
+              <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", viti: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-2 hover:text-slate-800 dark:hover:text-slate-200">
                 Pastro filtrat
               </button>
             )}
+            <div className="w-full flex flex-wrap gap-1.5 pt-1">
+              {AMENITIES.map((a) => (
+                <button
+                  key={a.key}
+                  type="button"
+                  onClick={() => toggleAmenity(a.key)}
+                  className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition ${
+                    filters.amenities.includes(a.key)
+                      ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20"
+                      : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                  }`}
+                >
+                  {filters.amenities.includes(a.key) && <Check size={11} />} {a.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

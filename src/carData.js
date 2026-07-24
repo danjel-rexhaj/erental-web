@@ -60,6 +60,13 @@ export const CAR_CATEGORIES = [
   { key: "van", label: "Van / Minibus" },
 ];
 
+export const ALBANIAN_LOCATIONS = [
+  "Porti i Durresit", "Porti i Vlores", "Aeroporti Rinas (Tirane)",
+  "Tirane", "Durres", "Vlore", "Shkoder", "Elbasan", "Fier", "Korce",
+  "Berat", "Lushnje", "Kavaje", "Pogradec", "Gjirokaster", "Sarande",
+  "Lezhe", "Kukes", "Peshkopi", "Kruje", "Fushe-Kruje", "Patos", "Kucove",
+];
+
 export const NATIONALITIES = [
   "Shqiperi", "Kosove", "Maqedoni e Veriut", "Mal i Zi", "Greqi", "Itali", "Gjermani",
   "Zvicer", "Austri", "Spanje", "Franc", "Mbreteri e Bashkuar", "Belgjike", "Holande",
