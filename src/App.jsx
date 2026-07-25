@@ -38,6 +38,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("erental_verify")) || null; } catch { return null; }
   });
   const [businessTab, setBusinessTab] = useState("dashboard");
+  const [businessCarId, setBusinessCarIdState] = useState(null);
   const [highlightBookingId, setHighlightBookingId] = useState(null);
   const [bookingsRefreshKey, setBookingsRefreshKey] = useState(0);
   const [theme, setTheme] = useState(() => localStorage.getItem("erental_theme") || "light");
@@ -214,7 +215,13 @@ export default function App() {
     }
     if (segs[0] === "rezervimet") { setView("bookings"); return; }
     if (segs[0] === "preferuarat") { setView("favorites"); return; }
-    if (segs[0] === "biznesi") { setView("business"); setBusinessTab(params.get("tab") || "dashboard"); return; }
+    if (segs[0] === "biznesi") {
+      setView("business");
+      setBusinessTab(params.get("tab") || "dashboard");
+      const carId = params.get("carId");
+      setBusinessCarIdState(carId ? Number(carId) : null);
+      return;
+    }
     if (segs[0] === "profili") { setView("auth"); return; }
     if (segs[0] === "verifiko") { setView("verifyEmail"); return; }
     if (segs[0] === "rreth-nesh") { setView("about"); return; }
@@ -422,7 +429,23 @@ export default function App() {
             onToggleFavorite={toggleFavorite}
           />
         ) : <AuthGate onGo={() => go("/profili")} text="Kyçu per te pare makinat e preferuara." />)}
-        {view === "business" && (token ? <Business token={token} showError={showError} showOk={showOk} isAdmin={isAdmin} tab={businessTab} setTab={(t) => { setBusinessTab(t); window.history.replaceState(null, "", "#/biznesi?tab=" + t); }} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text="Kyçu per te menaxhuar biznesin tend." />)}
+        {view === "business" && (token ? (
+          <Business
+            token={token}
+            showError={showError}
+            showOk={showOk}
+            isAdmin={isAdmin}
+            tab={businessTab}
+            setTab={(t) => { setBusinessTab(t); window.history.replaceState(null, "", "#/biznesi?tab=" + t); }}
+            carId={businessCarId}
+            setCarId={(id) => {
+              setBusinessCarIdState(id);
+              window.history.replaceState(null, "", `#/biznesi?tab=${businessTab}${id ? `&carId=${id}` : ""}`);
+            }}
+            highlightBookingId={highlightBookingId}
+            refreshKey={bookingsRefreshKey}
+          />
+        ) : <AuthGate onGo={() => go("/profili")} text="Kyçu per te menaxhuar biznesin tend." />)}
         {view === "auth" && (
           token
             ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} />

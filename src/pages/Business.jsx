@@ -7,7 +7,7 @@ import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANI
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
 
-export default function Business({ token, showError, showOk, isAdmin, tab, setTab, highlightBookingId, refreshKey }) {
+export default function Business({ token, showError, showOk, isAdmin, tab, setTab, carId, setCarId, highlightBookingId, refreshKey }) {
   const [company, setCompany] = useState(undefined);
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +72,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       {tab === "dashboard" && (
         company === null
           ? <RegisterCompanyForm token={token} onDone={load} showError={showError} showOk={showOk} />
-          : <CompanyDashboard token={token} company={company} cars={cars} reload={load} showError={showError} showOk={showOk} />
+          : <CompanyDashboard token={token} company={company} cars={cars} reload={load} showError={showError} showOk={showOk} managingCarId={carId} setManagingCarId={setCarId} />
       )}
     </div>
   );
@@ -511,7 +511,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
   );
 }
 
-function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
+function CompanyDashboard({ token, company, cars, reload, showError, showOk, managingCarId, setManagingCarId }) {
   const [showAddCar, setShowAddCar] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
   const [coords, setCoords] = useState(null);
@@ -519,7 +519,6 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk }) {
   const [editingDetails, setEditingDetails] = useState(false);
   const [confirmingDeactivate, setConfirmingDeactivate] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
-  const [managingCarId, setManagingCarId] = useState(null);
 
   async function deactivate() {
     setDeactivating(true);
