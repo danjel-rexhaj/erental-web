@@ -1,8 +1,18 @@
 import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal, Check } from "lucide-react";
 import { CarCard } from "../components";
-import { CAR_CATEGORIES, AMENITIES } from "../carData";
+import { CAR_CATEGORIES, AMENITIES, CAR_BRANDS } from "../carData";
 
 const categoryLabel = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
+const BRAND_ORDER = Object.keys(CAR_BRANDS);
+function sortByBrandPopularity(brands) {
+  return [...brands].sort((a, b) => {
+    const ia = BRAND_ORDER.indexOf(a), ib = BRAND_ORDER.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+}
 
 const selectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
 
@@ -15,8 +25,8 @@ function freeInLabel(lirohetMe, dataFillimit) {
 
 export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters }) {
 
-  const brands = [...new Set(cars.map((c) => c.marka).filter(Boolean))].sort();
-  const models = [...new Set(cars.map((c) => c.modeli).filter(Boolean))].sort();
+  const brands = sortByBrandPopularity([...new Set(cars.map((c) => c.marka).filter(Boolean))]);
+  const models = [...new Set(cars.filter((c) => !filters.marka || c.marka === filters.marka).map((c) => c.modeli).filter(Boolean))].sort();
   const categories = [...new Set(cars.map((c) => c.kategoria).filter(Boolean))].sort();
   const zones = [...new Set(cars.map((c) => c.company?.qyteti).filter(Boolean))].sort();
   const years = [...new Set(cars.map((c) => c.viti).filter(Boolean))].sort((a, b) => b - a);
@@ -37,7 +47,8 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
     (!filters.karburanti || c.karburanti === filters.karburanti) &&
     (!filters.kategoria || c.kategoria === filters.kategoria) &&
     (!filters.zona || c.company?.qyteti === filters.zona) &&
-    (!filters.viti || String(c.viti) === filters.viti) &&
+    (!filters.vitiMin || c.viti >= Number(filters.vitiMin)) &&
+    (!filters.vitiMax || c.viti <= Number(filters.vitiMax)) &&
     (!filters.cmimiMax || c.cmimiDites <= Number(filters.cmimiMax)) &&
     filters.amenities.every((key) => c.amenities?.includes(key)) &&
     (!term ||
@@ -54,7 +65,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
     return acc;
   }, {});
   const companyGroups = Object.values(grouped);
-  const activeFilterCount = ["marka", "modeli", "biznesi", "karburanti", "kategoria", "zona", "viti", "cmimiMax", "sort"].filter((k) => filters[k]).length + filters.amenities.length;
+  const activeFilterCount = ["marka", "modeli", "biznesi", "karburanti", "kategoria", "zona", "vitiMin", "vitiMax", "cmimiMax", "sort"].filter((k) => filters[k]).length + filters.amenities.length;
 
   return (
     <div>
@@ -92,7 +103,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
           <div className="overflow-hidden">
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value }))} className={selectClass}>
+                <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value, modeli: "" }))} className={selectClass}>
                   <option value="">Te gjitha markat</option>
                   {brands.map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
@@ -119,8 +130,12 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
                   <option value="">Te gjitha kategorite</option>
                   {categories.map((k) => <option key={k} value={k}>{categoryLabel(k)}</option>)}
                 </select>
-                <select value={filters.viti} onChange={(e) => setFilters((f) => ({ ...f, viti: e.target.value }))} className={selectClass}>
-                  <option value="">Te gjitha vitet</option>
+                <select value={filters.vitiMin} onChange={(e) => setFilters((f) => ({ ...f, vitiMin: e.target.value }))} className={selectClass}>
+                  <option value="">Viti nga</option>
+                  {years.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
+                <select value={filters.vitiMax} onChange={(e) => setFilters((f) => ({ ...f, vitiMax: e.target.value }))} className={selectClass}>
+                  <option value="">Viti deri</option>
                   {years.map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
                 <input
@@ -157,7 +172,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
               </div>
 
               {activeFilterCount > 0 && (
-                <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", viti: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
+                <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
                   Pastro filtrat
                 </button>
               )}

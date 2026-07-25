@@ -63,7 +63,7 @@ export default function App() {
   const [paymentSuccessInfo, setPaymentSuccessInfo] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   // Also lives here (not in Results.jsx) so it survives leaving for a car's detail page and coming back.
-  const [resultFilters, setResultFilters] = useState({ search: "", marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", cmimiMax: "", viti: "", amenities: [], sort: "" });
+  const [resultFilters, setResultFilters] = useState({ search: "", marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", cmimiMax: "", vitiMin: "", vitiMax: "", amenities: [], sort: "" });
   const [showResultFilters, setShowResultFilters] = useState(false);
 
   useEffect(() => {

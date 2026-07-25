@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
-import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES } from "../carData";
+import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS } from "../carData";
 
 const MUAJT_SHKURTER = ["Jan", "Shk", "Mar", "Pri", "Maj", "Qer", "Kor", "Gsh", "Sht", "Tet", "Nen", "Dhj"];
 function formatShortDate(iso) {
@@ -13,6 +13,16 @@ function formatShortDate(iso) {
 
 const companySelectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
 const categoryLabelCompany = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
+const BRAND_ORDER_COMPANY = Object.keys(CAR_BRANDS);
+function sortByBrandPopularityCompany(brands) {
+  return [...brands].sort((a, b) => {
+    const ia = BRAND_ORDER_COMPANY.indexOf(a), ib = BRAND_ORDER_COMPANY.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+}
 
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner, favoriteIds, onToggleFavorite }) {
   const [bookedRanges, setBookedRanges] = useState([]);
@@ -493,7 +503,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   );
 }
 
-const COMPANY_FILTERS_DEFAULT = { marka: "", modeli: "", kategoria: "", karburanti: "", viti: "", cmimiMax: "", amenities: [], sort: "" };
+const COMPANY_FILTERS_DEFAULT = { marka: "", modeli: "", kategoria: "", karburanti: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" };
 
 export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds, onToggleFavorite }) {
   const [filters, setFilters] = useState(COMPANY_FILTERS_DEFAULT);
@@ -510,8 +520,8 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.adresa ? company.adresa + ", " : ""}${company.qyteti || ""}, Shqiperi`)}`;
   const mapEmbedUrl = hasCoords ? getMapEmbedUrl(lat, lng) : null;
 
-  const brands = [...new Set(cars.map((c) => c.marka).filter(Boolean))].sort();
-  const models = [...new Set(cars.map((c) => c.modeli).filter(Boolean))].sort();
+  const brands = sortByBrandPopularityCompany([...new Set(cars.map((c) => c.marka).filter(Boolean))]);
+  const models = [...new Set(cars.filter((c) => !filters.marka || c.marka === filters.marka).map((c) => c.modeli).filter(Boolean))].sort();
   const categories = [...new Set(cars.map((c) => c.kategoria).filter(Boolean))].sort();
   const years = [...new Set(cars.map((c) => c.viti).filter(Boolean))].sort((a, b) => b - a);
 
@@ -527,13 +537,14 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
     (!filters.modeli || c.modeli === filters.modeli) &&
     (!filters.kategoria || c.kategoria === filters.kategoria) &&
     (!filters.karburanti || c.karburanti === filters.karburanti) &&
-    (!filters.viti || String(c.viti) === filters.viti) &&
+    (!filters.vitiMin || c.viti >= Number(filters.vitiMin)) &&
+    (!filters.vitiMax || c.viti <= Number(filters.vitiMax)) &&
     (!filters.cmimiMax || c.cmimiDites <= Number(filters.cmimiMax)) &&
     filters.amenities.every((key) => c.amenities?.includes(key))
   );
   if (filters.sort === "asc") visibleCars = [...visibleCars].sort((a, b) => a.cmimiDites - b.cmimiDites);
   if (filters.sort === "desc") visibleCars = [...visibleCars].sort((a, b) => b.cmimiDites - a.cmimiDites);
-  const activeFilterCount = ["marka", "modeli", "kategoria", "karburanti", "viti", "cmimiMax", "sort"].filter((k) => filters[k]).length + filters.amenities.length;
+  const activeFilterCount = ["marka", "modeli", "kategoria", "karburanti", "vitiMin", "vitiMax", "cmimiMax", "sort"].filter((k) => filters[k]).length + filters.amenities.length;
 
   return (
     <div>
@@ -611,7 +622,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
         <div className="overflow-hidden">
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value }))} className={companySelectClass}>
+              <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value, modeli: "" }))} className={companySelectClass}>
                 <option value="">Te gjitha markat</option>
                 {brands.map((b) => <option key={b} value={b}>{b}</option>)}
               </select>
@@ -630,8 +641,12 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
                 <option value="">Te gjitha kategorite</option>
                 {categories.map((k) => <option key={k} value={k}>{categoryLabelCompany(k)}</option>)}
               </select>
-              <select value={filters.viti} onChange={(e) => setFilters((f) => ({ ...f, viti: e.target.value }))} className={companySelectClass}>
-                <option value="">Te gjitha vitet</option>
+              <select value={filters.vitiMin} onChange={(e) => setFilters((f) => ({ ...f, vitiMin: e.target.value }))} className={companySelectClass}>
+                <option value="">Viti nga</option>
+                {years.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+              <select value={filters.vitiMax} onChange={(e) => setFilters((f) => ({ ...f, vitiMax: e.target.value }))} className={companySelectClass}>
+                <option value="">Viti deri</option>
                 {years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
               <input

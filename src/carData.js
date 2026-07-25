@@ -1,18 +1,21 @@
 export const OTHER_BRAND = "Tjeter";
 export const OTHER_MODEL = "Tjeter";
 
+// Ordered by how common each brand is on Albanian roads (Mercedes-Benz/VW/BMW/Audi's
+// dominance there is well known, not from a formal registry dataset), so the most
+// relevant options are at the top of the dropdown instead of alphabetical/random order.
 export const CAR_BRANDS = {
-  "Volkswagen": ["Golf", "Polo", "Passat", "Tiguan", "Touran", "Jetta", "Arteon", "T-Roc", "T-Cross", "Up!"],
-  "Toyota": ["Corolla", "Yaris", "Camry", "RAV4", "C-HR", "Auris", "Aygo", "Land Cruiser", "Hilux", "Prius"],
   "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "GLA", "GLC", "GLE", "CLA", "Vito", "Sprinter"],
+  "Volkswagen": ["Golf", "Polo", "Passat", "Tiguan", "Touran", "Jetta", "Arteon", "T-Roc", "T-Cross", "Up!"],
   "BMW": ["Seria 1", "Seria 2", "Seria 3", "Seria 4", "Seria 5", "Seria 7", "X1", "X3", "X5", "X6"],
   "Audi": ["A1", "A3", "A4", "A5", "A6", "A8", "Q2", "Q3", "Q5", "Q7"],
-  "Skoda": ["Fabia", "Octavia", "Superb", "Kamiq", "Karoq", "Kodiaq", "Rapid", "Scala"],
+  "Toyota": ["Corolla", "Yaris", "Camry", "RAV4", "C-HR", "Auris", "Aygo", "Land Cruiser", "Hilux", "Prius"],
   "Opel": ["Corsa", "Astra", "Insignia", "Mokka", "Crossland", "Grandland", "Zafira", "Vivaro"],
+  "Ford": ["Fiesta", "Focus", "Mondeo", "Kuga", "Puma", "EcoSport", "Transit", "S-Max"],
+  "Fiat": ["500", "Panda", "Tipo", "Punto", "500X", "Doblo", "Ducato"],
   "Renault": ["Clio", "Megane", "Talisman", "Captur", "Kadjar", "Koleos", "Scenic", "Twingo"],
   "Peugeot": ["208", "308", "508", "2008", "3008", "5008", "Partner"],
-  "Fiat": ["500", "Panda", "Tipo", "Punto", "500X", "Doblo", "Ducato"],
-  "Ford": ["Fiesta", "Focus", "Mondeo", "Kuga", "Puma", "EcoSport", "Transit", "S-Max"],
+  "Skoda": ["Fabia", "Octavia", "Superb", "Kamiq", "Karoq", "Kodiaq", "Rapid", "Scala"],
   "Hyundai": ["i10", "i20", "i30", "Elantra", "Tucson", "Santa Fe", "Kona"],
   "Kia": ["Picanto", "Rio", "Ceed", "Sportage", "Sorento", "Niro", "Stonic"],
   "Nissan": ["Micra", "Juke", "Qashqai", "X-Trail", "Leaf", "Navara"],
