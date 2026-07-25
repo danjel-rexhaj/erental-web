@@ -11,7 +11,7 @@ function formatShortDate(iso) {
   return `${d.getDate()} ${MUAJT_SHKURTER[d.getMonth()]}`;
 }
 
-const companySelectClass = "text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition";
+const companySelectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
 const categoryLabelCompany = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
 
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner, favoriteIds, onToggleFavorite }) {
@@ -607,67 +607,74 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
         </button>
       </div>
 
-      {showFilters && (
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-4 flex flex-wrap items-center gap-2">
-          <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value }))} className={companySelectClass}>
-            <option value="">Te gjitha markat</option>
-            {brands.map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
-          <select value={filters.modeli} onChange={(e) => setFilters((f) => ({ ...f, modeli: e.target.value }))} className={companySelectClass}>
-            <option value="">Te gjitha modelet</option>
-            {models.map((m) => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${companySelectClass} capitalize`}>
-            <option value="">Te gjitha karburantet</option>
-            <option value="diesel">Diesel</option>
-            <option value="benzine">Benzine</option>
-            <option value="hybrid">Hybrid</option>
-            <option value="elektrik">Elektrik</option>
-          </select>
-          <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={companySelectClass}>
-            <option value="">Te gjitha kategorite</option>
-            {categories.map((k) => <option key={k} value={k}>{categoryLabelCompany(k)}</option>)}
-          </select>
-          <select value={filters.viti} onChange={(e) => setFilters((f) => ({ ...f, viti: e.target.value }))} className={companySelectClass}>
-            <option value="">Te gjitha vitet</option>
-            {years.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <input
-            type="number"
-            min={0}
-            value={filters.cmimiMax}
-            onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
-            placeholder="Cmimi max/dite €"
-            className={`${companySelectClass} w-32`}
-          />
-          <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={companySelectClass}>
-            <option value="">Rendit sipas</option>
-            <option value="asc">Cmimi: me i ulet</option>
-            <option value="desc">Cmimi: me i larte</option>
-          </select>
-          {activeFilterCount > 0 && (
-            <button onClick={() => setFilters(COMPANY_FILTERS_DEFAULT)} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-2 hover:text-slate-800 dark:hover:text-slate-200">
-              Pastro filtrat
-            </button>
-          )}
-          <div className="w-full flex flex-wrap gap-1.5 pt-1">
-            {AMENITIES.map((a) => (
-              <button
-                key={a.key}
-                type="button"
-                onClick={() => toggleAmenity(a.key)}
-                className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition ${
-                  filters.amenities.includes(a.key)
-                    ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20"
-                    : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
-                }`}
-              >
-                {filters.amenities.includes(a.key) && <Check size={11} />} {a.label}
+      <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showFilters ? "grid-rows-[1fr] opacity-100 mb-4" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value }))} className={companySelectClass}>
+                <option value="">Te gjitha markat</option>
+                {brands.map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+              <select value={filters.modeli} onChange={(e) => setFilters((f) => ({ ...f, modeli: e.target.value }))} className={companySelectClass}>
+                <option value="">Te gjitha modelet</option>
+                {models.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+              <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${companySelectClass} capitalize`}>
+                <option value="">Te gjitha karburantet</option>
+                <option value="diesel">Diesel</option>
+                <option value="benzine">Benzine</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="elektrik">Elektrik</option>
+              </select>
+              <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={companySelectClass}>
+                <option value="">Te gjitha kategorite</option>
+                {categories.map((k) => <option key={k} value={k}>{categoryLabelCompany(k)}</option>)}
+              </select>
+              <select value={filters.viti} onChange={(e) => setFilters((f) => ({ ...f, viti: e.target.value }))} className={companySelectClass}>
+                <option value="">Te gjitha vitet</option>
+                {years.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+              <input
+                type="number"
+                min={0}
+                value={filters.cmimiMax}
+                onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
+                placeholder="Cmimi max/dite €"
+                className={companySelectClass}
+              />
+              <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={companySelectClass}>
+                <option value="">Rendit sipas</option>
+                <option value="asc">Cmimi: me i ulet</option>
+                <option value="desc">Cmimi: me i larte</option>
+              </select>
+            </div>
+
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-4 mb-1.5">Pajisje</p>
+            <div className="flex flex-wrap gap-1.5">
+              {AMENITIES.map((a) => (
+                <button
+                  key={a.key}
+                  type="button"
+                  onClick={() => toggleAmenity(a.key)}
+                  className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition ${
+                    filters.amenities.includes(a.key)
+                      ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20"
+                      : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+                  }`}
+                >
+                  {filters.amenities.includes(a.key) && <Check size={11} />} {a.label}
+                </button>
+              ))}
+            </div>
+
+            {activeFilterCount > 0 && (
+              <button onClick={() => setFilters(COMPANY_FILTERS_DEFAULT)} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
+                Pastro filtrat
               </button>
-            ))}
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       {visibleCars.length === 0 ? (
         <p className="text-sm text-slate-400 text-center py-10">Asnje makine nuk perputhet me filtrat.</p>
