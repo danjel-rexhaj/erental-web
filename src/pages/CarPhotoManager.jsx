@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, X as XIcon } from "lucide-react";
+import { Upload, X as XIcon, Star } from "lucide-react";
 import { apiFetch } from "../api";
 import { PHOTO_SLOTS } from "../carData";
 
@@ -38,6 +38,14 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
     } catch (e) { showError(e); } finally { setBusyKey(null); }
   }
 
+  async function handleSetMain(photoId) {
+    setBusyKey(`main-${photoId}`);
+    try {
+      await apiFetch(`/CarPhotos/${photoId}/main`, token, { method: "PUT" });
+      onChanged();
+    } catch (e) { showError(e); } finally { setBusyKey(null); }
+  }
+
   return (
     <div>
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Foto ({totalCount}/7)</p>
@@ -51,6 +59,21 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
               <div key={slot.key} className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                 <img src={photo.urlFotos} alt={slot.label} className="w-full h-20 object-cover" />
                 <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-1.5 py-0.5">{slot.label}</span>
+                {photo.eshteKryesore ? (
+                  <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-5 h-5 flex items-center justify-center" title="Foto kryesore">
+                    <Star size={11} className="fill-current" />
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSetMain(photo.photoId)}
+                    disabled={busyKey === `main-${photo.photoId}`}
+                    className="absolute top-1 left-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-amber-500"
+                    title="Beje foto kryesore"
+                  >
+                    <Star size={11} />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => handleDelete(photo.photoId)}
@@ -91,6 +114,21 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
             {others.map((photo) => (
               <div key={photo.photoId} className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                 <img src={photo.urlFotos} alt="" className="w-full h-20 object-cover" />
+                {photo.eshteKryesore ? (
+                  <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-5 h-5 flex items-center justify-center" title="Foto kryesore">
+                    <Star size={11} className="fill-current" />
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSetMain(photo.photoId)}
+                    disabled={busyKey === `main-${photo.photoId}`}
+                    className="absolute top-1 left-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-amber-500"
+                    title="Beje foto kryesore"
+                  >
+                    <Star size={11} />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => handleDelete(photo.photoId)}

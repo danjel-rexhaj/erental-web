@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon } from "lucide-react";
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
@@ -775,14 +775,19 @@ function buildCarForm(car) {
   };
 }
 
-function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk }) {
+function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, onDirtyChange }) {
   const isEdit = !!existingCar;
   const [loading, setLoading] = useState(false);
   const [createdCar, setCreatedCar] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [form, setForm] = useState(() => buildCarForm(existingCar));
+  const initialFormRef = useRef(form);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const models = CAR_BRANDS[form.marka] || [];
+
+  useEffect(() => {
+    onDirtyChange?.(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
+  }, [form, onDirtyChange]);
 
   function toggleAmenity(key) {
     setForm((f) => ({
@@ -936,6 +941,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
   const mainPhoto = photos.find((p) => p.eshteKryesore) || photos[0];
   const [managingPhotos, setManagingPhotos] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editDirty, setEditDirty] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [blocks, setBlocks] = useState([]);
   const [blockFrom, setBlockFrom] = useState(null);
@@ -954,6 +960,25 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
     const next = !showCalendar;
     setShowCalendar(next);
     if (next) loadBlocks();
+  }
+
+  function confirmLeaveEdit() {
+    if (!editing || !editDirty) return true;
+    return window.confirm("Ke ndryshime te paruajtura tek edito. Doni t'i lini pa i ruajtur?");
+  }
+
+  function handleToggleEdit() {
+    if (!confirmLeaveEdit()) return;
+    setEditDirty(false);
+    setEditing((s) => !s);
+    setManagingPhotos(false);
+  }
+
+  function handleTogglePhotos() {
+    if (!confirmLeaveEdit()) return;
+    setEditing(false);
+    setEditDirty(false);
+    setManagingPhotos((s) => !s);
   }
 
   async function submitBlock() {
@@ -1001,7 +1026,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
+      <button onClick={() => confirmLeaveEdit() && onBack()} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
         <ChevronLeft size={16} /> Prapa te makinat
       </button>
 
@@ -1099,14 +1124,14 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
           <div className="flex gap-2 mt-4">
             <GhostButton
               type="button"
-              onClick={() => setEditing((s) => !s)}
+              onClick={handleToggleEdit}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${editing ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
             >
               <Pencil size={13} />{editing ? "Mbyll editimin" : "Edito detajet"}
             </GhostButton>
             <GhostButton
               type="button"
-              onClick={() => setManagingPhotos((s) => !s)}
+              onClick={handleTogglePhotos}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${managingPhotos ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
             >
               <Upload size={13} />{managingPhotos ? "Mbyll fotot" : "Menaxho fotot"}
@@ -1118,9 +1143,10 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
                 token={token}
                 companyId={car.companyId}
                 existingCar={car}
-                onDone={() => { setEditing(false); reload(); }}
+                onDone={() => { setEditing(false); setEditDirty(false); reload(); }}
                 showError={showError}
                 showOk={showOk}
+                onDirtyChange={setEditDirty}
               />
             </div>
           )}
