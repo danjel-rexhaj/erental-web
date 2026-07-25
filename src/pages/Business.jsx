@@ -26,7 +26,10 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
 
   useEffect(() => { load(); }, [load]);
 
-  if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
+  // Only show the full-page spinner on the very first load -- reload() also runs after small
+  // actions like uploading a photo, and swapping the whole tree out mid-session would unmount
+  // CompanyDashboard, losing things like which car's detail view is open.
+  if (loading && company === undefined) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
 
   if (company === null && !isAdmin) return <RegisterCompanyForm token={token} onDone={load} showError={showError} showOk={showOk} />;
 
@@ -1023,35 +1026,11 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
               ))}
             </div>
           )}
-        </div>
 
-        <div>
-          <div className="flex items-center justify-between gap-2">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</h1>
-            <CarStatusBadge statusi={car.statusi} />
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{car.targa} · {car.viti} · {car.cmimiDites}€/dite</p>
-
-          <div className="flex gap-2 mt-4">
-            <GhostButton
-              type="button"
-              onClick={() => setEditing((s) => !s)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${editing ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
-            >
-              <Pencil size={13} />{editing ? "Mbyll editimin" : "Edito detajet"}
-            </GhostButton>
-            <GhostButton
-              type="button"
-              onClick={() => setManagingPhotos((s) => !s)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${managingPhotos ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
-            >
-              <Upload size={13} />{managingPhotos ? "Mbyll fotot" : "Menaxho fotot"}
-            </GhostButton>
-          </div>
           <GhostButton
             type="button"
             onClick={toggleCalendar}
-            className={`flex items-center justify-center gap-1.5 py-2 mt-2 ${showCalendar ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
+            className={`flex items-center justify-center gap-1.5 py-2 mt-4 ${showCalendar ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
           >
             <Calendar size={13} />{showCalendar ? "Mbyll kalendarin" : "Kalendari i rezervimeve"}
           </GhostButton>
@@ -1108,6 +1087,31 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
               )}
             </div>
           )}
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</h1>
+            <CarStatusBadge statusi={car.statusi} />
+          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{car.targa} · {car.viti} · {car.cmimiDites}€/dite</p>
+
+          <div className="flex gap-2 mt-4">
+            <GhostButton
+              type="button"
+              onClick={() => setEditing((s) => !s)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${editing ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
+            >
+              <Pencil size={13} />{editing ? "Mbyll editimin" : "Edito detajet"}
+            </GhostButton>
+            <GhostButton
+              type="button"
+              onClick={() => setManagingPhotos((s) => !s)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${managingPhotos ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
+            >
+              <Upload size={13} />{managingPhotos ? "Mbyll fotot" : "Menaxho fotot"}
+            </GhostButton>
+          </div>
           {editing && (
             <div className="mt-3">
               <AddCarForm
