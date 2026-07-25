@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon, Star, ChevronDown } from "lucide-react";
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
@@ -100,6 +100,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   const [reason, setReason] = useState("");
   const [deletingId, setDeletingId] = useState(null);
   const [licenseModalId, setLicenseModalId] = useState(null);
+  const [showCancelled, setShowCancelled] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -249,6 +250,34 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     </div>
   );
 
+  const renderCancelledCard = (b) => (
+    <div key={b.bookingId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+      <div className="flex items-start justify-between">
+        <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
+        <StatusPill status={b.statusi} />
+      </div>
+      <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">{confirmim(b)}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {b.klienti.emri} {b.klienti.mbiemri}</p>
+      {b.arsyejaRefuzimit && (
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
+          <span className="font-semibold">Arsyeja:</span> {b.arsyejaRefuzimit}
+        </p>
+      )}
+      {deletingId === b.bookingId ? (
+        <div className="flex items-center gap-2 mt-3">
+          <button onClick={() => removeBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
+            {actingId === b.bookingId ? "Duke fshire..." : "Po, fshije"}
+          </button>
+          <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">Anulo</button>
+        </div>
+      ) : (
+        <button onClick={() => setDeletingId(b.bookingId)} className="text-xs text-slate-400 dark:text-slate-500 underline mt-3">
+          Fshi
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-8">
       {pending.length > 0 && (
@@ -360,10 +389,18 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 
       {cancelledGroup.length > 0 && (
         <div>
-          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Anuluar ({cancelledGroup.length})</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cancelledGroup.map(renderHistoryCard)}
-          </div>
+          <button
+            onClick={() => setShowCancelled((s) => !s)}
+            className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+          >
+            <ChevronDown size={16} className={`transition-transform ${showCancelled ? "rotate-180" : ""}`} />
+            Anuluar ({cancelledGroup.length})
+          </button>
+          {showCancelled && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+              {cancelledGroup.map(renderCancelledCard)}
+            </div>
+          )}
         </div>
       )}
 
@@ -938,6 +975,8 @@ function BusinessCarCard({ car, onOpen }) {
 function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
   const photos = (car.carPhotos || []).filter(Boolean);
   const mainPhoto = photos.find((p) => p.eshteKryesore) || photos[0];
+  const [previewPhoto, setPreviewPhoto] = useState(null);
+  const shownPhoto = previewPhoto || mainPhoto;
   const [managingPhotos, setManagingPhotos] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editDirty, setEditDirty] = useState(false);
@@ -950,6 +989,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
   const [togglingStatus, setTogglingStatus] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   function loadBlocks() {
     apiFetch(`/Cars/${car.carId}/blocks`, token).then(setBlocks).catch(() => {});
@@ -961,23 +1001,32 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
     if (next) loadBlocks();
   }
 
-  function confirmLeaveEdit() {
-    if (!editing || !editDirty) return true;
-    return window.confirm("Ke ndryshime te paruajtura tek edito. Doni t'i lini pa i ruajtur?");
+  function guardedAction(action) {
+    if (editing && editDirty) setPendingAction(() => action);
+    else action();
+  }
+
+  function confirmDiscard() {
+    setEditing(false);
+    setEditDirty(false);
+    pendingAction?.();
+    setPendingAction(null);
   }
 
   function handleToggleEdit() {
-    if (!confirmLeaveEdit()) return;
-    setEditDirty(false);
-    setEditing((s) => !s);
-    setManagingPhotos(false);
+    guardedAction(() => {
+      setEditDirty(false);
+      setEditing((s) => !s);
+      setManagingPhotos(false);
+    });
   }
 
   function handleTogglePhotos() {
-    if (!confirmLeaveEdit()) return;
-    setEditing(false);
-    setEditDirty(false);
-    setManagingPhotos((s) => !s);
+    guardedAction(() => {
+      setEditing(false);
+      setEditDirty(false);
+      setManagingPhotos((s) => !s);
+    });
   }
 
   async function submitBlock() {
@@ -1025,15 +1074,15 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
 
   return (
     <div>
-      <button onClick={() => confirmLeaveEdit() && onBack()} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
+      <button onClick={() => guardedAction(onBack)} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
         <ChevronLeft size={16} /> Prapa te makinat
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <div className="rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-            {mainPhoto ? (
-              <img src={mainPhoto.urlFotos} alt={`${car.marka} ${car.modeli}`} className="w-full h-64 object-cover" />
+            {shownPhoto ? (
+              <img src={shownPhoto.urlFotos} alt={`${car.marka} ${car.modeli}`} className="w-full h-64 object-cover" />
             ) : (
               <div className="w-full h-64 flex items-center justify-center text-slate-300 dark:text-slate-600"><CarIcon size={40} /></div>
             )}
@@ -1041,12 +1090,19 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
           {car.carPhotos?.length > 1 && (
             <div className="grid grid-cols-4 gap-2 mt-2">
               {car.carPhotos.map((p) => (
-                <img
+                <button
                   key={p.photoId}
-                  src={p.urlFotos}
-                  alt=""
-                  className={`w-full h-16 object-cover rounded-xl border-2 ${p.photoId === mainPhoto?.photoId ? "border-emerald-500" : "border-transparent"}`}
-                />
+                  type="button"
+                  onClick={() => setPreviewPhoto(p)}
+                  className={`relative rounded-xl overflow-hidden border-2 ${p.photoId === shownPhoto?.photoId ? "border-emerald-500" : "border-transparent hover:border-slate-300 dark:hover:border-slate-600"}`}
+                >
+                  <img src={p.urlFotos} alt="" className="w-full h-16 object-cover" />
+                  {p.eshteKryesore && (
+                    <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-4 h-4 flex items-center justify-center" title="Foto kryesore">
+                      <Star size={9} className="fill-current" />
+                    </span>
+                  )}
+                </button>
               ))}
             </div>
           )}
@@ -1188,6 +1244,19 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
           </div>
         </div>
       </div>
+
+      {pendingAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setPendingAction(null)}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">Ndryshime te paruajtura</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Ke ndryshime tek "Edito detajet" qe s'jane ruajtur ende. Nese vazhdon, do te humbasin.</p>
+            <div className="flex gap-2">
+              <button onClick={confirmDiscard} className="flex-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2">Vazhdo pa i ruajtur</button>
+              <GhostButton type="button" onClick={() => setPendingAction(null)} className="flex-1 text-xs py-2">Anulo</GhostButton>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
