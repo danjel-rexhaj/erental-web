@@ -641,13 +641,27 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
                 <option value="">Te gjitha kategorite</option>
                 {categories.map((k) => <option key={k} value={k}>{categoryLabelCompany(k)}</option>)}
               </select>
-              <select value={filters.vitiMin} onChange={(e) => setFilters((f) => ({ ...f, vitiMin: e.target.value }))} className={companySelectClass}>
+              <select
+                value={filters.vitiMin}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFilters((f) => ({ ...f, vitiMin: v, vitiMax: f.vitiMax && v && Number(f.vitiMax) < Number(v) ? v : f.vitiMax }));
+                }}
+                className={companySelectClass}
+              >
                 <option value="">Viti nga</option>
-                {years.map((y) => <option key={y} value={y}>{y}</option>)}
+                {years.filter((y) => !filters.vitiMax || y <= Number(filters.vitiMax)).map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
-              <select value={filters.vitiMax} onChange={(e) => setFilters((f) => ({ ...f, vitiMax: e.target.value }))} className={companySelectClass}>
+              <select
+                value={filters.vitiMax}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFilters((f) => ({ ...f, vitiMax: v, vitiMin: f.vitiMin && v && Number(f.vitiMin) > Number(v) ? v : f.vitiMin }));
+                }}
+                className={companySelectClass}
+              >
                 <option value="">Viti deri</option>
-                {years.map((y) => <option key={y} value={y}>{y}</option>)}
+                {years.filter((y) => !filters.vitiMin || y >= Number(filters.vitiMin)).map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
               <input
                 type="number"
