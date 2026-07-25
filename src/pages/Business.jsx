@@ -148,6 +148,17 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     } catch (e) { showError(e); } finally { setActingId(null); }
   }
 
+  async function rejectLicense(id, reason) {
+    setActingId(id);
+    try {
+      await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT", body: JSON.stringify({ reason }) });
+      showOk("Rezervimi u refuzua per shkak te patentes.");
+      setLicenseModalId(null);
+      load();
+      onChanged && onChanged();
+    } catch (e) { showError(e); } finally { setActingId(null); }
+  }
+
   const days = (b) => Math.max(1, Math.round((new Date(b.dataPerfundimit) - new Date(b.dataFillimit)) / 86400000));
   const confirmim = (b) => `ER-${String(b.bookingId).padStart(6, "0")}`;
 
@@ -411,6 +422,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
           showError={showError}
           verifying={actingId === licenseModalId}
           onVerify={() => verifyId(licenseModalId)}
+          onReject={(reason) => rejectLicense(licenseModalId, reason)}
           onClose={() => setLicenseModalId(null)}
         />
       )}
@@ -418,9 +430,12 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   );
 }
 
-function LicenseModal({ bookingId, token, showError, verifying, onVerify, onClose }) {
+function LicenseModal({ bookingId, token, showError, verifying, onVerify, onReject, onClose }) {
   const [imgs, setImgs] = useState({ para: null, mbrapa: null });
   const [loading, setLoading] = useState(true);
+  const [zoomed, setZoomed] = useState(null);
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
 
   useEffect(() => {
     let paraUrl = null, mbrapaUrl = null, cancelled = false;
@@ -446,6 +461,11 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onClos
     };
   }, [bookingId, token]);
 
+  function submitReject() {
+    if (!reason.trim()) { showError(new Error("Duhet te shkruash nje arsye per refuzimin.")); return; }
+    onReject(reason);
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
@@ -457,19 +477,57 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onClos
           <p className="text-xs text-slate-400 text-center py-6">Duke ngarkuar...</p>
         ) : imgs.para && imgs.mbrapa && (
           <>
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <img src={imgs.para} alt="Para" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700" />
-              <img src={imgs.mbrapa} alt="Mbrapa" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700" />
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <button type="button" onClick={() => setZoomed(imgs.para)} className="block">
+                <img src={imgs.para} alt="Para" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700 hover:opacity-90 transition" />
+              </button>
+              <button type="button" onClick={() => setZoomed(imgs.mbrapa)} className="block">
+                <img src={imgs.mbrapa} alt="Mbrapa" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700 hover:opacity-90 transition" />
+              </button>
             </div>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3">Kliko nje foto per ta zmadhuar.</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-lg p-2.5 mb-3 leading-relaxed">
-              Kjo eshte nje e dhene personale e mbrojtur me ligj. Perdore vetem per te pergatitur kontraten e qerase se ketij rezervimi — ruajtja, ndarja ose perdorimi per cdo qellim tjeter eshte i ndaluar dhe i ndjekshem penalisht.
+              Kjo eshte nje e dhene personale e mbrojtur me ligj, e shikueshme vetem ne kete moment — patenta nuk ruhet ne pajisjen tende dhe s'ka link te perhershem per te. Perdore vetem per te pergatitur kontraten e qerase se ketij rezervimi — ruajtja, ndarja ose perdorimi per cdo qellim tjeter eshte i ndaluar dhe i ndjekshem penalisht.
             </p>
-            <PrimaryButton type="button" onClick={onVerify} disabled={verifying} className="w-full text-xs py-2">
-              {verifying ? "Duke ruajtur..." : "Konfirmo verifikimin"}
-            </PrimaryButton>
+
+            {rejecting ? (
+              <div className="flex flex-col gap-2">
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Arsyeja (p.sh. fotoja nuk eshte e patentes, dokument i palexueshem, etj.)"
+                  rows={2}
+                  className={inputClass + " text-xs"}
+                />
+                <div className="flex gap-2">
+                  <button type="button" onClick={submitReject} disabled={verifying} className="flex-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
+                    {verifying ? "Duke refuzuar..." : "Refuzo dhe anulo rezervimin"}
+                  </button>
+                  <GhostButton type="button" onClick={() => { setRejecting(false); setReason(""); }} className="flex-1 text-xs py-2">Anulo</GhostButton>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <PrimaryButton type="button" onClick={onVerify} disabled={verifying} className="w-full text-xs py-2">
+                  {verifying ? "Duke ruajtur..." : "Konfirmo verifikimin"}
+                </PrimaryButton>
+                <button type="button" onClick={() => setRejecting(true)} disabled={verifying} className="text-xs font-medium text-red-600 dark:text-red-400 underline">
+                  Kjo nuk eshte foto patente — refuzo
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
+
+      {zoomed && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4" onClick={(e) => { e.stopPropagation(); setZoomed(null); }}>
+          <img src={zoomed} alt="Patenta e zmadhuar" className="max-w-full max-h-full rounded-lg object-contain" />
+          <button onClick={() => setZoomed(null)} className="absolute top-4 right-4 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70">
+            <X size={18} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

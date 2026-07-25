@@ -256,6 +256,7 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
   const [showLicenseForm, setShowLicenseForm] = useState(false);
   const [licenseVersion, setLicenseVersion] = useState(0);
   const [licenseImgs, setLicenseImgs] = useState({ para: null, mbrapa: null });
+  const [pendingLicense, setPendingLicense] = useState(null);
 
   useEffect(() => {
     apiFetch("/Bookings", token).then((b) => setBookingCount(b.length)).catch(() => {});
@@ -411,11 +412,35 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
                 {hasLicense ? "Mund ta ndryshosh me poshte." : "Duhet ta shtosh (para dhe mbrapa) para se te mund te rezervosh nje makine."}
               </p>
               <div className="grid grid-cols-2 gap-3">
-                <LicenseSlot label="Para" url={licenseImgs.para} uploading={uploadingLicense === "para"} onUpload={(f) => uploadLicensePart("para", f)} />
-                <LicenseSlot label="Mbrapa" url={licenseImgs.mbrapa} uploading={uploadingLicense === "mbrapa"} onUpload={(f) => uploadLicensePart("mbrapa", f)} />
+                <LicenseSlot label="Para" url={licenseImgs.para} uploading={uploadingLicense === "para"} onUpload={(f) => setPendingLicense({ side: "para", file: f, preview: URL.createObjectURL(f) })} />
+                <LicenseSlot label="Mbrapa" url={licenseImgs.mbrapa} uploading={uploadingLicense === "mbrapa"} onUpload={(f) => setPendingLicense({ side: "mbrapa", file: f, preview: URL.createObjectURL(f) })} />
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {pendingLicense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => { URL.revokeObjectURL(pendingLicense.preview); setPendingLicense(null); }}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 mb-3">Konfirmo foton e patentes</h3>
+            <img src={pendingLicense.preview} alt="Patenta" className="w-full h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-700 mb-3" />
+            <p className="text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2.5 mb-4 leading-relaxed">
+              Kjo foto duhet te jete patenta jote reale e drejtimit ({pendingLicense.side === "para" ? "faqja e pare" : "faqja e dyte"}). Nese ngarkon nje foto tjeter (jo patente, ose fallco), biznesi mund ta refuzoje dhe rezervimi do te anulohet — dhe abuzimi i perseritur mund te sjelle mbylljen e llogarise tende.
+            </p>
+            <div className="flex gap-2">
+              <PrimaryButton
+                type="button"
+                onClick={() => { uploadLicensePart(pendingLicense.side, pendingLicense.file); URL.revokeObjectURL(pendingLicense.preview); setPendingLicense(null); }}
+                className="flex-1 text-xs py-2"
+              >
+                Po, kjo eshte patenta ime — ngarkoje
+              </PrimaryButton>
+              <GhostButton type="button" onClick={() => { URL.revokeObjectURL(pendingLicense.preview); setPendingLicense(null); }} className="flex-1 text-xs py-2">
+                Anulo
+              </GhostButton>
+            </div>
+          </div>
         </div>
       )}
 

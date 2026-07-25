@@ -688,7 +688,12 @@ function AdminBookingsPanel({ token, showError, showOk }) {
               <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.biznesi?.emri}</td>
               <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.klienti?.emri} {b.klienti?.mbiemri}</td>
               <td className="px-4 py-2.5 text-right text-slate-900 dark:text-slate-100 font-semibold whitespace-nowrap">{b.cmimiTotal}€</td>
-              <td className="px-4 py-2.5"><StatusPill status={b.statusi} /></td>
+              <td className="px-4 py-2.5">
+                <StatusPill status={b.statusi} />
+                {b.statusi === "cancelled" && b.arsyejaRefuzimit && (
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 max-w-[220px]" title={b.arsyejaRefuzimit}>{b.arsyejaRefuzimit}</p>
+                )}
+              </td>
               <td className="px-4 py-2.5 text-right">
                 {(b.statusi === "pending" || b.statusi === "confirmed") && (
                   <button onClick={() => cancel(b.bookingId)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400"><X size={14} /></button>
