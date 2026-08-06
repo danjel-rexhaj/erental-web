@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Calendar, ArrowRight } from "lucide-react";
+import { ShieldCheck, Calendar, ArrowRight, MapPin } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton } from "../components";
 import { useLang } from "../useLang";
+import { ALBANIAN_LOCATIONS } from "../carData";
 
 const today = () => new Date().toISOString().split("T")[0];
 const dayAfter = (dateStr) => {
@@ -11,14 +12,15 @@ const dayAfter = (dateStr) => {
   return d.toISOString().split("T")[0];
 };
 
-export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, setDataPerfundimit, onSearch, loading }) {
+export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, setDataPerfundimit, zona, setZona, onSearch, loading }) {
   const { t } = useLang();
   const [companies, setCompanies] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
 
   useEffect(() => {
     apiFetch("/Companies", null).then((data) => {
       setCompanies(data.filter((c) => c.eshteVerifikuar));
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setLoadingCompanies(false));
   }, []);
 
   const loop = companies.length > 0 ? [...companies, ...companies] : [];
@@ -57,7 +59,22 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             {t("home.subtitle")}
           </p>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 mt-8 w-full max-w-2xl flex flex-col sm:flex-row sm:items-end gap-3 shadow-2xl">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 mt-8 w-full max-w-2xl flex flex-col sm:flex-row sm:items-end gap-3 shadow-2xl flex-wrap">
+            <div className="flex-1 min-w-[170px]">
+              <Field label={t("home.zone")}>
+                <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-emerald-100 dark:focus-within:ring-emerald-900/40 transition">
+                  <MapPin size={15} className="text-emerald-600 shrink-0 pointer-events-none" />
+                  <select
+                    className="flex-1 min-w-0 w-full py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none bg-transparent cursor-pointer font-semibold"
+                    value={zona}
+                    onChange={(e) => setZona(e.target.value)}
+                  >
+                    <option value="">{t("home.allZones")}</option>
+                    {ALBANIAN_LOCATIONS.map((z) => <option key={z} value={z}>{z}</option>)}
+                  </select>
+                </div>
+              </Field>
+            </div>
             <div className="flex-1 min-w-0">
               <Field label={t("home.from")}>
                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 overflow-hidden focus-within:border-emerald-600 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-2 focus-within:ring-emerald-100 dark:focus-within:ring-emerald-900/40 transition">
@@ -92,23 +109,31 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         </div>
       </div>
 
-      {loop.length > 0 && (
+      {(loadingCompanies || loop.length > 0) && (
         <div className="relative mt-10 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700">
           <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-teal-950/40 dark:via-slate-800 dark:to-emerald-950/30" />
 
           <div className="relative p-6 sm:p-8">
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">{t("home.verifiedBusinesses")}</p>
-            <div className="overflow-hidden">
-              <div className="flex gap-3 animate-marquee w-max">
-                {loop.map((c, i) => (
-                  <div key={i} className="flex items-center gap-2 border border-teal-100 dark:border-teal-800/50 rounded-xl px-4 py-3 bg-white/90 dark:bg-slate-900/70 backdrop-blur-sm flex-shrink-0 shadow-sm">
-                    <ShieldCheck size={14} className="text-teal-600 dark:text-teal-400 flex-shrink-0" />
-                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">{c.emri}</span>
-                    <span className="text-xs text-slate-400 whitespace-nowrap">· {c.qyteti}</span>
-                  </div>
+            {loadingCompanies ? (
+              <div className="flex gap-3">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="h-11 w-36 rounded-xl bg-white/70 dark:bg-slate-900/50 animate-pulse flex-shrink-0" />
                 ))}
               </div>
-            </div>
+            ) : (
+              <div className="overflow-hidden">
+                <div className="flex gap-3 animate-marquee w-max">
+                  {loop.map((c, i) => (
+                    <div key={i} className="flex items-center gap-2 border border-teal-100 dark:border-teal-800/50 rounded-xl px-4 py-3 bg-white/90 dark:bg-slate-900/70 backdrop-blur-sm flex-shrink-0 shadow-sm">
+                      <ShieldCheck size={14} className="text-teal-600 dark:text-teal-400 flex-shrink-0" />
+                      <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">{c.emri}</span>
+                      <span className="text-xs text-slate-400 whitespace-nowrap">· {c.qyteti}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

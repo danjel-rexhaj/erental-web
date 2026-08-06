@@ -382,6 +382,8 @@ export default function App() {
         setDataFillimit={setDataFillimit}
         dataPerfundimit={dataPerfundimit}
         setDataPerfundimit={setDataPerfundimit}
+        zona={resultFilters.zona}
+        setZona={(zona) => setResultFilters((f) => ({ ...f, zona }))}
         onSearch={search}
         loading={searching}
       />
