@@ -603,7 +603,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
               checked={form.ofronDergimMakine}
               onChange={(e) => setForm((f) => ({ ...f, ofronDergimMakine: e.target.checked }))}
             />
-            <span>Ofroj dergim te makines te klienti (brenda zones, ne aeroport ose port)</span>
+            <span>Ofroj dergim te makines te klienti (brenda zones se mbulimit)</span>
           </label>
           <Field label="Certifikata e NIPT-it (foto/PDF)">
             <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className={inputClass} />

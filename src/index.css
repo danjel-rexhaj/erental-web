@@ -10,6 +10,16 @@ html.dark, html.dark body {
   background-color: #0f172a;
 }
 
+/* Lets the browser render native form-control chrome (select dropdown popup, scrollbars)
+   in the matching theme -- Tailwind's dark: classes on <option> don't reach the native
+   popup in every browser, so without this the dropdown list stays light-on-light in dark mode. */
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
 button:not(:disabled), [role="button"] {
   cursor: pointer;
 }
