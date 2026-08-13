@@ -10,6 +10,11 @@ function formatShortDate(iso) {
   if (isNaN(d)) return iso;
   return `${d.getDate()} ${MUAJT_SHKURTER[d.getMonth()]}`;
 }
+function addDaysIso(iso, days) {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+}
 
 const companySelectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
 const categoryLabelCompany = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
@@ -32,7 +37,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const activeFrom = selTo ? selFrom : dataFillimit;
   const activeTo = selTo ? selTo : dataPerfundimit;
   const days = activeFrom && activeTo ? Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000)) : 0;
-  const total = (days * car.cmimiDites).toFixed(2);
+  const matchedOffer = car.priceOffers?.find((o) => o.dite === days);
+  const total = (matchedOffer ? matchedOffer.cmimiTotal : days * car.cmimiDites).toFixed(2);
   // Results shows near-miss cars (free in X days) using the searched dates, which for this car
   // may already be taken — don't let the payment flow start until those dates are changed.
   const hasDateConflict = activeFrom && activeTo && bookedRanges.some((r) => {
@@ -174,10 +180,33 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               <Calendar size={14} /> {formatShortDate(activeFrom)} → {formatShortDate(activeTo)}
             </div>
             <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-slate-500 dark:text-slate-400">{days} dite × {car.cmimiDites}€</p>
+              {matchedOffer ? (
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full w-fit">Çmim special për {days} net</span>
+              ) : (
+                <p className="text-xs text-slate-500 dark:text-slate-400">{days} dite × {car.cmimiDites}€</p>
+              )}
             </div>
             <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
           </div>
+
+          {car.priceOffers && car.priceOffers.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {car.priceOffers.map((o) => (
+                <button
+                  key={o.dite}
+                  type="button"
+                  onClick={() => {
+                    const from = activeFrom || new Date().toISOString().split("T")[0];
+                    setSelFrom(from);
+                    setSelTo(addDaysIso(from, o.dite));
+                  }}
+                  className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-teal-400 dark:hover:border-teal-600 px-2.5 py-1 rounded-full transition"
+                >
+                  {o.dite} net · {o.cmimiTotal}€
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="mt-3">
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">

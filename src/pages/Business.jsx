@@ -865,6 +865,7 @@ function buildCarForm(car) {
       viti: "2020", km: "0", karburanti: "diesel", transmisioni: "manual",
       ngjyra: "", targa: "", kategoria: "economy", numriVendeve: "5",
       klimatizimi: true, cmimiDites: "20", pershkrimi: "", kubatura: "", cilindra: "", amenities: [],
+      priceOffers: [],
     };
   }
   const markaKnown = Object.prototype.hasOwnProperty.call(CAR_BRANDS, car.marka);
@@ -888,6 +889,7 @@ function buildCarForm(car) {
     kubatura: car.kubatura != null ? String(car.kubatura) : "",
     cilindra: car.cilindra != null ? String(car.cilindra) : "",
     amenities: car.amenities || [],
+    priceOffers: (car.priceOffers || []).map((o) => ({ dite: String(o.dite), cmimiTotal: String(o.cmimiTotal) })),
   };
 }
 
@@ -912,6 +914,16 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
     }));
   }
 
+  function addOffer() {
+    setForm((f) => ({ ...f, priceOffers: [...f.priceOffers, { dite: "", cmimiTotal: "" }] }));
+  }
+  function updateOffer(i, key, value) {
+    setForm((f) => ({ ...f, priceOffers: f.priceOffers.map((o, idx) => (idx === i ? { ...o, [key]: value } : o)) }));
+  }
+  function removeOffer(i) {
+    setForm((f) => ({ ...f, priceOffers: f.priceOffers.filter((_, idx) => idx !== i) }));
+  }
+
   async function submit(e) {
     e.preventDefault();
     setLoading(true);
@@ -926,6 +938,9 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         kubatura: form.kubatura ? Number(form.kubatura) : null,
         cilindra: form.cilindra ? Number(form.cilindra) : null,
         amenities: form.amenities,
+        priceOffers: form.priceOffers
+          .filter((o) => o.dite && o.cmimiTotal)
+          .map((o) => ({ dite: Number(o.dite), cmimiTotal: Number(o.cmimiTotal) })),
       };
       if (isEdit) {
         await apiFetch(`/Cars/${existingCar.carId}`, token, { method: "PUT", body: JSON.stringify(payload) });
@@ -1015,6 +1030,19 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
               <input type="checkbox" checked={form.amenities.includes(a.key)} onChange={() => toggleAmenity(a.key)} /> {a.label}
             </label>
           ))}
+        </div>
+      </Field>
+      <Field label="Oferta çmimi (opsionale)">
+        <div className="flex flex-col gap-1.5">
+          {form.priceOffers.map((o, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <input type="number" min="1" placeholder="Ditë" className={`${inputClass} w-20`} value={o.dite} onChange={(e) => updateOffer(i, "dite", e.target.value)} />
+              <span className="text-xs text-slate-400">ditë =</span>
+              <input type="number" min="0" step="0.01" placeholder="Çmimi total (€)" className={inputClass} value={o.cmimiTotal} onChange={(e) => updateOffer(i, "cmimiTotal", e.target.value)} />
+              <button type="button" onClick={() => removeOffer(i)} className="text-slate-400 hover:text-red-600 shrink-0" title="Hiq ofertën"><X size={15} /></button>
+            </div>
+          ))}
+          <GhostButton type="button" onClick={addOffer} className="text-xs py-1.5 w-fit">+ Shto ofertë</GhostButton>
         </div>
       </Field>
       <PrimaryButton type="submit" disabled={loading} className="mt-2">
