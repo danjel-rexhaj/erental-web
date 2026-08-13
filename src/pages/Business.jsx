@@ -6,8 +6,10 @@ import { generateInvoicePdf } from "../invoicePdf";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins } from "./Analytics";
+import { useLang } from "../useLang";
 
 export default function Business({ token, showError, showOk, isAdmin, tab, setTab, carId, setCarId, highlightBookingId, refreshKey }) {
+  const { t } = useLang();
   const [company, setCompany] = useState(undefined);
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,17 +31,17 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
   // Only show the full-page spinner on the very first load -- reload() also runs after small
   // actions like uploading a photo, and swapping the whole tree out mid-session would unmount
   // CompanyDashboard, losing things like which car's detail view is open.
-  if (loading && company === undefined) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
+  if (loading && company === undefined) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
 
   if (company === null && !isAdmin) return <RegisterCompanyForm token={token} onDone={load} showError={showError} showOk={showOk} />;
 
   // Biznesi im / Rezervimet / Statistikat are reachable directly from the top nav now,
   // so this bar only needs to surface the admin-only views.
   const tabs = isAdmin ? [
-    { key: "admin", label: "Verifikime" },
+    { key: "admin", label: t("business.tabsVerifications") },
     { key: "whatsapp", label: "WhatsApp" },
-    { key: "admin-analytics", label: "Statistikat e platformes" },
-    { key: "admin-logins", label: "Logs hyrjesh" },
+    { key: "admin-analytics", label: t("business.tabsPlatformStats") },
+    { key: "admin-logins", label: t("business.tabsLoginLogs") },
   ] : [];
 
   return (
@@ -79,6 +81,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
 }
 
 function PaymentBadge({ b }) {
+  const { t } = useLang();
   if (!b.paymentMethod || b.paymentMethod === "cash") return null;
   const shumaPaguar = b.payment?.shumaPaguarOnline ?? 0;
   const mbetetCash = (b.cmimiTotal - shumaPaguar).toFixed(2);
@@ -86,13 +89,14 @@ function PaymentBadge({ b }) {
     <p className="text-[11px] text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-0.5">
       <CreditCard size={11} />
       {b.paymentMethod === "paypal_full"
-        ? "Paguar plotesisht me karte"
-        : `Depozite ${shumaPaguar}€ e paguar me karte, mbeten ${mbetetCash}€ cash`}
+        ? t("booking.fullyPaidCard")
+        : t("booking.depositPaidRest", { amount: shumaPaguar, rest: mbetetCash })}
     </p>
   );
 }
 
 function CompanyBookings({ token, showError, showOk, highlightBookingId, company, refreshKey, onChanged }) {
+  const { t } = useLang();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState(null);
@@ -118,15 +122,15 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 
   async function confirm(id) {
     setActingId(id);
-    try { await apiFetch(`/Bookings/${id}/confirm`, token, { method: "PUT" }); showOk("Rezervimi u miratua."); load(); onChanged && onChanged(); }
+    try { await apiFetch(`/Bookings/${id}/confirm`, token, { method: "PUT" }); showOk(t("business.approvedToast")); load(); onChanged && onChanged(); }
     catch (e) { showError(e); } finally { setActingId(null); }
   }
   async function reject(id) {
-    if (!reason.trim()) { showError(new Error("Duhet te shkruash nje arsye per refuzimin.")); return; }
+    if (!reason.trim()) { showError(new Error(t("business.needRejectReasonError"))); return; }
     setActingId(id);
     try {
       await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT", body: JSON.stringify({ reason }) });
-      showOk("Rezervimi u refuzua.");
+      showOk(t("business.rejectedToast"));
       setRejectingId(null);
       setReason("");
       load();
@@ -135,14 +139,14 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   }
   async function removeBooking(id) {
     setActingId(id);
-    try { await apiFetch(`/Bookings/${id}`, token, { method: "DELETE" }); showOk("Rezervimi u fshi."); setDeletingId(null); load(); }
+    try { await apiFetch(`/Bookings/${id}`, token, { method: "DELETE" }); showOk(t("booking.deleted")); setDeletingId(null); load(); }
     catch (e) { showError(e); } finally { setActingId(null); }
   }
   async function verifyId(id) {
     setActingId(id);
     try {
       await apiFetch(`/Bookings/${id}/verify-id`, token, { method: "PUT" });
-      showOk("Identiteti u verifikua, kontrata u dergua ne email.");
+      showOk(t("business.identityVerifiedContract"));
       setLicenseModalId(null);
       load();
     } catch (e) { showError(e); } finally { setActingId(null); }
@@ -152,7 +156,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     setActingId(id);
     try {
       await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT", body: JSON.stringify({ reason }) });
-      showOk("Rezervimi u refuzua per shkak te patentes.");
+      showOk(t("business.rejectedForLicense"));
       setLicenseModalId(null);
       load();
       onChanged && onChanged();
@@ -179,8 +183,8 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     });
   }
 
-  if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
-  if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Ende s'ke asnje rezervim per makinat e tua.</p></div>;
+  if (loading) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
+  if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">{t("business.emptyBookings")}</p></div>;
 
   const confirmedGroup = bookings.filter((b) => b.statusi === "confirmed" || b.statusi === "completed");
   const pending = bookings.filter((b) => b.statusi === "pending");
@@ -197,7 +201,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
         <StatusPill status={b.statusi} />
       </div>
       <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">{confirmim(b)}</p>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {t("car.daysCount", { count: days(b) })}</p>
       <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
         <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri}
         {b.klienti.hasWhatsapp && b.klienti.telefoni && (
@@ -206,7 +210,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
             target="_blank"
             rel="noreferrer"
             className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
-            title="Shkruaj ne WhatsApp"
+            title={t("business.whatsappLinkTitle")}
           >
             <MessageCircle size={13} />
           </a>
@@ -215,7 +219,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
       <p className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">{b.cmimiTotal}€</p>
       {b.payment?.komisioni != null && (
         <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-          Komisioni ynë {b.payment.komisioni.toFixed(2)}€ · Neto për ty {b.payment.shumaBiznesit.toFixed(2)}€
+          {t("business.commissionLine", { commission: b.payment.komisioni.toFixed(2), net: b.payment.shumaBiznesit.toFixed(2) })}
         </p>
       )}
       <PaymentBadge b={b} />
@@ -225,36 +229,36 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
           onClick={() => downloadInvoice(b)}
           className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 mt-1"
         >
-          <Download size={11} /> Shkarko faturen
+          <Download size={11} /> {t("paymentSuccess.downloadInvoice")}
         </button>
       )}
       {b.statusi === "confirmed" && (
         b.idVerifikuar ? (
           <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
-            <CheckCircle2 size={12} /> Identiteti u verifikua
+            <CheckCircle2 size={12} /> {t("business.identityVerifiedShort")}
           </p>
         ) : (
           <GhostButton type="button" onClick={() => setLicenseModalId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 mt-2">
-            Shiko patenten per verifikim
+            {t("business.viewLicenseForVerification")}
           </GhostButton>
         )
       )}
       {b.arsyejaRefuzimit && (
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
-          <span className="font-semibold">Arsyeja:</span> {b.arsyejaRefuzimit}
+          <span className="font-semibold">{t("business.reasonLabel")}</span> {b.arsyejaRefuzimit}
         </p>
       )}
       {b.statusi === "cancelled" && (
         deletingId === b.bookingId ? (
           <div className="flex items-center gap-2 mt-3">
             <button onClick={() => removeBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
-              {actingId === b.bookingId ? "Duke fshire..." : "Po, fshije"}
+              {actingId === b.bookingId ? t("booking.deleting") : t("booking.confirmDelete")}
             </button>
-            <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">Anulo</button>
+            <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">{t("booking.cancel")}</button>
           </div>
         ) : (
           <button onClick={() => setDeletingId(b.bookingId)} className="text-xs text-slate-400 dark:text-slate-500 underline mt-3">
-            Fshi
+            {t("booking.delete")}
           </button>
         )
       )}
@@ -271,19 +275,19 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {b.klienti.emri} {b.klienti.mbiemri}</p>
       {b.arsyejaRefuzimit && (
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
-          <span className="font-semibold">Arsyeja:</span> {b.arsyejaRefuzimit}
+          <span className="font-semibold">{t("business.reasonLabel")}</span> {b.arsyejaRefuzimit}
         </p>
       )}
       {deletingId === b.bookingId ? (
         <div className="flex items-center gap-2 mt-3">
           <button onClick={() => removeBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
-            {actingId === b.bookingId ? "Duke fshire..." : "Po, fshije"}
+            {actingId === b.bookingId ? t("booking.deleting") : t("booking.confirmDelete")}
           </button>
-          <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">Anulo</button>
+          <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">{t("booking.cancel")}</button>
         </div>
       ) : (
         <button onClick={() => setDeletingId(b.bookingId)} className="text-xs text-slate-400 dark:text-slate-500 underline mt-3">
-          Fshi
+          {t("booking.delete")}
         </button>
       )}
     </div>
@@ -293,7 +297,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     <div className="flex flex-col gap-8">
       {pending.length > 0 && (
         <div>
-          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Ne pritje te miratimit ({pending.length})</h3>
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">{t("business.pendingApprovalCount", { count: pending.length })}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {pending.map((b) => (
               <div
@@ -303,7 +307,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
               >
                 <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
                 <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500">{confirmim(b)}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {days(b)} dite</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {t("car.daysCount", { count: days(b) })}</p>
                 <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
                   <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri} · {b.klienti.telefoni}
                   {b.klienti.hasWhatsapp && b.klienti.telefoni && (
@@ -313,7 +317,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                       rel="noreferrer"
                       onClick={(e) => e.stopPropagation()}
                       className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
-                      title="Shkruaj ne WhatsApp"
+                      title={t("business.whatsappLinkTitle")}
                     >
                       <MessageCircle size={13} />
                     </a>
@@ -323,7 +327,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                       href={`mailto:${b.klienti.email}?subject=${encodeURIComponent(`Rezervimi juaj prane ${company?.emri || "nesh"}`)}&body=${encodeURIComponent(`Pershendetje ${b.klienti.emri},\n\nJu kontaktojme lidhur me rezervimin tuaj per ${b.car.marka} ${b.car.modeli} (${b.dataFillimit} - ${b.dataPerfundimit}) prane ${company?.emri || "nesh"}.\n\n`)}`}
                       onClick={(e) => e.stopPropagation()}
                       className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                      title="Shkruaj email"
+                      title={t("business.emailLinkTitle")}
                     >
                       <Mail size={13} />
                     </a>
@@ -337,12 +341,12 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                     onClick={() => downloadInvoice(b)}
                     className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 mt-1"
                   >
-                    <Download size={11} /> Shkarko faturen
+                    <Download size={11} /> {t("paymentSuccess.downloadInvoice")}
                   </button>
                 )}
                 {b.idVerifikuar && (
                   <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
-                    <CheckCircle2 size={12} /> Identiteti u verifikua
+                    <CheckCircle2 size={12} /> {t("business.identityVerifiedShort")}
                   </p>
                 )}
                 {rejectingId === b.bookingId ? (
@@ -350,36 +354,36 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                     <textarea
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
-                      placeholder="Arsyeja e refuzimit (i dergohet klientit)..."
+                      placeholder={t("business.rejectReasonPlaceholder")}
                       rows={2}
                       autoFocus
                       className="w-full text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 mb-2 outline-none focus:border-emerald-600 dark:focus:border-emerald-500"
                     />
                     <div className="flex gap-2">
                       <GhostButton onClick={() => reject(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/60 hover:bg-red-50 dark:hover:bg-red-900/20">
-                        Konfirmo refuzimin
+                        {t("business.confirmReject")}
                       </GhostButton>
                       <GhostButton onClick={() => { setRejectingId(null); setReason(""); }} className="text-xs py-2">
-                        Anulo
+                        {t("booking.cancel")}
                       </GhostButton>
                     </div>
                   </div>
                 ) : b.idVerifikuar ? (
                   <div className="flex gap-2 mt-3">
                     <PrimaryButton onClick={() => confirm(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2">
-                      Mirato
+                      {t("business.approve")}
                     </PrimaryButton>
                     <GhostButton onClick={() => { setRejectingId(b.bookingId); setReason(""); }} disabled={actingId === b.bookingId} className="text-xs py-2">
-                      Refuzo
+                      {t("business.reject")}
                     </GhostButton>
                   </div>
                 ) : (
                   <div className="flex gap-2 mt-3">
                     <PrimaryButton onClick={() => setLicenseModalId(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2">
-                      Shiko patenten per verifikim
+                      {t("business.viewLicenseForVerification")}
                     </PrimaryButton>
                     <GhostButton onClick={() => { setRejectingId(b.bookingId); setReason(""); }} disabled={actingId === b.bookingId} className="text-xs py-2">
-                      Refuzo
+                      {t("business.reject")}
                     </GhostButton>
                   </div>
                 )}
@@ -391,7 +395,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 
       {confirmedGroup.length > 0 && (
         <div>
-          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">Konfirmuar ({confirmedGroup.length})</h3>
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">{t("business.confirmedCount", { count: confirmedGroup.length })}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {confirmedGroup.map(renderHistoryCard)}
           </div>
@@ -405,7 +409,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
             className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           >
             <ChevronDown size={16} className={`transition-transform ${showCancelled ? "rotate-180" : ""}`} />
-            Anuluar ({cancelledGroup.length})
+            {t("business.cancelledCount", { count: cancelledGroup.length })}
           </button>
           {showCancelled && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
@@ -431,6 +435,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
 }
 
 function LicenseModal({ bookingId, token, showError, verifying, onVerify, onReject, onClose }) {
+  const { t } = useLang();
   const [imgs, setImgs] = useState({ para: null, mbrapa: null });
   const [loading, setLoading] = useState(true);
   const [zoomed, setZoomed] = useState(null);
@@ -462,7 +467,7 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onReje
   }, [bookingId, token]);
 
   function submitReject() {
-    if (!reason.trim()) { showError(new Error("Duhet te shkruash nje arsye per refuzimin.")); return; }
+    if (!reason.trim()) { showError(new Error(t("business.needRejectReasonError"))); return; }
     onReject(reason);
   }
 
@@ -470,24 +475,24 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onReje
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-3">
-          <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Patenta e klientit</h3>
+          <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">{t("business.clientLicense")}</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={16} /></button>
         </div>
         {loading ? (
-          <p className="text-xs text-slate-400 text-center py-6">Duke ngarkuar...</p>
+          <p className="text-xs text-slate-400 text-center py-6">{t("common.loading")}</p>
         ) : imgs.para && imgs.mbrapa && (
           <>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <button type="button" onClick={() => setZoomed(imgs.para)} className="block">
-                <img src={imgs.para} alt="Para" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700 hover:opacity-90 transition" />
+                <img src={imgs.para} alt={t("auth.licenseFront")} className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700 hover:opacity-90 transition" />
               </button>
               <button type="button" onClick={() => setZoomed(imgs.mbrapa)} className="block">
-                <img src={imgs.mbrapa} alt="Mbrapa" className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700 hover:opacity-90 transition" />
+                <img src={imgs.mbrapa} alt={t("auth.licenseBack")} className="rounded-lg w-full h-28 object-cover border border-slate-200 dark:border-slate-700 hover:opacity-90 transition" />
               </button>
             </div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3">Kliko nje foto per ta zmadhuar.</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3">{t("business.tapToZoom")}</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-lg p-2.5 mb-3 leading-relaxed">
-              Kjo eshte nje e dhene personale e mbrojtur me ligj, e shikueshme vetem ne kete moment — patenta nuk ruhet ne pajisjen tende dhe s'ka link te perhershem per te. Perdore vetem per te pergatitur kontraten e qerase se ketij rezervimi — ruajtja, ndarja ose perdorimi per cdo qellim tjeter eshte i ndaluar dhe i ndjekshem penalisht.
+              {t("business.licensePrivacyNotice")}
             </p>
 
             {rejecting ? (
@@ -495,24 +500,24 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onReje
                 <textarea
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="Arsyeja (p.sh. fotoja nuk eshte e patentes, dokument i palexueshem, etj.)"
+                  placeholder={t("business.rejectReasonExamplePlaceholder")}
                   rows={2}
                   className={inputClass + " text-xs"}
                 />
                 <div className="flex gap-2">
                   <button type="button" onClick={submitReject} disabled={verifying} className="flex-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
-                    {verifying ? "Duke refuzuar..." : "Refuzo dhe anulo rezervimin"}
+                    {verifying ? t("business.rejecting") : t("business.rejectAndCancelBooking")}
                   </button>
-                  <GhostButton type="button" onClick={() => { setRejecting(false); setReason(""); }} className="flex-1 text-xs py-2">Anulo</GhostButton>
+                  <GhostButton type="button" onClick={() => { setRejecting(false); setReason(""); }} className="flex-1 text-xs py-2">{t("booking.cancel")}</GhostButton>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
                 <PrimaryButton type="button" onClick={onVerify} disabled={verifying} className="w-full text-xs py-2">
-                  {verifying ? "Duke ruajtur..." : "Konfirmo verifikimin"}
+                  {verifying ? t("common.saving") : t("business.confirmVerification")}
                 </PrimaryButton>
                 <button type="button" onClick={() => setRejecting(true)} disabled={verifying} className="text-xs font-medium text-red-600 dark:text-red-400 underline">
-                  Kjo nuk eshte foto patente — refuzo
+                  {t("business.notLicensePhoto")}
                 </button>
               </div>
             )}
@@ -522,7 +527,7 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onReje
 
       {zoomed && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4" onClick={(e) => { e.stopPropagation(); setZoomed(null); }}>
-          <img src={zoomed} alt="Patenta e zmadhuar" className="max-w-full max-h-full rounded-lg object-contain" />
+          <img src={zoomed} alt={t("business.enlargedLicenseAlt")} className="max-w-full max-h-full rounded-lg object-contain" />
           <button onClick={() => setZoomed(null)} className="absolute top-4 right-4 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70">
             <X size={18} />
           </button>
@@ -533,6 +538,7 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onReje
 }
 
 function RegisterCompanyForm({ token, onDone, showError, showOk }) {
+  const { t } = useLang();
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
   const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "", iban: "", ofronDergimMakine: false });
@@ -549,7 +555,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
       if (file) fd.append("certifikataFile", file);
 
       await apiFetch("/Companies/register", token, { method: "POST", body: fd });
-      showOk("Biznesi u regjistrua. Ne pritje te verifikimit.");
+      showOk(t("business.registered"));
       onDone();
     } catch (e) { showError(e); } finally { setLoading(false); }
   }
@@ -557,45 +563,45 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
   return (
     <div className="max-w-2xl mx-auto py-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">Bëhu pjesë e ERental</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">{t("business.registerHeroTitle")}</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-          Lista makinat e biznesit tënd te platforma jonë dhe merr klientë të rinj çdo ditë — pa kosto fillestare.
+          {t("business.registerHeroSubtitle")}
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center">
           <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">0€</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Kosto fillestare</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t("business.startCost")}</p>
         </div>
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center">
           <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">24-48h</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Verifikim i shpejtë</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t("business.fastVerification")}</p>
         </div>
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center flex flex-col items-center justify-center">
           <MessageCircle size={20} className="text-emerald-700 dark:text-emerald-400 mb-1" />
-          <p className="text-xs text-slate-500 dark:text-slate-400">Support: <a href="https://wa.me/355688208868" target="_blank" rel="noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">WhatsApp</a></p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t("business.support")} <a href="https://wa.me/355688208868" target="_blank" rel="noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">WhatsApp</a></p>
         </div>
       </div>
 
       <div className="max-w-md mx-auto">
-        <div className="flex items-center gap-2 mb-1"><Building2 size={20} className="text-emerald-700 dark:text-emerald-400" /><h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Regjistro biznesin</h2></div>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Do te perdorim email-in e llogarise tende per biznesin.</p>
+        <div className="flex items-center gap-2 mb-1"><Building2 size={20} className="text-emerald-700 dark:text-emerald-400" /><h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("business.registerBusiness")}</h2></div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("business.willUseAccountEmail")}</p>
         <form onSubmit={submit}>
-          <Field label="Emri i biznesit"><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="AutoRent Tirana" /></Field>
-          <Field label="Telefoni"><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder="0691234567" /></Field>
-          <Field label="Adresa"><input className={inputClass} value={form.adresa} onChange={set("adresa")} placeholder="Rruga..." /></Field>
-          <Field label="Qyteti / Zona">
+          <Field label={t("business.businessName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="AutoRent Tirana" /></Field>
+          <Field label={t("auth.phone")}><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder="0691234567" /></Field>
+          <Field label={t("business.address")}><input className={inputClass} value={form.adresa} onChange={set("adresa")} placeholder="Rruga..." /></Field>
+          <Field label={t("business.cityZone")}>
             <select required className={inputClass} value={form.qyteti} onChange={set("qyteti")}>
-              <option value="">Zgjidh...</option>
+              <option value="">{t("business.choose")}</option>
               {ALBANIAN_LOCATIONS.map((z) => <option key={z} value={z}>{z}</option>)}
             </select>
           </Field>
-          <Field label="Vendndodhja e sakte (per hartë tek klientët)">
+          <Field label={t("business.exactLocation")}>
             <LocationPicker adresa={form.adresa} qyteti={form.qyteti} coords={coords} onChange={setCoords} showError={showError} />
           </Field>
-          <Field label="NIPT"><input required className={inputClass} value={form.nipt} onChange={set("nipt")} placeholder="L12345678A" /></Field>
-          <Field label="IBAN (per te marre pagesat, pas komisionit)"><input required className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
+          <Field label={t("business.nipt")}><input required className={inputClass} value={form.nipt} onChange={set("nipt")} placeholder="L12345678A" /></Field>
+          <Field label={t("business.ibanForPayments")}><input required className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
           <label className="flex items-start gap-2 mb-4 text-xs text-slate-600 dark:text-slate-300">
             <input
               type="checkbox"
@@ -603,12 +609,12 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
               checked={form.ofronDergimMakine}
               onChange={(e) => setForm((f) => ({ ...f, ofronDergimMakine: e.target.checked }))}
             />
-            <span>Ofroj dergim te makines te klienti (brenda zones se mbulimit)</span>
+            <span>{t("business.offersDeliveryRegister")}</span>
           </label>
-          <Field label="Certifikata e NIPT-it (foto/PDF)">
+          <Field label={t("business.niptCertificate")}>
             <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className={inputClass} />
           </Field>
-          <PrimaryButton type="submit" disabled={loading}>{loading ? "Duke dergaur..." : "Regjistro biznesin"}</PrimaryButton>
+          <PrimaryButton type="submit" disabled={loading}>{loading ? t("common.sending") : t("business.registerBusiness")}</PrimaryButton>
         </form>
       </div>
     </div>
@@ -616,6 +622,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
 }
 
 function CompanyDashboard({ token, company, cars, reload, showError, showOk, managingCarId, setManagingCarId }) {
+  const { t } = useLang();
   const [showAddCar, setShowAddCar] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
   const [coords, setCoords] = useState(null);
@@ -628,7 +635,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
     setDeactivating(true);
     try {
       await apiFetch("/Companies/my-company/deactivate", token, { method: "POST" });
-      showOk("Llogaria u caktivizua.");
+      showOk(t("business.accountDeactivatedToast"));
       setConfirmingDeactivate(false);
       reload();
     } catch (e) { showError(e); } finally { setDeactivating(false); }
@@ -638,7 +645,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
     setDeactivating(true);
     try {
       await apiFetch("/Companies/my-company/reactivate", token, { method: "POST" });
-      showOk("Llogaria u riaktivizua.");
+      showOk(t("business.accountReactivatedToast"));
       reload();
     } catch (e) { showError(e); } finally { setDeactivating(false); }
   }
@@ -648,7 +655,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
     setSavingLocation(true);
     try {
       await apiFetch("/Companies/my-company/location", token, { method: "PUT", body: JSON.stringify(coords) });
-      showOk("Vendndodhja u ruajt.");
+      showOk(t("business.locationSaved"));
       setEditingLocation(false);
       setCoords(null);
       reload();
@@ -666,8 +673,8 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
     <div>
       {!company.iban && (
         <div className="border border-amber-200 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-900/20 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-xs text-amber-800 dark:text-amber-300">Nuk ke vendosur ende IBAN-in e biznesit — pa te s'mund te marresh pagesat pas komisionit.</p>
-          <button onClick={() => setEditingDetails(true)} className="text-xs font-semibold text-amber-800 dark:text-amber-300 underline shrink-0">Shto IBAN</button>
+          <p className="text-xs text-amber-800 dark:text-amber-300">{t("business.noIbanWarning")}</p>
+          <button onClick={() => setEditingDetails(true)} className="text-xs font-semibold text-amber-800 dark:text-amber-300 underline shrink-0">{t("business.addIban")}</button>
         </div>
       )}
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6">
@@ -684,15 +691,15 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-bold text-slate-900 dark:text-slate-100 text-sm">{company.emri}</p>
                 {company.eshteVerifikuar ? (
-                  <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={12} /> I verifikuar</span>
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={12} /> {t("common.verified")}</span>
                 ) : (
-                  <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Clock size={12} /> Ne pritje</span>
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Clock size={12} /> {t("common.status.pending")}</span>
                 )}
                 {company.ofronDergimMakine && (
-                  <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={12} /> Dergim makine</span>
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={12} /> {t("common.deliveryBadge")}</span>
                 )}
                 {!editingDetails && (
-                  <button onClick={() => setEditingDetails(true)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" title="Ndrysho te dhenat">
+                  <button onClick={() => setEditingDetails(true)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" title={t("auth.editData")}>
                     <Pencil size={13} />
                   </button>
                 )}
@@ -709,8 +716,8 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
               ) : (
                 <>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{company.qyteti} · NIPT {company.nipt}</p>
-                  <p className="text-[11px] text-slate-400 mt-1">Modeli i faturimit: {company.billingModel === "commission" ? `Komision ${company.commissionRate}%` : "Abonim mujor"}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">IBAN: {company.iban || "i pavendosur"}</p>
+                  <p className="text-[11px] text-slate-400 mt-1">{t("business.billingModelLabel")} {company.billingModel === "commission" ? t("business.commission", { pct: company.commissionRate }) : t("business.monthlySubscription")}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">IBAN: {company.iban || t("business.ibanNotSet")}</p>
                 </>
               )}
 
@@ -719,14 +726,14 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
                   <LocationPicker adresa={company.adresa} qyteti={company.qyteti} coords={coords} onChange={setCoords} showError={showError} />
                   <div className="flex gap-2 mt-2">
                     <PrimaryButton type="button" onClick={saveLocation} disabled={!coords || savingLocation} className="text-xs py-2">
-                      {savingLocation ? "Duke ruajtur..." : "Ruaj vendndodhjen"}
+                      {savingLocation ? t("common.saving") : t("business.saveLocation")}
                     </PrimaryButton>
-                    <GhostButton type="button" onClick={() => { setEditingLocation(false); setCoords(null); }} className="text-xs py-2">Anulo</GhostButton>
+                    <GhostButton type="button" onClick={() => { setEditingLocation(false); setCoords(null); }} className="text-xs py-2">{t("booking.cancel")}</GhostButton>
                   </div>
                 </div>
               ) : !editingDetails && (
                 <button onClick={() => setEditingLocation(true)} className={`flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 mt-2.5 w-fit border transition ${company.latitude != null ? "border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-                  <MapPin size={11} /> {company.latitude != null ? "Vendndodhja e saktë e vendosur — ndrysho" : "Vendos vendndodhjen e sakte per hartë"}
+                  <MapPin size={11} /> {company.latitude != null ? t("business.exactLocationSetChange") : t("business.setExactLocation")}
                 </button>
               )}
             </div>
@@ -737,10 +744,10 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
               href={directionsUrl}
               target="_blank"
               rel="noreferrer"
-              title="Hap ne Google Maps"
+              title={t("business.openInGoogleMaps")}
               className="hidden lg:block relative flex-1 min-h-20 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
             >
-              <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" loading="lazy" tabIndex={-1} />
+              <iframe title={t("common.businessLocationTitle")} src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" loading="lazy" tabIndex={-1} />
               <span className="absolute inset-0 bg-black/0 hover:bg-black/10 transition" />
             </a>
           )}
@@ -759,8 +766,8 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
       ) : (
         <>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">Makinat e mia ({cars.length})</h3>
-            <button onClick={() => setShowAddCar((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 underline"><Plus size={14} /> Shto makine</button>
+            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{t("business.myCars", { count: cars.length })}</h3>
+            <button onClick={() => setShowAddCar((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 underline"><Plus size={14} /> {t("business.addCar")}</button>
           </div>
 
           {showAddCar && <div className="max-w-xl"><AddCarForm token={token} companyId={company.companyId} onDone={() => { setShowAddCar(false); reload(); }} showError={showError} showOk={showOk} /></div>}
@@ -773,32 +780,32 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
 
       {!managingCarId && (company.statusi === "inactive" ? (
         <div className="mt-8 border border-amber-200 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-900/20 rounded-2xl p-4">
-          <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">Llogaria eshte e caktivizuar</p>
-          <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">Makinat e tua nuk shfaqen ne kerkim dhe s'mund te marresh rezervime te reja. Rezervimet ekzistuese s'preken.</p>
+          <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">{t("business.accountDeactivated")}</p>
+          <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">{t("business.deactivatedNotice")}</p>
           <PrimaryButton type="button" onClick={reactivate} disabled={deactivating} className="text-xs py-2 w-fit">
-            {deactivating ? "Duke riaktivizuar..." : "Riaktivizo llogarine"}
+            {deactivating ? t("business.reactivating") : t("business.reactivateAccount")}
           </PrimaryButton>
         </div>
       ) : (
         <div className="mt-8 border border-red-200 dark:border-red-800/60 rounded-2xl p-4">
-          <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Zona e rrezikut</p>
+          <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">{t("business.dangerZone")}</p>
           {confirmingDeactivate ? (
             <>
               <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-                Makinat e tua do te fshihen nga kerkimi dhe s'do mund te marresh rezervime te reja. Faturat, kontratat dhe historiku i rezervimeve ekzistuese mbeten te paprekura. Mund ta riaktivizosh llogarine kurdo qe te duash.
+                {t("business.deactivateWarning")}
               </p>
               <div className="flex gap-2">
                 <button onClick={deactivate} disabled={deactivating} className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
-                  {deactivating ? "Duke caktivizuar..." : "Po, fshi llogarine"}
+                  {deactivating ? t("business.deactivating") : t("business.confirmDeleteAccount")}
                 </button>
-                <GhostButton type="button" onClick={() => setConfirmingDeactivate(false)} className="text-xs py-2">Anulo</GhostButton>
+                <GhostButton type="button" onClick={() => setConfirmingDeactivate(false)} className="text-xs py-2">{t("booking.cancel")}</GhostButton>
               </div>
             </>
           ) : (
             <>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">Caktivizon llogarine e biznesit — makinat s'do shfaqen me per rezervime te reja.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{t("business.deactivateHint")}</p>
               <button onClick={() => setConfirmingDeactivate(true)} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
-                Fshi llogarine
+                {t("business.deleteAccount")}
               </button>
             </>
           )}
