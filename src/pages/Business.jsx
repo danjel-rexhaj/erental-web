@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon, Star, ChevronDown } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon, Star, ChevronDown, Truck } from "lucide-react";
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
@@ -535,7 +535,7 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onReje
 function RegisterCompanyForm({ token, onDone, showError, showOk }) {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "", iban: "" });
+  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "", iban: "", ofronDergimMakine: false });
   const [coords, setCoords] = useState(null);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -596,6 +596,15 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
           </Field>
           <Field label="NIPT"><input required className={inputClass} value={form.nipt} onChange={set("nipt")} placeholder="L12345678A" /></Field>
           <Field label="IBAN (per te marre pagesat, pas komisionit)"><input required className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
+          <label className="flex items-start gap-2 mb-4 text-xs text-slate-600 dark:text-slate-300">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={form.ofronDergimMakine}
+              onChange={(e) => setForm((f) => ({ ...f, ofronDergimMakine: e.target.checked }))}
+            />
+            <span>Ofroj dergim te makines te klienti (brenda zones, ne aeroport ose port)</span>
+          </label>
           <Field label="Certifikata e NIPT-it (foto/PDF)">
             <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className={inputClass} />
           </Field>
@@ -678,6 +687,9 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
                   <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={12} /> I verifikuar</span>
                 ) : (
                   <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Clock size={12} /> Ne pritje</span>
+                )}
+                {company.ofronDergimMakine && (
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={12} /> Dergim makine</span>
                 )}
                 {!editingDetails && (
                   <button onClick={() => setEditingDetails(true)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" title="Ndrysho te dhenat">
@@ -804,6 +816,7 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
     adresa: company.adresa || "",
     qyteti: company.qyteti || "",
     iban: company.iban || "",
+    ofronDergimMakine: company.ofronDergimMakine ?? false,
   });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -828,6 +841,15 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
         </select>
       </Field>
       <Field label="IBAN (per te marre pagesat, pas komisionit)"><input className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
+      <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          checked={form.ofronDergimMakine}
+          onChange={(e) => setForm((f) => ({ ...f, ofronDergimMakine: e.target.checked }))}
+        />
+        <span>Ofroj dergim te makines te klienti (brenda zones, ne aeroport ose port)</span>
+      </label>
       <div className="flex gap-2">
         <PrimaryButton type="submit" disabled={loading} className="text-xs py-2">{loading ? "Duke ruajtur..." : "Ruaj"}</PrimaryButton>
         <GhostButton type="button" onClick={onCancel} className="text-xs py-2">Anulo</GhostButton>

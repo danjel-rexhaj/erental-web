@@ -69,8 +69,10 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
                     value={zona}
                     onChange={(e) => setZona(e.target.value)}
                   >
-                    <option value="">{t("home.allZones")}</option>
-                    {ALBANIAN_LOCATIONS.map((z) => <option key={z} value={z}>{z}</option>)}
+                    <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" value="">{t("home.allZones")}</option>
+                    {ALBANIAN_LOCATIONS.map((z) => (
+                      <option key={z} value={z} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">{z}</option>
+                    ))}
                   </select>
                 </div>
               </Field>

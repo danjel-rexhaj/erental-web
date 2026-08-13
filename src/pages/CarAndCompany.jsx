@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
 import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS } from "../carData";
@@ -260,6 +260,9 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                     <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{car.company.emri}</p>
                     {car.company.eshteVerifikuar && (
                       <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> I verifikuar</span>
+                    )}
+                    {car.company.ofronDergimMakine && (
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> Dergim makine</span>
                     )}
                   </div>
                   <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400 mt-1.5">
@@ -564,6 +567,9 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{company.emri}</h1>
               {company.eshteVerifikuar && (
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> I verifikuar</span>
+              )}
+              {company.ofronDergimMakine && (
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> Dergim makine</span>
               )}
             </div>
             <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400">

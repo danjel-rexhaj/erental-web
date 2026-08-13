@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart } from "lucide-react";
+import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart, Truck } from "lucide-react";
 import { decodeJwt } from "./api";
 import { generateInvoicePdf } from "./invoicePdf";
 
@@ -315,6 +315,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
           >
             <Building2 size={11} /> {car.company?.emri}
             {car.company?.eshteVerifikuar && <ShieldCheck size={11} className="text-emerald-600" />}
+            {car.company?.ofronDergimMakine && <Truck size={11} className="text-teal-600" title="Ofron dergim makine te klienti" />}
             {car.company?.avgRating != null && (
               <span className="flex items-center gap-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200 ml-1">
                 <Star size={11} className="text-amber-400 fill-amber-400" /> {car.company.avgRating} <span className="text-slate-400 dark:text-slate-500 font-normal">({car.company.reviewCount})</span>
