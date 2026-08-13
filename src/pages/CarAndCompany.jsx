@@ -190,25 +190,35 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           </div>
 
           {car.priceOffers && car.priceOffers.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {car.priceOffers.map((o) => (
-                <button
-                  key={o.dite}
-                  type="button"
-                  onClick={() => {
-                    const from = activeFrom || new Date().toISOString().split("T")[0];
-                    setSelFrom(from);
-                    setSelTo(addDaysIso(from, o.dite));
-                  }}
-                  className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-teal-400 dark:hover:border-teal-600 px-2.5 py-1 rounded-full transition"
-                >
-                  {o.dite} net · {o.cmimiTotal}€
-                </button>
-              ))}
+            <div className="mt-5">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Oferta te disponueshme</p>
+              <div className="flex flex-wrap gap-2">
+                {car.priceOffers.map((o) => {
+                  const active = o.dite === days;
+                  return (
+                    <button
+                      key={o.dite}
+                      type="button"
+                      onClick={() => {
+                        const from = activeFrom || new Date().toISOString().split("T")[0];
+                        setSelFrom(from);
+                        setSelTo(addDaysIso(from, o.dite));
+                      }}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition ${
+                        active
+                          ? "text-white bg-teal-600 border-teal-600"
+                          : "text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-teal-400 dark:hover:border-teal-600"
+                      }`}
+                    >
+                      {o.dite} net · {o.cmimiTotal}€
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          <div className="mt-3">
+          <div className="mt-5">
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
               {selTo ? "Zgjidh datat direkt ne kalendar per t'i ndryshuar" : "Zgjidh daten e fillimit ne kalendar"}
             </p>
