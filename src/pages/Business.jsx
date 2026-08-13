@@ -40,6 +40,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
   const tabs = isAdmin ? [
     { key: "admin", label: t("business.tabsVerifications") },
     { key: "whatsapp", label: "WhatsApp" },
+    { key: "amenity-suggestions", label: t("business.tabsAmenitySuggestions") },
     { key: "admin-analytics", label: t("business.tabsPlatformStats") },
     { key: "admin-logins", label: t("business.tabsLoginLogs") },
   ] : [];
@@ -57,6 +58,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       )}
       {tab === "admin" && <AdminPending token={token} showError={showError} showOk={showOk} />}
       {tab === "whatsapp" && <AdminWhatsapp token={token} showError={showError} showOk={showOk} />}
+      {tab === "amenity-suggestions" && <AdminAmenitySuggestions token={token} showError={showError} showOk={showOk} />}
       {tab === "admin-analytics" && <AdminAnalytics token={token} showError={showError} showOk={showOk} refreshKey={analyticsRefreshKey} onGoPending={() => setTab("admin")} />}
       {tab === "admin-logins" && <AdminLogins token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
       {tab === "analytics" && <BusinessAnalytics token={token} showError={showError} refreshKey={analyticsRefreshKey} onGoBookings={() => setTab("bookings")} />}
@@ -912,6 +914,18 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
   const initialFormRef = useRef(form);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const models = CAR_BRANDS[form.marka] || [];
+  const [amenitySuggestion, setAmenitySuggestion] = useState("");
+  const [suggestingAmenity, setSuggestingAmenity] = useState(false);
+
+  async function submitAmenitySuggestion() {
+    if (!amenitySuggestion.trim()) return;
+    setSuggestingAmenity(true);
+    try {
+      await apiFetch("/AmenitySuggestions", token, { method: "POST", body: JSON.stringify({ companyId, suggestion: amenitySuggestion.trim() }) });
+      showOk(t("business.suggestAmenitySent"));
+      setAmenitySuggestion("");
+    } catch (e) { showError(e); } finally { setSuggestingAmenity(false); }
+  }
 
   useEffect(() => {
     onDirtyChange?.(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
@@ -1035,6 +1049,18 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
       </div>
       <Field label={t("business.additionalAmenities")}>
         <AmenityPicker selected={form.amenities} onToggle={toggleAmenity} />
+        <div className="flex items-center gap-1.5 mt-2">
+          <input
+            type="text"
+            className={`${inputClass} text-xs`}
+            value={amenitySuggestion}
+            onChange={(e) => setAmenitySuggestion(e.target.value)}
+            placeholder={t("business.suggestAmenityPlaceholder")}
+          />
+          <GhostButton type="button" onClick={submitAmenitySuggestion} disabled={suggestingAmenity || !amenitySuggestion.trim()} className="text-xs py-2.5 w-fit shrink-0 px-3">
+            {t("business.suggestAmenityPrompt")}
+          </GhostButton>
+        </div>
       </Field>
       <Field label={t("business.priceOffersLabel")}>
         <div className="flex flex-col gap-1.5">
@@ -1459,6 +1485,47 @@ function AdminWhatsapp({ token, showError, showOk }) {
           <p className="font-bold text-lg tracking-[0.3em] text-slate-900 dark:text-slate-100 text-center mt-1">{w.code}</p>
           <PrimaryButton onClick={() => verify(w.id)} className="mt-3 text-xs py-2">{t("auth.verify")}</PrimaryButton>
           <GhostButton onClick={() => reject(w.id)} className="mt-2 text-xs py-2">{t("business.reject")}</GhostButton>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AdminAmenitySuggestions({ token, showError, showOk }) {
+  const { t } = useLang();
+  const [pending, setPending] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { setPending(await apiFetch("/AmenitySuggestions/pending", token)); } catch (e) { showError(e); } finally { setLoading(false); }
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function approve(id) {
+    try { await apiFetch(`/AmenitySuggestions/${id}/approve`, token, { method: "PUT" }); showOk(t("business.suggestionApproved")); load(); }
+    catch (e) { showError(e); }
+  }
+
+  async function reject(id) {
+    try { await apiFetch(`/AmenitySuggestions/${id}/reject`, token, { method: "PUT" }); showOk(t("business.suggestionRejected")); load(); }
+    catch (e) { showError(e); }
+  }
+
+  if (loading) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
+  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">{t("business.amenitySuggestionsEmpty")}</p></div>;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {pending.map((s) => (
+        <div key={s.id} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+          <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{s.suggestion}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("business.suggestedBy", { company: s.companyEmri })}</p>
+          <div className="flex gap-2 mt-3">
+            <PrimaryButton onClick={() => approve(s.id)} className="text-xs py-2">{t("business.approveSuggestion")}</PrimaryButton>
+            <GhostButton onClick={() => reject(s.id)} className="text-xs py-2">{t("business.reject")}</GhostButton>
+          </div>
         </div>
       ))}
     </div>

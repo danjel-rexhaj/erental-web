@@ -206,6 +206,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               )}
             </div>
             <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("home.standardTimes")}</p>
           </div>
 
           <div className="mt-5">

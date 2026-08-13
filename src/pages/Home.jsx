@@ -108,6 +108,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             </div>
             <PrimaryButton onClick={onSearch} disabled={loading} className="sm:w-48 mb-3">{loading ? t("home.searching") : t("home.search")}</PrimaryButton>
           </div>
+          <p className="text-slate-300 text-xs mt-3">{t("home.standardTimes")}</p>
         </div>
       </div>
 

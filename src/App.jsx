@@ -267,6 +267,8 @@ export default function App() {
       go("/biznesi?tab=admin");
     } else if (n.target === "admin_whatsapp_verification") {
       go("/biznesi?tab=whatsapp");
+    } else if (n.target === "admin_amenity_suggestion") {
+      go("/biznesi?tab=amenity-suggestions");
     }
   }
 
