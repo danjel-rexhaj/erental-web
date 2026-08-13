@@ -3,12 +3,13 @@ import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Sno
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
 import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS } from "../carData";
+import { useLang } from "../useLang";
+import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
 
-const MUAJT_SHKURTER = ["Jan", "Shk", "Mar", "Pri", "Maj", "Qer", "Kor", "Gsh", "Sht", "Tet", "Nen", "Dhj"];
-function formatShortDate(iso) {
+function formatShortDate(iso, lang) {
   const d = new Date(iso);
   if (isNaN(d)) return iso;
-  return `${d.getDate()} ${MUAJT_SHKURTER[d.getMonth()]}`;
+  return `${d.getDate()} ${monthShort(d.getMonth(), lang)}`;
 }
 function addDaysIso(iso, days) {
   const d = new Date(iso);
@@ -30,6 +31,7 @@ function sortByBrandPopularityCompany(brands) {
 }
 
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner, favoriteIds, onToggleFavorite }) {
+  const { t, lang } = useLang();
   const [bookedRanges, setBookedRanges] = useState([]);
   const [hasLicense, setHasLicense] = useState(null);
   const [selFrom, setSelFrom] = useState(dataFillimit);
@@ -85,7 +87,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
 
   return (
     <div>
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4"><ChevronLeft size={16} /> Prapa te kerkimi</button>
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4"><ChevronLeft size={16} /> {t("common.backToSearch")}</button>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3 lg:row-start-1 order-1">
           <div className="relative rounded-2xl overflow-hidden">
@@ -118,7 +120,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 type="button"
                 onClick={() => onToggleFavorite(car)}
                 className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition"
-                title={favoriteIds?.has(car.carId) ? "Hiq nga te preferuarat" : "Shto te preferuarat"}
+                title={favoriteIds?.has(car.carId) ? t("common.favoriteRemove") : t("common.favoriteAdd")}
               >
                 <Heart size={16} className={favoriteIds?.has(car.carId) ? "text-red-500 fill-red-500" : "text-slate-500 dark:text-slate-300"} />
               </button>
@@ -154,17 +156,17 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           </button>
 
           <div className="grid grid-cols-2 gap-2 mt-5">
-            <Spec icon={Fuel} label="Karburanti" value={car.karburanti} />
-            <Spec icon={Gauge} label="Transmisioni" value={car.transmisioni} />
-            <Spec icon={UsersIcon} label="Vende" value={car.numriVendeve} />
-            <Spec icon={Snowflake} label="Kondicioner" value={car.klimatizimi ? "Po" : "Jo"} />
-            {car.kubatura != null && <Spec icon={Cog} label="Kubatura" value={`${car.kubatura}cc`} />}
-            {car.cilindra != null && <Spec icon={Disc} label="Cilindra" value={car.cilindra} />}
+            <Spec icon={Fuel} label={t("car.spec.fuel")} value={car.karburanti} />
+            <Spec icon={Gauge} label={t("car.spec.transmission")} value={car.transmisioni} />
+            <Spec icon={UsersIcon} label={t("car.spec.seats")} value={car.numriVendeve} />
+            <Spec icon={Snowflake} label={t("car.spec.aircon")} value={car.klimatizimi ? t("common.yes") : t("common.no")} />
+            {car.kubatura != null && <Spec icon={Cog} label={t("car.spec.engineSize")} value={`${car.kubatura}cc`} />}
+            {car.cilindra != null && <Spec icon={Disc} label={t("car.spec.cylinders")} value={car.cilindra} />}
           </div>
 
           {car.amenities && car.amenities.length > 0 && (
             <div className="mt-5">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Pajisje</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{t("common.amenities")}</p>
               <div className="flex flex-wrap gap-2">
                 {car.amenities.map((key) => (
                   <span key={key} className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
@@ -177,13 +179,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mt-5">
             <div className="flex items-center gap-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2.5 py-1.5 w-fit">
-              <Calendar size={14} /> {formatShortDate(activeFrom)} → {formatShortDate(activeTo)}
+              <Calendar size={14} /> {formatShortDate(activeFrom, lang)} → {formatShortDate(activeTo, lang)}
             </div>
             <div className="flex items-center justify-between mt-2">
               {matchedOffer ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full w-fit">Çmim special për {days} ditë</span>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full w-fit">{t("car.specialPriceFor", { days })}</span>
               ) : (
-                <p className="text-xs text-slate-500 dark:text-slate-400">{days} dite × {car.cmimiDites}€</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("car.pricePerDay", { days, price: car.cmimiDites })}</p>
               )}
             </div>
             <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
@@ -191,7 +193,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
 
           <div className="mt-5">
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
-              {selTo ? "Zgjidh datat direkt ne kalendar per t'i ndryshuar" : "Zgjidh daten e fillimit ne kalendar"}
+              {selTo ? t("car.pickDatesEdit") : t("car.pickDatesStart")}
             </p>
             <DateRangeCalendar
               ranges={bookedRanges}
@@ -203,11 +205,11 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
 
           {isBusinessOwner ? (
             <p className="mt-4 text-xs text-slate-400 text-center bg-slate-50 dark:bg-slate-800 rounded-xl py-2.5 px-3">
-              Llogarite e bizneseve nuk mund te bejne rezervime.
+              {t("car.businessCantBook")}
             </p>
           ) : hasDateConflict ? (
             <div className="mt-4 flex items-center gap-2 text-xs font-medium text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl py-2.5 px-3">
-              <AlertTriangle size={14} className="shrink-0" /> Keto data jane te zena per kete makine. Ndrysho daten ne kalendar per te vazhduar me pagesen.
+              <AlertTriangle size={14} className="shrink-0" /> {t("car.datesConflict")}
             </div>
           ) : (
             <div className="mt-4">
@@ -232,8 +234,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           <div className="lg:col-span-3 lg:row-start-2 order-3 flex flex-col gap-5">
             {car.priceOffers && car.priceOffers.length > 0 && (
               <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><Tag size={16} className="text-teal-600 dark:text-teal-400" /> Oferta te disponueshme</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">Zgjidh nje kohezgjatje per te perfituar nga cmimi i posacem.</p>
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><Tag size={16} className="text-teal-600 dark:text-teal-400" /> {t("car.priceOffers.title")}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{t("car.priceOffers.subtitle")}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {car.priceOffers.map((o) => {
                     const active = o.dite === days;
@@ -253,9 +255,9 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                             : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal-300 dark:hover:border-teal-700"
                         }`}
                       >
-                        <p className={`text-xs font-semibold ${active ? "text-teal-700 dark:text-teal-300" : "text-slate-500 dark:text-slate-400"}`}>{o.dite} ditë</p>
+                        <p className={`text-xs font-semibold ${active ? "text-teal-700 dark:text-teal-300" : "text-slate-500 dark:text-slate-400"}`}>{t("car.daysCount", { count: o.dite })}</p>
                         <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{o.cmimiTotal}€</p>
-                        <p className="text-[11px] text-slate-400">~{perDite}€/ditë</p>
+                        <p className="text-[11px] text-slate-400">{t("car.priceOffers.approxPerDay", { price: perDite })}</p>
                       </button>
                     );
                   })}
@@ -265,13 +267,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
 
             {car.company?.qyteti && (
               <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> {t("car.pickupTitle")}</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
 
                 {mapEmbedUrl && (
                   <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
                     <iframe
-                      title="Vendndodhja e biznesit"
+                      title={t("common.businessLocationTitle")}
                       src={mapEmbedUrl}
                       className="w-full h-64 border-0"
                     />
@@ -284,7 +286,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-4 py-2.5"
                 >
-                  <MapPin size={15} /> Merr udhezime
+                  <MapPin size={15} /> {t("common.getDirections")}
                 </a>
               </div>
             )}
@@ -306,10 +308,10 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-bold text-slate-900 dark:text-slate-100 truncate">{car.company.emri}</p>
                     {car.company.eshteVerifikuar && (
-                      <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> I verifikuar</span>
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> {t("common.verified")}</span>
                     )}
                     {car.company.ofronDergimMakine && (
-                      <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> Dergim makine</span>
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> {t("common.deliveryBadge")}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400 mt-1.5">
@@ -318,8 +320,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                         <Star size={13} className="text-amber-400 fill-amber-400" /> {car.company.avgRating} <span className="font-normal text-slate-400">({car.company.reviewCount})</span>
                       </span>
                     )}
-                    <span className="whitespace-nowrap">{car.company.carCount} {car.company.carCount === 1 ? "makine" : "makina"} ne platforme</span>
-                    {car.company.dataRegjistrimit && <span className="whitespace-nowrap">Anetar qe nga {memberSince(car.company.dataRegjistrimit)}</span>}
+                    <span className="whitespace-nowrap">{t("car.carsOnPlatform", { count: car.company.carCount })}</span>
+                    {car.company.dataRegjistrimit && <span className="whitespace-nowrap">{t("car.memberSince", { date: memberSince(car.company.dataRegjistrimit, lang) })}</span>}
                   </div>
                 </div>
               </div>
@@ -327,7 +329,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 onClick={() => onSelectCompany(car.companyId)}
                 className="w-full sm:w-auto shrink-0 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.99] transition"
               >
-                Shiko profilin e biznesit
+                {t("car.viewBusinessProfile")}
               </button>
             </div>
           </div>
@@ -337,14 +339,14 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   );
 }
 
-const MUAJT = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
-function memberSince(raw) {
+function memberSince(raw, lang) {
   const d = new Date(raw);
   if (isNaN(d)) return "";
-  return `${MUAJT[d.getMonth()]} ${d.getFullYear()}`;
+  return `${monthName(d.getMonth(), lang)} ${d.getFullYear()}`;
 }
 
 function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth, goToProfile, hasLicense, showError, showOk, onBooked }) {
+  const { t } = useLang();
   const [method, setMethod] = useState("paypal_deposit");
   const [loading, setLoading] = useState(false);
   const [sdkError, setSdkError] = useState(null);
@@ -409,10 +411,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
         createOrder,
         onApprove,
         onCancel: () => { setOpeningCard(false); setLoading(false); },
-        onError: () => { setOpeningCard(false); showError(new Error("Pagesa deshtoi. Provo perseri.")); setLoading(false); },
+        onError: () => { setOpeningCard(false); showError(new Error(t("booking.paymentFailed"))); setLoading(false); },
       });
       if (!buttons.isEligible()) {
-        setSdkError("Pagesa me karte nuk eshte e disponueshme aktualisht.");
+        setSdkError(t("booking.cardUnavailable"));
         return;
       }
       buttons.render(buttonsRef.current);
@@ -429,8 +431,8 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
 
     const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
     if (!clientId) {
-      const t = setTimeout(() => setSdkError("Pagesat nuk jane konfiguruar akoma."), 0);
-      return () => { cancelled = true; clearTimeout(t); setButtonReady(false); };
+      const timer = setTimeout(() => setSdkError(t("booking.paymentsNotConfigured")), 0);
+      return () => { cancelled = true; clearTimeout(timer); setButtonReady(false); };
     }
 
     let script = document.getElementById("paypal-sdk");
@@ -440,7 +442,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=buttons&currency=EUR`;
       document.body.appendChild(script);
     }
-    const onScriptError = () => setSdkError("Sistemi i pagesave nuk u ngarkua dot. Kontrollo internetin dhe provo perseri.");
+    const onScriptError = () => setSdkError(t("booking.paymentSystemLoadError"));
     script.addEventListener("load", renderButtons);
     script.addEventListener("error", onScriptError);
     return () => {
@@ -456,11 +458,11 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       {token && hasLicense === false && (
         <div className="border border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/20 rounded-2xl p-3 mb-3">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">
-            <AlertTriangle size={13} /> Nuk e ke shtuar patenten
+            <AlertTriangle size={13} /> {t("booking.noLicenseTitle")}
           </p>
-          <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">Duhet te ngarkosh foton e patentes (para dhe mbrapa) ne profilin tend para se te rezervosh.</p>
+          <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">{t("booking.noLicenseBody")}</p>
           <button type="button" onClick={goToProfile} className="text-xs font-semibold text-amber-800 dark:text-amber-300 underline">
-            Shto tani ne profil
+            {t("booking.addNow")}
           </button>
         </div>
       )}
@@ -468,17 +470,17 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       {token && hasLicense === true && (
         <div className="flex flex-col gap-1.5 mb-3">
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> Depozite ({car.cmimiDites}€) me karte, pjesa tjeter cash
+            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: car.cmimiDites })}
           </label>
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> Pagese e plote ({total}€) me karte
+            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: total })}
           </label>
           <button
             type="button"
             onClick={() => setShowRefundPolicy(true)}
             className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 underline underline-offset-2 mt-1"
           >
-            <Info size={11} /> Politika e rimbursimit
+            <Info size={11} /> {t("booking.refundPolicy")}
           </button>
         </div>
       )}
@@ -487,51 +489,51 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowRefundPolicy(false)}>
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-3">
-              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Politika e rimbursimit</h3>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">{t("booking.refundPolicy")}</h3>
               <button onClick={() => setShowRefundPolicy(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                 <X size={16} />
               </button>
             </div>
             <div className="mb-3">
-              <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 mb-1">Depozite (karte) + pjesa tjeter cash</p>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 mb-1">{t("booking.refundPolicy.depositTitle")}</p>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Depozita e paguar me karte rimbursohet plotesisht nese anulon brenda 12 oresh nga rezervimi. Pas 12 oresh, rimbursimi i saj varet nga marreveshja mes teje dhe biznesit. Pjesa cash paguhet direkt te biznesi kur merr makinen — s'kalon nga ERental, ndaj s'ka nevoje per rimbursim nga ne.
+                {t("booking.refundPolicy.depositBody")}
               </p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 mb-1">Pagese e plote (karte)</p>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 mb-1">{t("booking.refundPolicy.fullTitle")}</p>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                Shuma e plote rimbursohet nese anulon brenda 12 oresh nga rezervimi. Pas 12 oresh, rimbursimi varet nga marreveshja mes teje dhe biznesit — ERental s'nderhyn me ne kete vendim.
+                {t("booking.refundPolicy.fullBody")}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {!token && <PrimaryButton onClick={needAuth}>Logohu per te rezervuar</PrimaryButton>}
+      {!token && <PrimaryButton onClick={needAuth}>{t("booking.needLogin")}</PrimaryButton>}
 
       {token && hasLicense === null && (
-        <p className="text-xs text-slate-400 py-2">Duke kontrolluar te dhenat...</p>
+        <p className="text-xs text-slate-400 py-2">{t("booking.checkingData")}</p>
       )}
 
       {token && hasLicense === true && (
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3 bg-slate-50/60 dark:bg-slate-900/40">
           <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-2">
-            <Lock size={11} /> Pagese e sigurte, e procesuar direkt nga PayPal
+            <Lock size={11} /> {t("booking.securePayment")}
           </p>
           {loading && (
             <div className="flex items-center justify-center gap-2 py-4 text-sm font-medium text-slate-600 dark:text-slate-300">
-              <Loader2 size={16} className="animate-spin" /> Duke procesuar pagesen...
+              <Loader2 size={16} className="animate-spin" /> {t("booking.processingPayment")}
             </div>
           )}
           {!loading && !buttonReady && !sdkError && (
             <div className="flex items-center justify-center gap-2 py-4 text-sm font-medium text-slate-500 dark:text-slate-400">
-              <Loader2 size={16} className="animate-spin" /> Duke pergatitur pagesen...
+              <Loader2 size={16} className="animate-spin" /> {t("booking.preparingPayment")}
             </div>
           )}
           {!loading && buttonReady && openingCard && (
             <div className="flex items-center justify-center gap-2 py-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-              <Loader2 size={14} className="animate-spin" /> Duke hapur formularin e pageses...
+              <Loader2 size={14} className="animate-spin" /> {t("booking.openingCardForm")}
             </div>
           )}
           <div className={loading || showRefundPolicy || !buttonReady ? "hidden" : ""} ref={buttonsRef} />
@@ -546,7 +548,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
           dataPerfundimit={dataPerfundimit}
           successInfo={successInfo}
           token={token}
-          onClose={() => { setSuccessInfo(null); showOk("Rezervimi u konfirmua."); onBooked(); }}
+          onClose={() => { setSuccessInfo(null); showOk(t("booking.confirmed")); onBooked(); }}
         />
       )}
     </div>
@@ -556,6 +558,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
 const COMPANY_FILTERS_DEFAULT = { marka: "", modeli: "", kategoria: "", karburanti: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" };
 
 export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds, onToggleFavorite }) {
+  const { t, lang } = useLang();
   const [filters, setFilters] = useState(COMPANY_FILTERS_DEFAULT);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -598,7 +601,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
 
   return (
     <div>
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6"><ChevronLeft size={16} /> Prapa te kerkimi</button>
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6"><ChevronLeft size={16} /> {t("common.backToSearch")}</button>
 
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-8">
         <div className="flex items-center lg:items-stretch gap-4">
@@ -613,10 +616,10 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{company.emri}</h1>
               {company.eshteVerifikuar && (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> I verifikuar</span>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> {t("common.verified")}</span>
               )}
               {company.ofronDergimMakine && (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> Dergim makine</span>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> {t("common.deliveryBadge")}</span>
               )}
             </div>
             <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400">
@@ -625,19 +628,19 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
                   <Star size={13} className="text-amber-400 fill-amber-400" /> {company.avgRating} <span className="font-normal text-slate-400">({company.reviewCount})</span>
                 </span>
               )}
-              <span className="whitespace-nowrap">{company.carCount ?? cars.length} {(company.carCount ?? cars.length) === 1 ? "makine" : "makina"}</span>
-              {company.dataRegjistrimit && <span className="whitespace-nowrap">Anetar qe nga {memberSince(company.dataRegjistrimit)}</span>}
+              <span className="whitespace-nowrap">{t("company.carsCount", { count: company.carCount ?? cars.length })}</span>
+              {company.dataRegjistrimit && <span className="whitespace-nowrap">{t("car.memberSince", { date: memberSince(company.dataRegjistrimit, lang) })}</span>}
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1"><MapPin size={13} /> {company.adresa ? `${company.adresa}, ` : ""}{company.qyteti}</p>
             <div className="flex items-center gap-3 flex-wrap">
-              <p className="text-xs text-slate-400 dark:text-slate-500">Kontakti i biznesit shfaqet te rezervimi juaj, pasi te konfirmohet.</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">{t("company.contactAfterConfirm")}</p>
               <a
                 href={directionsUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="lg:hidden inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-3 py-2 whitespace-nowrap"
               >
-                <MapPin size={13} /> Merr udhezime
+                <MapPin size={13} /> {t("common.getDirections")}
               </a>
             </div>
           </div>
@@ -646,10 +649,10 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
               href={directionsUrl}
               target="_blank"
               rel="noreferrer"
-              title="Merr udhezime"
+              title={t("common.getDirections")}
               className="hidden lg:block relative flex-1 min-h-20 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
             >
-              <iframe title="Vendndodhja e biznesit" src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" tabIndex={-1} />
+              <iframe title={t("common.businessLocationTitle")} src={mapEmbedUrl} className="w-full h-full border-0 pointer-events-none" tabIndex={-1} />
               <span className="absolute inset-0 bg-black/0 hover:bg-black/10 transition" />
             </a>
           )}
@@ -657,7 +660,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
       </div>
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">Makinat e {company.emri} ({visibleCars.length}{visibleCars.length !== cars.length ? ` nga ${cars.length}` : ""})</h2>
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("company.carsOfTitle", { name: company.emri })} ({visibleCars.length}{visibleCars.length !== cars.length ? ` ${t("company.ofTotal", { total: cars.length })}` : ""})</h2>
         <button
           type="button"
           onClick={() => setShowFilters((s) => !s)}
@@ -667,7 +670,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
               : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
           }`}
         >
-          <SlidersHorizontal size={13} /> Filtro{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+          <SlidersHorizontal size={13} /> {t("common.filter")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
         </button>
       </div>
 
@@ -676,22 +679,22 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value, modeli: "" }))} className={companySelectClass}>
-                <option value="">Te gjitha markat</option>
+                <option value="">{t("results.allBrands")}</option>
                 {brands.map((b) => <option key={b} value={b}>{b}</option>)}
               </select>
               <select value={filters.modeli} onChange={(e) => setFilters((f) => ({ ...f, modeli: e.target.value }))} className={companySelectClass}>
-                <option value="">Te gjitha modelet</option>
+                <option value="">{t("results.allModels")}</option>
                 {models.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
               <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${companySelectClass} capitalize`}>
-                <option value="">Te gjitha karburantet</option>
+                <option value="">{t("results.allFuels")}</option>
                 <option value="diesel">Diesel</option>
                 <option value="benzine">Benzine</option>
                 <option value="hybrid">Hybrid</option>
                 <option value="elektrik">Elektrik</option>
               </select>
               <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={companySelectClass}>
-                <option value="">Te gjitha kategorite</option>
+                <option value="">{t("results.allCategories")}</option>
                 {categories.map((k) => <option key={k} value={k}>{categoryLabelCompany(k)}</option>)}
               </select>
               <select
@@ -702,7 +705,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
                 }}
                 className={companySelectClass}
               >
-                <option value="">Viti nga</option>
+                <option value="">{t("results.yearFrom")}</option>
                 {years.filter((y) => !filters.vitiMax || y <= Number(filters.vitiMax)).map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
               <select
@@ -713,7 +716,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
                 }}
                 className={companySelectClass}
               >
-                <option value="">Viti deri</option>
+                <option value="">{t("results.yearTo")}</option>
                 {years.filter((y) => !filters.vitiMin || y >= Number(filters.vitiMin)).map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
               <input
@@ -721,17 +724,17 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
                 min={0}
                 value={filters.cmimiMax}
                 onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
-                placeholder="Cmimi max/dite €"
+                placeholder={t("results.maxPricePlaceholder")}
                 className={companySelectClass}
               />
               <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={companySelectClass}>
-                <option value="">Rendit sipas</option>
-                <option value="asc">Cmimi: me i ulet</option>
-                <option value="desc">Cmimi: me i larte</option>
+                <option value="">{t("common.sortBy")}</option>
+                <option value="asc">{t("common.priceAsc")}</option>
+                <option value="desc">{t("common.priceDesc")}</option>
               </select>
             </div>
 
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-4 mb-1.5">Pajisje</p>
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-4 mb-1.5">{t("common.amenities")}</p>
             <div className="flex flex-wrap gap-1.5">
               {AMENITIES.map((a) => (
                 <button
@@ -751,7 +754,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
 
             {activeFilterCount > 0 && (
               <button onClick={() => setFilters(COMPANY_FILTERS_DEFAULT)} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
-                Pastro filtrat
+                {t("common.clearFilters")}
               </button>
             )}
           </div>
@@ -759,7 +762,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
       </div>
 
       {visibleCars.length === 0 ? (
-        <p className="text-sm text-slate-400 text-center py-10">Asnje makine nuk perputhet me filtrat.</p>
+        <p className="text-sm text-slate-400 text-center py-10">{t("company.noMatch")}</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {visibleCars.map((car) => (
@@ -768,7 +771,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
         </div>
       )}
 
-      <h2 className="font-semibold text-slate-900 dark:text-slate-100 mt-10 mb-4">Vleresime</h2>
+      <h2 className="font-semibold text-slate-900 dark:text-slate-100 mt-10 mb-4">{t("company.reviewsTitle")}</h2>
       <CompanyReviews companyId={company.companyId} />
     </div>
   );
@@ -785,6 +788,7 @@ function Stars({ rating, size = 12 }) {
 }
 
 function CompanyReviews({ companyId }) {
+  const { t, lang } = useLang();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(3);
@@ -799,8 +803,8 @@ function CompanyReviews({ companyId }) {
     return () => { cancelled = true; };
   }, [companyId]);
 
-  if (loading) return <p className="text-sm text-slate-400">Duke ngarkuar...</p>;
-  if (reviews.length === 0) return <p className="text-sm text-slate-400">Ende pa vleresime.</p>;
+  if (loading) return <p className="text-sm text-slate-400">{t("common.loading")}</p>;
+  if (reviews.length === 0) return <p className="text-sm text-slate-400">{t("company.noReviewsYet")}</p>;
 
   const avg = (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1);
 
@@ -809,7 +813,7 @@ function CompanyReviews({ companyId }) {
       <div className="flex items-center gap-2 mb-4">
         <Stars rating={Math.round(avg)} size={16} />
         <span className="font-bold text-slate-900 dark:text-slate-100">{avg}</span>
-        <span className="text-sm text-slate-500 dark:text-slate-400">({reviews.length} vleresime)</span>
+        <span className="text-sm text-slate-500 dark:text-slate-400">({t("company.reviewsCount", { count: reviews.length })})</span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {reviews.slice(0, visibleCount).map((r) => (
@@ -819,7 +823,7 @@ function CompanyReviews({ companyId }) {
               <Stars rating={r.rating} />
             </div>
             {r.koment && <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">{r.koment}</p>}
-            <p className="text-[11px] text-slate-400 mt-2">{new Date(r.data).toLocaleDateString("sq-AL")}</p>
+            <p className="text-[11px] text-slate-400 mt-2">{formatLocaleDate(r.data, lang)}</p>
           </div>
         ))}
       </div>
@@ -828,7 +832,7 @@ function CompanyReviews({ companyId }) {
           onClick={() => setVisibleCount((n) => n + 6)}
           className="mt-4 text-sm font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800"
         >
-          Shiko me shume ({reviews.length - visibleCount})
+          {t("company.seeMore", { count: reviews.length - visibleCount })}
         </button>
       )}
     </div>
