@@ -1,6 +1,6 @@
-import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal, Check } from "lucide-react";
-import { CarCard } from "../components";
-import { CAR_CATEGORIES, AMENITIES, CAR_BRANDS } from "../carData";
+import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal } from "lucide-react";
+import { CarCard, AmenityPicker } from "../components";
+import { CAR_CATEGORIES, CAR_BRANDS } from "../carData";
 import { useLang } from "../useLang";
 
 const categoryLabel = (key, t) => (CAR_CATEGORIES.some((c) => c.key === key) ? t(`category.${key}`) : key);
@@ -170,22 +170,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
               </div>
 
               <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-4 mb-1.5">{t("common.amenities")}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {AMENITIES.map((a) => (
-                  <button
-                    key={a.key}
-                    type="button"
-                    onClick={() => toggleAmenity(a.key)}
-                    className={`flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition ${
-                      filters.amenities.includes(a.key)
-                        ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20"
-                        : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
-                    }`}
-                  >
-                    {filters.amenities.includes(a.key) && <Check size={11} />} {t(`amenity.${a.key}`)}
-                  </button>
-                ))}
-              </div>
+              <AmenityPicker selected={filters.amenities} onToggle={toggleAmenity} />
 
               {activeFilterCount > 0 && (
                 <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">

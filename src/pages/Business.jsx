@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon, Star, ChevronDown, Truck } from "lucide-react";
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
-import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar } from "../components";
+import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar, AmenityPicker } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
@@ -1034,13 +1034,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         </label>
       </div>
       <Field label={t("business.additionalAmenities")}>
-        <div className="grid grid-cols-2 gap-1.5">
-          {AMENITIES.map((a) => (
-            <label key={a.key} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-              <input type="checkbox" checked={form.amenities.includes(a.key)} onChange={() => toggleAmenity(a.key)} /> {t(`amenity.${a.key}`)}
-            </label>
-          ))}
-        </div>
+        <AmenityPicker selected={form.amenities} onToggle={toggleAmenity} />
       </Field>
       <Field label={t("business.priceOffersLabel")}>
         <div className="flex flex-col gap-1.5">

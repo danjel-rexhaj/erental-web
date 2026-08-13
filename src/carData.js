@@ -40,20 +40,50 @@ export const CAR_BRANDS = {
   [OTHER_BRAND]: [],
 };
 
-// Display labels for these keys live in src/i18n.jsx under amenity.*/category.*, not here.
-export const AMENITIES = [
-  { key: "bluetooth" },
-  { key: "gps" },
-  { key: "kamera_pas" },
-  { key: "sensore_parkimi" },
-  { key: "sedilje_lekuri" },
-  { key: "sunroof" },
-  { key: "usb" },
-  { key: "sedilje_bebe" },
-  { key: "sedilje_femije" },
-  { key: "traksion_4x4" },
-  { key: "bagazh_i_madh" },
+// Display labels for these keys/categories live in src/i18n.jsx under amenity.*/amenityCategory.*,
+// not here. Keys that already existed (sunroof/sedilje_lekuri/sensore_parkimi/kamera_pas/bluetooth/
+// usb/traksion_4x4/sedilje_bebe/bagazh_i_madh) are kept as-is so cars that already have amenities
+// selected don't silently lose them - only re-labeled/re-categorized. sedilje_femije was merged into
+// sedilje_bebe (now "ISOFIX child-seat mounting points"); gps was dropped (not in the new catalog).
+export const AMENITY_CATEGORIES = [
+  {
+    key: "comfort",
+    items: [
+      "sunroof", "keyless_entry", "keyless_start", "sedilje_lekuri", "heated_seats",
+      "ventilated_seats", "electric_seats", "memory_seats", "auto_dimming_mirrors",
+      "electric_windows", "climate_multizone", "rear_ac", "sensore_parkimi", "kamera_pas", "camera_360",
+    ],
+  },
+  {
+    key: "multimedia",
+    items: ["apple_carplay", "android_auto", "bluetooth", "premium_sound", "dab_radio", "touchscreen", "voice_control", "usb", "wifi_hotspot"],
+  },
+  {
+    key: "safety",
+    items: [
+      "collision_warning", "auto_emergency_braking", "adaptive_cruise_control", "lane_assist",
+      "blind_spot_monitoring", "traffic_sign_recognition", "auto_headlights", "rain_sensor",
+      "parking_assist", "driving_modes", "traksion_4x4", "heated_steering_wheel",
+    ],
+  },
+  {
+    key: "family",
+    items: ["sedilje_bebe", "rear_child_anchors", "child_safety_locks", "rear_seat_foldable", "rear_sun_blinds"],
+  },
+  {
+    key: "exterior",
+    items: [
+      "led_headlights", "adaptive_headlights", "matrix_led", "ambient_lighting", "alloy_wheels",
+      "sport_package", "privacy_glass", "power_tailgate", "folding_mirrors",
+    ],
+  },
+  {
+    key: "practical",
+    items: ["bagazh_i_madh", "folding_rear_seats", "hands_free_tailgate", "socket_12v", "wireless_charging", "cup_holders_temp"],
+  },
 ];
+
+export const AMENITIES = AMENITY_CATEGORIES.flatMap((c) => c.items.map((key) => ({ key, category: c.key })));
 
 export const CAR_CATEGORIES = [
   { key: "economy" },

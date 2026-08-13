@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart, Truck } from "lucide-react";
+import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, ChevronDown, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart, Truck } from "lucide-react";
 import { decodeJwt } from "./api";
 import { generateInvoicePdf } from "./invoicePdf";
 import { useLang } from "./useLang";
 import { monthName, weekdayInitials } from "./dateFormat";
+import { AMENITY_CATEGORIES } from "./carData";
 
 export function AvailabilityCalendar({ ranges = [] }) {
   const { t, lang } = useLang();
@@ -492,6 +493,57 @@ export function Spec({ icon: Icon, label, value }) {
         <p className="text-[10px] text-slate-400 leading-none mb-0.5">{label}</p>
         <p className="text-xs font-medium text-slate-700 dark:text-slate-200 leading-none capitalize">{value}</p>
       </div>
+    </div>
+  );
+}
+
+// Categorized, collapsible amenities picker — ~55 items in 6 categories is too many to dump as one
+// flat checkbox grid (illegible, and makes the car form feel enormous), so each category collapses
+// to a single row until opened. Categories start collapsed; several can be open at once.
+export function AmenityPicker({ selected, onToggle }) {
+  const { t } = useLang();
+  const [openCategories, setOpenCategories] = useState(() => new Set());
+
+  function toggleCategory(key) {
+    setOpenCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {AMENITY_CATEGORIES.map((cat) => {
+        const open = openCategories.has(cat.key);
+        const selectedCount = cat.items.filter((key) => selected.includes(key)).length;
+        return (
+          <div key={cat.key} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => toggleCategory(cat.key)}
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+            >
+              <span className="flex items-center gap-1.5">
+                {t(`amenityCategory.${cat.key}`)}
+                {selectedCount > 0 && (
+                  <span className="text-[10px] font-bold text-white bg-emerald-600 rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">{selectedCount}</span>
+                )}
+              </span>
+              <ChevronDown size={14} className={`text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+            </button>
+            {open && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 px-3 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800">
+                {cat.items.map((key) => (
+                  <label key={key} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                    <input type="checkbox" checked={selected.includes(key)} onChange={() => onToggle(key)} /> {t(`amenity.${key}`)}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
