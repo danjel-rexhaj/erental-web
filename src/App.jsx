@@ -16,6 +16,7 @@ import { AuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
 
 export default function App() {
+  const { t } = useLang();
   const [token, setToken] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("erental_auth"));
@@ -182,7 +183,7 @@ export default function App() {
         setSelectedCar(hint.car);
       } else {
         try { setSelectedCar(await apiFetch(`/Cars/${segs[1]}`, null)); }
-        catch { showError(new Error("Makina nuk u gjet.")); }
+        catch { showError(new Error(t("app.carNotFound"))); }
       }
       return;
     }
@@ -308,7 +309,7 @@ export default function App() {
 
   const search = useCallback(async () => {
     if (!dataFillimit || !dataPerfundimit) {
-      showError(new Error("Zgjidh datat e marrjes dhe te dorezimit."));
+      showError(new Error(t("app.pickDates")));
       return;
     }
     setSearching(true);
@@ -420,7 +421,7 @@ export default function App() {
       <Notice notice={notice} onClose={() => setNotice(null)} />
       <div className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
         {view === "browse" && renderBrowse()}
-        {view === "bookings" && (token ? <Bookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text="Logohu per te pare rezervimet e tua." />)}
+        {view === "bookings" && (token ? <Bookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text={t("app.needLoginFor", { feature: t("app.featureYourBookings") })} />)}
         {view === "favorites" && (token ? (
           <Favorites
             token={token}
@@ -430,7 +431,7 @@ export default function App() {
             favoriteIds={favoriteIds}
             onToggleFavorite={toggleFavorite}
           />
-        ) : <AuthGate onGo={() => go("/profili")} text="Logohu per te pare makinat e preferuara." />)}
+        ) : <AuthGate onGo={() => go("/profili")} text={t("app.needLoginFor", { feature: t("app.featureFavoriteCars") })} />)}
         {view === "business" && (token ? (
           <Business
             token={token}
@@ -447,7 +448,7 @@ export default function App() {
             highlightBookingId={highlightBookingId}
             refreshKey={bookingsRefreshKey}
           />
-        ) : <AuthGate onGo={() => go("/profili")} text="Logohu per te menaxhuar biznesin tend." />)}
+        ) : <AuthGate onGo={() => go("/profili")} text={t("app.needLoginFor", { feature: t("app.featureManageBusiness") })} />)}
         {view === "auth" && (
           token
             ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} />
@@ -556,7 +557,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
           <button
             onClick={toggleTheme}
             className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-            title={theme === "dark" ? "Kalo ne dritë" : "Kalo ne erresire"}
+            title={theme === "dark" ? t("app.switchToLight") : t("app.switchToDark")}
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -577,7 +578,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
               {notifOpen && (
                 <div className="absolute top-full right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg w-72 max-h-96 overflow-y-auto z-30">
                   {notifications.length === 0 ? (
-                    <p className="text-xs text-slate-400 text-center py-6">Asnje njoftim ende.</p>
+                    <p className="text-xs text-slate-400 text-center py-6">{t("app.noNotifications")}</p>
                   ) : (
                     <>
                       <div className="flex justify-end px-3 py-1.5 border-b border-slate-50 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800">
@@ -585,7 +586,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
                           onClick={() => clearAllNotifications()}
                           className="text-[11px] font-medium text-slate-400 hover:text-red-600"
                         >
-                          Fshi te gjitha
+                          {t("app.clearAllNotifications")}
                         </button>
                       </div>
                       {notifications.map((n) => (
@@ -677,17 +678,18 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
 }
 
 function Footer({ setView }) {
+  const { t } = useLang();
   return (
     <div className="bg-slate-900">
       <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2">
         <Logo size={38} variant="dark" />
         <div className="flex items-center gap-4">
-          <button onClick={() => setView("privacy")} className="text-xs text-slate-400 hover:text-white">Privatesia</button>{" "}
-          <button onClick={() => setView("terms")} className="text-xs text-slate-400 hover:text-white">Kushtet</button>{" "}
-          <button onClick={() => setView("careers")} className="text-xs text-slate-400 hover:text-white">Karriere</button>{" "}
+          <button onClick={() => setView("privacy")} className="text-xs text-slate-400 hover:text-white">{t("footer.privacy")}</button>{" "}
+          <button onClick={() => setView("terms")} className="text-xs text-slate-400 hover:text-white">{t("footer.terms")}</button>{" "}
+          <button onClick={() => setView("careers")} className="text-xs text-slate-400 hover:text-white">{t("nav.careers")}</button>{" "}
           <a href="mailto:info@erental.store" className="text-xs text-slate-400 hover:text-white">info@erental.store</a>
         </div>
-        <p className="text-xs text-slate-500">Platforma e makinave me qera.</p>
+        <p className="text-xs text-slate-500">{t("footer.tagline")}</p>
       </div>
     </div>
   );
