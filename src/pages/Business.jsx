@@ -1020,7 +1020,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         <Field label="Vende"><input type="number" className={inputClass} value={form.numriVendeve} onChange={set("numriVendeve")} /></Field>
         <Field label="Cmimi/dite (€)"><input type="number" className={inputClass} value={form.cmimiDites} onChange={set("cmimiDites")} /></Field>
         <label className="flex items-center gap-2 mt-6 text-xs text-slate-600 dark:text-slate-300">
-          <input type="checkbox" checked={form.klimatizimi} onChange={(e) => setForm((f) => ({ ...f, klimatizimi: e.target.checked }))} /> Klimatizim
+          <input type="checkbox" checked={form.klimatizimi} onChange={(e) => setForm((f) => ({ ...f, klimatizimi: e.target.checked }))} /> Kondicioner
         </label>
       </div>
       <Field label="Pajisje shtese">

@@ -22,7 +22,7 @@ export function AuthGate({ onGo, text }) {
     <div className="flex flex-col items-center justify-center text-center px-8 py-20 gap-4">
       <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center"><Lock size={22} className="text-emerald-700 dark:text-emerald-400" /></div>
       <p className="text-sm text-slate-500 dark:text-slate-400">{text}</p>
-      <PrimaryButton onClick={onGo} className="max-w-[160px]">Kyçu</PrimaryButton>
+      <PrimaryButton onClick={onGo} className="max-w-[160px]">Logohu</PrimaryButton>
     </div>
   );
 }
@@ -73,7 +73,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
     setForgotLoading(true);
     try {
       await apiFetch("/Auth/reset-password", null, { method: "POST", body: JSON.stringify({ email: forgotEmail, code: forgotCode, newPassword: forgotPassword }) });
-      showOk && showOk("Fjalekalimi u ndryshua. Kyçu me fjalekalimin e ri.");
+      showOk && showOk("Fjalekalimi u ndryshua. Logohu me fjalekalimin e ri.");
       setMode("login");
       setForgotStep("request");
       setForgotEmail(""); setForgotCode(""); setForgotPassword("");
@@ -100,7 +100,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
           </form>
         )}
         <button onClick={() => { setMode("login"); setForgotStep("request"); }} className="w-full text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
-          Kthehu tek <span className="text-emerald-700 dark:text-emerald-400 font-semibold underline">Kyçu</span>
+          Kthehu tek <span className="text-emerald-700 dark:text-emerald-400 font-semibold underline">Logohu</span>
         </button>
       </div>
     );
@@ -112,7 +112,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
         {mode === "login" ? "Mire se erdhe" : "Krijo llogari"}
       </h1>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-        {mode === "login" ? "Kyçu per te vazhduar." : "Regjistrohu per te filluar."}
+        {mode === "login" ? "Logohu per te vazhduar." : "Regjistrohu per te filluar."}
       </p>
       <form onSubmit={submit}>
         {mode === "register" && (
@@ -160,11 +160,11 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
           </label>
         )}
 
-        <PrimaryButton type="submit" disabled={loading} className="mt-2">{loading ? "Duke pritur..." : mode === "login" ? "Kyçu" : "Regjistrohu"}</PrimaryButton>
+        <PrimaryButton type="submit" disabled={loading} className="mt-2">{loading ? "Duke pritur..." : mode === "login" ? "Logohu" : "Regjistrohu"}</PrimaryButton>
       </form>
       <button onClick={() => setMode(mode === "login" ? "register" : "login")} className="w-full text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
         {mode === "login" ? "S'ke llogari? " : "Ke tashme llogari? "}
-        <span className="text-emerald-700 dark:text-emerald-400 font-semibold underline">{mode === "login" ? "Regjistrohu" : "Kyçu"}</span>
+        <span className="text-emerald-700 dark:text-emerald-400 font-semibold underline">{mode === "login" ? "Regjistrohu" : "Logohu"}</span>
       </button>
     </div>
   );

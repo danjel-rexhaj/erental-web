@@ -157,7 +157,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <Spec icon={Fuel} label="Karburanti" value={car.karburanti} />
             <Spec icon={Gauge} label="Transmisioni" value={car.transmisioni} />
             <Spec icon={UsersIcon} label="Vende" value={car.numriVendeve} />
-            <Spec icon={Snowflake} label="Klima" value={car.klimatizimi ? "Po" : "Jo"} />
+            <Spec icon={Snowflake} label="Kondicioner" value={car.klimatizimi ? "Po" : "Jo"} />
             {car.kubatura != null && <Spec icon={Cog} label="Kubatura" value={`${car.kubatura}cc`} />}
             {car.cilindra != null && <Spec icon={Disc} label="Cilindra" value={car.cilindra} />}
           </div>
@@ -508,7 +508,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
         </div>
       )}
 
-      {!token && <PrimaryButton onClick={needAuth}>Kyçu per te rezervuar</PrimaryButton>}
+      {!token && <PrimaryButton onClick={needAuth}>Logohu per te rezervuar</PrimaryButton>}
 
       {token && hasLicense === null && (
         <p className="text-xs text-slate-400 py-2">Duke kontrolluar te dhenat...</p>

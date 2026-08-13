@@ -420,7 +420,7 @@ export default function App() {
       <Notice notice={notice} onClose={() => setNotice(null)} />
       <div className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
         {view === "browse" && renderBrowse()}
-        {view === "bookings" && (token ? <Bookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text="Kyçu per te pare rezervimet e tua." />)}
+        {view === "bookings" && (token ? <Bookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text="Logohu per te pare rezervimet e tua." />)}
         {view === "favorites" && (token ? (
           <Favorites
             token={token}
@@ -430,7 +430,7 @@ export default function App() {
             favoriteIds={favoriteIds}
             onToggleFavorite={toggleFavorite}
           />
-        ) : <AuthGate onGo={() => go("/profili")} text="Kyçu per te pare makinat e preferuara." />)}
+        ) : <AuthGate onGo={() => go("/profili")} text="Logohu per te pare makinat e preferuara." />)}
         {view === "business" && (token ? (
           <Business
             token={token}
@@ -447,7 +447,7 @@ export default function App() {
             highlightBookingId={highlightBookingId}
             refreshKey={bookingsRefreshKey}
           />
-        ) : <AuthGate onGo={() => go("/profili")} text="Kyçu per te menaxhuar biznesin tend." />)}
+        ) : <AuthGate onGo={() => go("/profili")} text="Logohu per te menaxhuar biznesin tend." />)}
         {view === "auth" && (
           token
             ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} />
