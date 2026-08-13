@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import { LangContext } from "./langContext";
 
-// Pilot bilingual pass (sq/en) covering the top navigation and homepage only --
-// the rest of the app is still hardcoded Albanian. Add more keys here and swap
-// hardcoded strings for t("key") page by page to extend coverage.
+// Bilingual (sq/en) dictionary, extended page by page -- see the plan doc for the
+// rollout order. Keys are namespaced by page (auth.*, business.*, ...); strings
+// duplicated verbatim across pages live under common.*.
 const TRANSLATIONS = {
   sq: {
     "nav.cars": "Makina",
@@ -29,6 +29,9 @@ const TRANSLATIONS = {
     "home.search": "Kerko makina",
     "home.searching": "Duke kerkuar...",
     "home.verifiedBusinesses": "Bizneset e verifikuara ne ERental",
+    "common.loading": "Duke ngarkuar...",
+    "favorites.emptyTitle": "Ende s'ke asnje makine te preferuar.",
+    "favorites.emptySubtitle": "Shtyp zemren te nje makine per ta ruajtur ketu.",
   },
   en: {
     "nav.cars": "Cars",
@@ -54,8 +57,24 @@ const TRANSLATIONS = {
     "home.search": "Search cars",
     "home.searching": "Searching...",
     "home.verifiedBusinesses": "Verified businesses on ERental",
+    "common.loading": "Loading...",
+    "favorites.emptyTitle": "You haven't saved any favorite cars yet.",
+    "favorites.emptySubtitle": "Tap the heart on a car to save it here.",
   },
 };
+
+function interpolate(str, vars) {
+  if (!vars) return str;
+  return str.replace(/\{\{(\w+)\}\}/g, (_, k) => (vars[k] ?? ""));
+}
+
+function resolve(value, vars) {
+  if (value && typeof value === "object") {
+    const count = vars?.count;
+    value = count === 1 ? value.one : value.other;
+  }
+  return typeof value === "string" ? interpolate(value, vars) : value;
+}
 
 export function LangProvider({ children }) {
   const [lang, setLangState] = useState(() => localStorage.getItem("lang") || "sq");
@@ -65,7 +84,13 @@ export function LangProvider({ children }) {
     localStorage.setItem("lang", next);
   }, []);
 
-  const t = useCallback((key) => TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS.sq[key] ?? key, [lang]);
+  const t = useCallback(
+    (key, vars) => {
+      const raw = TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS.sq[key];
+      return raw !== undefined ? resolve(raw, vars) : key;
+    },
+    [lang]
+  );
 
   return <LangContext.Provider value={{ lang, setLang, t }}>{children}</LangContext.Provider>;
 }
