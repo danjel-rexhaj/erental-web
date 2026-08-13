@@ -816,6 +816,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
 }
 
 function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel }) {
+  const { t } = useLang();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     emri: company.emri || "",
@@ -838,16 +839,16 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
 
   return (
     <form onSubmit={submit} className="mt-2 flex flex-col gap-2 max-w-xs">
-      <Field label="Emri i biznesit"><input required className={inputClass} value={form.emri} onChange={set("emri")} /></Field>
-      <Field label="Telefoni"><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} /></Field>
-      <Field label="Adresa"><input className={inputClass} value={form.adresa} onChange={set("adresa")} /></Field>
-      <Field label="Qyteti / Zona">
+      <Field label={t("business.businessName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} /></Field>
+      <Field label={t("auth.phone")}><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} /></Field>
+      <Field label={t("business.address")}><input className={inputClass} value={form.adresa} onChange={set("adresa")} /></Field>
+      <Field label={t("business.cityZone")}>
         <select className={inputClass} value={form.qyteti} onChange={set("qyteti")}>
-          <option value="">Zgjidh...</option>
+          <option value="">{t("business.choose")}</option>
           {ALBANIAN_LOCATIONS.map((z) => <option key={z} value={z}>{z}</option>)}
         </select>
       </Field>
-      <Field label="IBAN (per te marre pagesat, pas komisionit)"><input className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
+      <Field label={t("business.ibanForPayments")}><input className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
       <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
         <input
           type="checkbox"
@@ -855,11 +856,11 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
           checked={form.ofronDergimMakine}
           onChange={(e) => setForm((f) => ({ ...f, ofronDergimMakine: e.target.checked }))}
         />
-        <span>Ofroj dergim te makines te klienti (brenda zones, ne aeroport ose port)</span>
+        <span>{t("business.offersDeliveryEdit")}</span>
       </label>
       <div className="flex gap-2">
-        <PrimaryButton type="submit" disabled={loading} className="text-xs py-2">{loading ? "Duke ruajtur..." : "Ruaj"}</PrimaryButton>
-        <GhostButton type="button" onClick={onCancel} className="text-xs py-2">Anulo</GhostButton>
+        <PrimaryButton type="submit" disabled={loading} className="text-xs py-2">{loading ? t("common.saving") : t("common.save")}</PrimaryButton>
+        <GhostButton type="button" onClick={onCancel} className="text-xs py-2">{t("booking.cancel")}</GhostButton>
       </div>
     </form>
   );
@@ -901,6 +902,7 @@ function buildCarForm(car) {
 }
 
 function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, onDirtyChange }) {
+  const { t } = useLang();
   const isEdit = !!existingCar;
   const [loading, setLoading] = useState(false);
   const [createdCar, setCreatedCar] = useState(null);
@@ -951,12 +953,12 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
       };
       if (isEdit) {
         await apiFetch(`/Cars/${existingCar.carId}`, token, { method: "PUT", body: JSON.stringify(payload) });
-        showOk("Makina u perditesua.");
+        showOk(t("business.carUpdated"));
         onDone();
       } else {
         const car = await apiFetch("/Cars", token, { method: "POST", body: JSON.stringify(payload) });
         setCreatedCar(car);
-        showOk("Makina u shtua. Tani shto fotot.");
+        showOk(t("business.carAddedNowPhotos"));
       }
     } catch (e) { showError(e); } finally { setLoading(false); }
   }
@@ -968,7 +970,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
   if (createdCar) {
     return (
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3 mb-4 bg-slate-50 dark:bg-slate-800">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">{createdCar.marka} {createdCar.modeli} u shtua</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("business.carAdded", { car: `${createdCar.marka} ${createdCar.modeli}` })}</p>
         <CarPhotoManager
           carId={createdCar.carId}
           token={token}
@@ -976,7 +978,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
           showError={showError}
           onChanged={() => refreshPhotos(createdCar.carId)}
         />
-        <PrimaryButton type="button" className="mt-3" onClick={onDone}>Perfundo</PrimaryButton>
+        <PrimaryButton type="button" className="mt-3" onClick={onDone}>{t("business.finish")}</PrimaryButton>
       </div>
     );
   }
@@ -984,53 +986,53 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
   return (
     <form onSubmit={submit} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3 mb-4 bg-slate-50 dark:bg-slate-800">
       <div className="grid grid-cols-2 gap-2">
-        <Field label="Marka">
+        <Field label={t("business.carField.brand")}>
           <select required className={inputClass} value={form.marka} onChange={(e) => setForm((f) => ({ ...f, marka: e.target.value, modeli: "" }))}>
-            <option value="" disabled>Zgjidh markën</option>
+            <option value="" disabled>{t("business.carField.chooseBrand")}</option>
             {Object.keys(CAR_BRANDS).map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
         </Field>
         {form.marka === OTHER_BRAND && (
-          <Field label="Marka (shkruaj)"><input required className={inputClass} value={form.markaCustom} onChange={set("markaCustom")} placeholder="Marka" /></Field>
+          <Field label={t("business.carField.brandCustom")}><input required className={inputClass} value={form.markaCustom} onChange={set("markaCustom")} placeholder={t("business.carField.brand")} /></Field>
         )}
-        <Field label="Modeli">
+        <Field label={t("business.carField.model")}>
           <select required className={inputClass} value={form.modeli} onChange={set("modeli")} disabled={!form.marka}>
-            <option value="" disabled>Zgjidh modelin</option>
+            <option value="" disabled>{t("business.carField.chooseModel")}</option>
             {models.map((m) => <option key={m} value={m}>{m}</option>)}
-            {form.marka && <option value={OTHER_MODEL}>Tjeter</option>}
+            {form.marka && <option value={OTHER_MODEL}>{t("business.carField.other")}</option>}
           </select>
         </Field>
         {form.modeli === OTHER_MODEL && (
-          <Field label="Modeli (shkruaj)"><input required className={inputClass} value={form.modeliCustom} onChange={set("modeliCustom")} placeholder="Modeli" /></Field>
+          <Field label={t("business.carField.modelCustom")}><input required className={inputClass} value={form.modeliCustom} onChange={set("modeliCustom")} placeholder={t("business.carField.model")} /></Field>
         )}
-        <Field label="Viti"><input type="number" className={inputClass} value={form.viti} onChange={set("viti")} /></Field>
-        <Field label="Km"><input type="number" className={inputClass} value={form.km} onChange={set("km")} /></Field>
-        <Field label="Kubatura (cc)"><input type="number" className={inputClass} value={form.kubatura} onChange={set("kubatura")} placeholder="1600" /></Field>
-        <Field label="Cilindra"><input type="number" className={inputClass} value={form.cilindra} onChange={set("cilindra")} placeholder="4" /></Field>
-        <Field label="Karburanti">
+        <Field label={t("business.carField.year")}><input type="number" className={inputClass} value={form.viti} onChange={set("viti")} /></Field>
+        <Field label={t("business.carField.km")}><input type="number" className={inputClass} value={form.km} onChange={set("km")} /></Field>
+        <Field label={t("business.carField.engineSizeCc")}><input type="number" className={inputClass} value={form.kubatura} onChange={set("kubatura")} placeholder="1600" /></Field>
+        <Field label={t("car.spec.cylinders")}><input type="number" className={inputClass} value={form.cilindra} onChange={set("cilindra")} placeholder="4" /></Field>
+        <Field label={t("car.spec.fuel")}>
           <select className={inputClass} value={form.karburanti} onChange={set("karburanti")}>
             <option value="diesel">Diesel</option><option value="benzine">Benzine</option><option value="hybrid">Hybrid</option><option value="elektrik">Elektrik</option>
           </select>
         </Field>
-        <Field label="Transmisioni">
+        <Field label={t("car.spec.transmission")}>
           <select className={inputClass} value={form.transmisioni} onChange={set("transmisioni")}>
             <option value="manual">Manual</option><option value="automatik">Automatik</option>
           </select>
         </Field>
-        <Field label="Ngjyra"><input className={inputClass} value={form.ngjyra} onChange={set("ngjyra")} placeholder="E zeze" /></Field>
-        <Field label="Targa"><input required className={inputClass} value={form.targa} onChange={set("targa")} placeholder="AA123BB" /></Field>
-        <Field label="Kategoria">
+        <Field label={t("business.carField.color")}><input className={inputClass} value={form.ngjyra} onChange={set("ngjyra")} placeholder="E zeze" /></Field>
+        <Field label={t("business.carField.plate")}><input required className={inputClass} value={form.targa} onChange={set("targa")} placeholder="AA123BB" /></Field>
+        <Field label={t("business.carField.category")}>
           <select className={inputClass} value={form.kategoria} onChange={set("kategoria")}>
             {CAR_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
           </select>
         </Field>
-        <Field label="Vende"><input type="number" className={inputClass} value={form.numriVendeve} onChange={set("numriVendeve")} /></Field>
-        <Field label="Cmimi/dite (€)"><input type="number" className={inputClass} value={form.cmimiDites} onChange={set("cmimiDites")} /></Field>
+        <Field label={t("car.spec.seats")}><input type="number" className={inputClass} value={form.numriVendeve} onChange={set("numriVendeve")} /></Field>
+        <Field label={t("business.carField.pricePerDay")}><input type="number" className={inputClass} value={form.cmimiDites} onChange={set("cmimiDites")} /></Field>
         <label className="flex items-center gap-2 mt-6 text-xs text-slate-600 dark:text-slate-300">
-          <input type="checkbox" checked={form.klimatizimi} onChange={(e) => setForm((f) => ({ ...f, klimatizimi: e.target.checked }))} /> Kondicioner
+          <input type="checkbox" checked={form.klimatizimi} onChange={(e) => setForm((f) => ({ ...f, klimatizimi: e.target.checked }))} /> {t("car.spec.aircon")}
         </label>
       </div>
-      <Field label="Pajisje shtese">
+      <Field label={t("business.additionalAmenities")}>
         <div className="grid grid-cols-2 gap-1.5">
           {AMENITIES.map((a) => (
             <label key={a.key} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
@@ -1039,36 +1041,38 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
           ))}
         </div>
       </Field>
-      <Field label="Oferta çmimi (opsionale)">
+      <Field label={t("business.priceOffersLabel")}>
         <div className="flex flex-col gap-1.5">
           {form.priceOffers.map((o, i) => (
             <div key={i} className="flex items-center gap-1.5">
-              <input type="number" min="1" placeholder="Ditë" className={`${inputClass} w-20`} value={o.dite} onChange={(e) => updateOffer(i, "dite", e.target.value)} />
-              <span className="text-xs text-slate-400">ditë =</span>
-              <input type="number" min="0" step="0.01" placeholder="Çmimi total (€)" className={inputClass} value={o.cmimiTotal} onChange={(e) => updateOffer(i, "cmimiTotal", e.target.value)} />
-              <button type="button" onClick={() => removeOffer(i)} className="text-slate-400 hover:text-red-600 shrink-0" title="Hiq ofertën"><X size={15} /></button>
+              <input type="number" min="1" placeholder={t("business.offerDaysPlaceholder")} className={`${inputClass} w-20`} value={o.dite} onChange={(e) => updateOffer(i, "dite", e.target.value)} />
+              <span className="text-xs text-slate-400">{t("business.offerDaysEquals")}</span>
+              <input type="number" min="0" step="0.01" placeholder={t("business.offerPricePlaceholder")} className={inputClass} value={o.cmimiTotal} onChange={(e) => updateOffer(i, "cmimiTotal", e.target.value)} />
+              <button type="button" onClick={() => removeOffer(i)} className="text-slate-400 hover:text-red-600 shrink-0" title={t("business.removeOffer")}><X size={15} /></button>
             </div>
           ))}
-          <GhostButton type="button" onClick={addOffer} className="text-xs py-1.5 w-fit">+ Shto ofertë</GhostButton>
+          <GhostButton type="button" onClick={addOffer} className="text-xs py-1.5 w-fit">{t("business.addOffer")}</GhostButton>
         </div>
       </Field>
       <PrimaryButton type="submit" disabled={loading} className="mt-2">
-        {loading ? "Duke ruajtur..." : isEdit ? "Ruaj ndryshimet" : "Ruaj makinen"}
+        {loading ? t("common.saving") : isEdit ? t("business.saveChanges") : t("business.saveCar")}
       </PrimaryButton>
     </form>
   );
 }
 
 function CarStatusBadge({ statusi }) {
+  const { t } = useLang();
   const active = statusi === "active";
   return (
     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${active ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300" : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"}`}>
-      {active ? "Aktive" : "Joaktive"}
+      {active ? t("business.active") : t("business.inactive")}
     </span>
   );
 }
 
 function BusinessCarCard({ car, onOpen }) {
+  const { t } = useLang();
   return (
     <button
       type="button"
@@ -1081,13 +1085,14 @@ function BusinessCarCard({ car, onOpen }) {
           <div><p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</p><p className="text-xs text-slate-500 dark:text-slate-400">{car.targa} · {car.cmimiDites}€/dite</p></div>
           <CarStatusBadge statusi={car.statusi} />
         </div>
-        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-3">Shiko detajet →</p>
+        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-3">{t("business.viewDetails")}</p>
       </div>
     </button>
   );
 }
 
 function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
+  const { t } = useLang();
   const photos = (car.carPhotos || []).filter(Boolean);
   const mainPhoto = photos.find((p) => p.eshteKryesore) || photos[0];
   const [previewPhoto, setPreviewPhoto] = useState(null);
@@ -1152,7 +1157,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
         method: "POST",
         body: JSON.stringify({ dataFillimit: blockFrom, dataPerfundimit: blockTo, shenim: blockNote }),
       });
-      showOk("Datat u bllokuan.");
+      showOk(t("business.datesBlocked"));
       setBlockFrom(null);
       setBlockTo(null);
       setBlockNote("");
@@ -1172,7 +1177,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
     try {
       const next = car.statusi === "active" ? "inactive" : "active";
       await apiFetch(`/Cars/${car.carId}/status`, token, { method: "PUT", body: JSON.stringify({ statusi: next }) });
-      showOk(next === "active" ? "Makina u aktivizua." : "Makina u caktivizua.");
+      showOk(next === "active" ? t("business.carActivated") : t("business.carDeactivated"));
       reload();
     } catch (e) { showError(e); } finally { setTogglingStatus(false); }
   }
@@ -1181,7 +1186,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
     setDeleting(true);
     try {
       await apiFetch(`/Cars/${car.carId}`, token, { method: "DELETE" });
-      showOk("Makina u fshi.");
+      showOk(t("business.carDeleted"));
       reload();
       onBack();
     } catch (e) { showError(e); } finally { setDeleting(false); }
@@ -1190,7 +1195,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
   return (
     <div>
       <button onClick={() => guardedAction(onBack)} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
-        <ChevronLeft size={16} /> Prapa te makinat
+        <ChevronLeft size={16} /> {t("business.backToCars")}
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1213,7 +1218,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
                 >
                   <img src={p.urlFotos} alt="" className="w-full h-16 object-cover" />
                   {p.eshteKryesore && (
-                    <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-4 h-4 flex items-center justify-center" title="Foto kryesore">
+                    <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-4 h-4 flex items-center justify-center" title={t("business.mainPhoto")}>
                       <Star size={9} className="fill-current" />
                     </span>
                   )}
@@ -1227,14 +1232,14 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
             onClick={toggleCalendar}
             className={`flex items-center justify-center gap-1.5 py-2 mt-4 ${showCalendar ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
           >
-            <Calendar size={13} />{showCalendar ? "Mbyll kalendarin" : "Kalendari i rezervimeve"}
+            <Calendar size={13} />{showCalendar ? t("business.closeCalendar") : t("business.bookingCalendar")}
           </GhostButton>
 
           {showCalendar && (
             <div className="mt-3 space-y-3">
               <div>
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1">
-                  <Ban size={12} /> Bllokoje per rezervime jashte platformes
+                  <Ban size={12} /> {t("business.blockForOutsidePlatform")}
                 </p>
                 <DateRangeCalendar
                   ranges={blocks}
@@ -1248,7 +1253,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
                       type="text"
                       value={blockNote}
                       onChange={(e) => setBlockNote(e.target.value)}
-                      placeholder="Shenim (opsionale)"
+                      placeholder={t("business.noteOptionalPlaceholder")}
                       className={inputClass + " text-xs py-1.5"}
                     />
                     <button
@@ -1257,7 +1262,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
                       disabled={savingBlock}
                       className="shrink-0 text-xs font-medium text-white bg-slate-900 dark:bg-slate-700 rounded-xl px-3 py-1.5 disabled:opacity-50"
                     >
-                      {savingBlock ? "Duke ruajtur..." : "Bllokoje"}
+                      {savingBlock ? t("common.saving") : t("business.block")}
                     </button>
                   </div>
                 )}
@@ -1269,7 +1274,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
                     <div key={b.blockId} className="flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-800 rounded-lg px-2.5 py-1.5">
                       <div>
                         <span className="font-medium text-slate-700 dark:text-slate-200">{b.dataFillimit} → {b.dataPerfundimit}</span>
-                        <span className="text-slate-400 ml-1.5">{b.eshteRezervimPlatforme ? "Rezervim nga platforma" : (b.shenim || "Jashte platformes")}</span>
+                        <span className="text-slate-400 ml-1.5">{b.eshteRezervimPlatforme ? t("business.platformBooking") : (b.shenim || t("business.outsidePlatform"))}</span>
                       </div>
                       {!b.eshteRezervimPlatforme && (
                         <button type="button" onClick={() => removeBlock(b.blockId)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 shrink-0 ml-2">
@@ -1297,14 +1302,14 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
               onClick={handleToggleEdit}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${editing ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
             >
-              <Pencil size={13} />{editing ? "Mbyll editimin" : "Edito detajet"}
+              <Pencil size={13} />{editing ? t("business.closeEditing") : t("business.editDetailsBtn")}
             </GhostButton>
             <GhostButton
               type="button"
               onClick={handleTogglePhotos}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${managingPhotos ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
             >
-              <Upload size={13} />{managingPhotos ? "Mbyll fotot" : "Menaxho fotot"}
+              <Upload size={13} />{managingPhotos ? t("business.closePhotos") : t("business.managePhotosBtn")}
             </GhostButton>
           </div>
           {editing && (
@@ -1333,27 +1338,27 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
               disabled={togglingStatus}
               className="text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
             >
-              {togglingStatus ? "Duke perditesuar..." : car.statusi === "active" ? "Caktivizo makinen (fshihet nga kerkimi)" : "Aktivizo makinen"}
+              {togglingStatus ? t("business.updating") : car.statusi === "active" ? t("business.deactivateCarAction") : t("business.activateCarAction")}
             </button>
           </div>
 
           <div className="mt-4 border border-red-200 dark:border-red-800/60 rounded-2xl p-4">
-            <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Zona e rrezikut</p>
+            <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">{t("business.dangerZone")}</p>
             {confirmingDelete ? (
               <>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-                  Kjo do ta fshije makinen perfundimisht. Nese ka rezervime ne histori, fshirja do te refuzohet — caktivizoje ne vend te kesaj.
+                  {t("business.deleteCarWarning")}
                 </p>
                 <div className="flex gap-2">
                   <button onClick={deleteCar} disabled={deleting} className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
-                    {deleting ? "Duke fshire..." : "Po, fshije perfundimisht"}
+                    {deleting ? t("business.deletingFinal") : t("business.confirmDeleteCarFinal")}
                   </button>
-                  <GhostButton type="button" onClick={() => setConfirmingDelete(false)} className="text-xs py-2">Anulo</GhostButton>
+                  <GhostButton type="button" onClick={() => setConfirmingDelete(false)} className="text-xs py-2">{t("booking.cancel")}</GhostButton>
                 </div>
               </>
             ) : (
               <button onClick={() => setConfirmingDelete(true)} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
-                Fshi makinen perfundimisht
+                {t("business.deleteCarFinal")}
               </button>
             )}
           </div>
@@ -1363,11 +1368,11 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
       {pendingAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setPendingAction(null)}>
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">Ndryshime te paruajtura</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Ke ndryshime tek "Edito detajet" qe s'jane ruajtur ende. Nese vazhdon, do te humbasin.</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">{t("business.unsavedChanges")}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("business.unsavedChangesBody")}</p>
             <div className="flex gap-2">
-              <button onClick={confirmDiscard} className="flex-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2">Vazhdo pa i ruajtur</button>
-              <GhostButton type="button" onClick={() => setPendingAction(null)} className="flex-1 text-xs py-2">Anulo</GhostButton>
+              <button onClick={confirmDiscard} className="flex-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2">{t("business.continueWithoutSaving")}</button>
+              <GhostButton type="button" onClick={() => setPendingAction(null)} className="flex-1 text-xs py-2">{t("booking.cancel")}</GhostButton>
             </div>
           </div>
         </div>
@@ -1377,6 +1382,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
 }
 
 function AdminPending({ token, showError, showOk }) {
+  const { t } = useLang();
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1388,17 +1394,17 @@ function AdminPending({ token, showError, showOk }) {
   useEffect(() => { load(); }, [load]);
 
   async function verify(id) {
-    try { await apiFetch(`/Companies/${id}/verify`, token, { method: "PUT" }); showOk("Biznesi u verifikua."); load(); }
+    try { await apiFetch(`/Companies/${id}/verify`, token, { method: "PUT" }); showOk(t("business.businessVerified")); load(); }
     catch (e) { showError(e); }
   }
 
   async function reject(id) {
-    try { await apiFetch(`/Companies/${id}/reject`, token, { method: "DELETE" }); showOk("Aplikimi u refuzua."); load(); }
+    try { await apiFetch(`/Companies/${id}/reject`, token, { method: "DELETE" }); showOk(t("business.applicationRejected")); load(); }
     catch (e) { showError(e); }
   }
 
-  if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
-  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Asnje biznes ne pritje.</p></div>;
+  if (loading) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
+  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">{t("business.noBusinessesPending")}</p></div>;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1409,13 +1415,13 @@ function AdminPending({ token, showError, showOk }) {
           <p className="text-xs text-slate-400">{c.email} · {c.telefoni}</p>
           {c.certifikataUrl ? (
             <a href={c.certifikataUrl} target="_blank" rel="noreferrer" className="text-xs text-emerald-700 dark:text-emerald-400 underline mt-2 block">
-              Shiko certifikaten e NIPT-it
+              {t("business.viewNiptCert")}
             </a>
           ) : (
-            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">S'ka certifikate te ngarkuar</p>
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">{t("business.noCertUploaded")}</p>
           )}
-          <PrimaryButton onClick={() => verify(c.companyId)} className="mt-2 text-xs py-2">Verifiko biznesin</PrimaryButton>
-          <GhostButton onClick={() => reject(c.companyId)} className="mt-2 text-xs py-2">Refuzo dhe fshi</GhostButton>
+          <PrimaryButton onClick={() => verify(c.companyId)} className="mt-2 text-xs py-2">{t("business.verifyBusiness")}</PrimaryButton>
+          <GhostButton onClick={() => reject(c.companyId)} className="mt-2 text-xs py-2">{t("business.rejectAndDelete")}</GhostButton>
         </div>
       ))}
     </div>
@@ -1423,6 +1429,7 @@ function AdminPending({ token, showError, showOk }) {
 }
 
 function AdminWhatsapp({ token, showError, showOk }) {
+  const { t } = useLang();
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1434,17 +1441,17 @@ function AdminWhatsapp({ token, showError, showOk }) {
   useEffect(() => { load(); }, [load]);
 
   async function verify(id) {
-    try { await apiFetch(`/WhatsappVerifications/${id}/verify`, token, { method: "PUT" }); showOk("Numri u verifikua."); load(); }
+    try { await apiFetch(`/WhatsappVerifications/${id}/verify`, token, { method: "PUT" }); showOk(t("business.numberVerified")); load(); }
     catch (e) { showError(e); }
   }
 
   async function reject(id) {
-    try { await apiFetch(`/WhatsappVerifications/${id}/reject`, token, { method: "PUT" }); showOk("Kerkesa u refuzua."); load(); }
+    try { await apiFetch(`/WhatsappVerifications/${id}/reject`, token, { method: "PUT" }); showOk(t("business.requestRejected")); load(); }
     catch (e) { showError(e); }
   }
 
-  if (loading) return <p className="text-center text-sm text-slate-400 py-16">Duke ngarkuar...</p>;
-  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">Asnje kerkese ne pritje.</p></div>;
+  if (loading) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
+  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">{t("business.noRequestsPending")}</p></div>;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1452,11 +1459,11 @@ function AdminWhatsapp({ token, showError, showOk }) {
         <div key={w.id} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
           <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{w.emri} {w.mbiemri}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">{w.email}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1"><MessageCircle size={12} /> {w.telefoni || "S'ka numer"}</p>
-          <p className="text-xs text-slate-400 mt-2">Kontrollo WhatsApp-in e biznesit per kodin:</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1"><MessageCircle size={12} /> {w.telefoni || t("business.noNumber")}</p>
+          <p className="text-xs text-slate-400 mt-2">{t("business.checkBusinessWhatsapp")}</p>
           <p className="font-bold text-lg tracking-[0.3em] text-slate-900 dark:text-slate-100 text-center mt-1">{w.code}</p>
-          <PrimaryButton onClick={() => verify(w.id)} className="mt-3 text-xs py-2">Verifiko</PrimaryButton>
-          <GhostButton onClick={() => reject(w.id)} className="mt-2 text-xs py-2">Refuzo</GhostButton>
+          <PrimaryButton onClick={() => verify(w.id)} className="mt-3 text-xs py-2">{t("auth.verify")}</PrimaryButton>
+          <GhostButton onClick={() => reject(w.id)} className="mt-2 text-xs py-2">{t("business.reject")}</GhostButton>
         </div>
       ))}
     </div>
