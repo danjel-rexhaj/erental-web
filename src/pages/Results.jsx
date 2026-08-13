@@ -1,6 +1,7 @@
 import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal, Check } from "lucide-react";
 import { CarCard } from "../components";
 import { CAR_CATEGORIES, AMENITIES, CAR_BRANDS } from "../carData";
+import { useLang } from "../useLang";
 
 const categoryLabel = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
 const BRAND_ORDER = Object.keys(CAR_BRANDS);
@@ -16,14 +17,15 @@ function sortByBrandPopularity(brands) {
 
 const selectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
 
-function freeInLabel(lirohetMe, dataFillimit) {
+function freeInLabel(lirohetMe, dataFillimit, t) {
   const days = Math.round((new Date(lirohetMe) - new Date(dataFillimit)) / 86400000);
-  if (days <= 0) return "Lirohet sot";
-  if (days === 1) return "Lirohet neser";
-  return `Lirohet pas ${days} ditesh`;
+  if (days <= 0) return t("results.freeToday");
+  if (days === 1) return t("results.freeTomorrow");
+  return t("results.freeInDays", { days });
 }
 
 export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters }) {
+  const { t } = useLang();
 
   const brands = sortByBrandPopularity([...new Set(cars.map((c) => c.marka).filter(Boolean))]);
   const models = [...new Set(cars.filter((c) => !filters.marka || c.marka === filters.marka).map((c) => c.modeli).filter(Boolean))].sort();
@@ -70,7 +72,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
   return (
     <div>
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
-        <ChevronLeft size={16} /> Ndrysho datat
+        <ChevronLeft size={16} /> {t("results.changeDates")}
       </button>
 
       <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6 shadow-sm">
@@ -81,7 +83,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
               type="text"
               value={filters.search}
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-              placeholder="Kerko makine ose biznes..."
+              placeholder={t("results.searchPlaceholder")}
               className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition"
             />
           </div>
@@ -94,7 +96,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
                 : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
             }`}
           >
-            <SlidersHorizontal size={13} /> Filtro{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+            <SlidersHorizontal size={13} /> {t("common.filter")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </button>
           <span className="text-xs text-slate-400 ml-auto whitespace-nowrap">{dataFillimit} → {dataPerfundimit}</span>
         </div>
@@ -104,30 +106,30 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value, modeli: "" }))} className={selectClass}>
-                  <option value="">Te gjitha markat</option>
+                  <option value="">{t("results.allBrands")}</option>
                   {brands.map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
                 <select value={filters.modeli} onChange={(e) => setFilters((f) => ({ ...f, modeli: e.target.value }))} className={selectClass}>
-                  <option value="">Te gjitha modelet</option>
+                  <option value="">{t("results.allModels")}</option>
                   {models.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
                 <select value={filters.biznesi} onChange={(e) => setFilters((f) => ({ ...f, biznesi: e.target.value }))} className={selectClass}>
-                  <option value="">Te gjitha bizneset</option>
+                  <option value="">{t("results.allBusinesses")}</option>
                   {businesses.map(([id, emri]) => <option key={id} value={id}>{emri}</option>)}
                 </select>
                 <select value={filters.zona} onChange={(e) => setFilters((f) => ({ ...f, zona: e.target.value }))} className={selectClass}>
-                  <option value="">Te gjitha zonat</option>
+                  <option value="">{t("home.allZones")}</option>
                   {zones.map((z) => <option key={z} value={z}>{z}</option>)}
                 </select>
                 <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${selectClass} capitalize`}>
-                  <option value="">Te gjitha karburantet</option>
+                  <option value="">{t("results.allFuels")}</option>
                   <option value="diesel">Diesel</option>
                   <option value="benzine">Benzine</option>
                   <option value="hybrid">Hybrid</option>
                   <option value="elektrik">Elektrik</option>
                 </select>
                 <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={selectClass}>
-                  <option value="">Te gjitha kategorite</option>
+                  <option value="">{t("results.allCategories")}</option>
                   {categories.map((k) => <option key={k} value={k}>{categoryLabel(k)}</option>)}
                 </select>
                 <select
@@ -138,7 +140,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
                   }}
                   className={selectClass}
                 >
-                  <option value="">Viti nga</option>
+                  <option value="">{t("results.yearFrom")}</option>
                   {years.filter((y) => !filters.vitiMax || y <= Number(filters.vitiMax)).map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
                 <select
@@ -149,7 +151,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
                   }}
                   className={selectClass}
                 >
-                  <option value="">Viti deri</option>
+                  <option value="">{t("results.yearTo")}</option>
                   {years.filter((y) => !filters.vitiMin || y >= Number(filters.vitiMin)).map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
                 <input
@@ -157,17 +159,17 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
                   min={0}
                   value={filters.cmimiMax}
                   onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
-                  placeholder="Cmimi max/dite €"
+                  placeholder={t("results.maxPricePlaceholder")}
                   className={selectClass}
                 />
                 <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={selectClass}>
-                  <option value="">Rendit sipas</option>
-                  <option value="asc">Cmimi: me i ulet</option>
-                  <option value="desc">Cmimi: me i larte</option>
+                  <option value="">{t("common.sortBy")}</option>
+                  <option value="asc">{t("common.priceAsc")}</option>
+                  <option value="desc">{t("common.priceDesc")}</option>
                 </select>
               </div>
 
-              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-4 mb-1.5">Pajisje</p>
+              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-4 mb-1.5">{t("common.amenities")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {AMENITIES.map((a) => (
                   <button
@@ -187,20 +189,20 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
 
               {activeFilterCount > 0 && (
                 <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
-                  Pastro filtrat
+                  {t("common.clearFilters")}
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        <p className="text-xs text-slate-400 mt-3">{visibleCars.filter((c) => c.eshteELire !== false).length} makina te lira · {companyGroups.length} biznese</p>
+        <p className="text-xs text-slate-400 mt-3">{t("results.availableCars", { count: visibleCars.filter((c) => c.eshteELire !== false).length })} · {t("results.businessCount", { count: companyGroups.length })}</p>
       </div>
 
       {visibleCars.length === 0 && (
         <div className="text-center py-16">
           <CarIcon size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">Asnje makine e lire per keto data/filtra.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("results.noResults")}</p>
         </div>
       )}
 
@@ -212,7 +214,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
             onSelectCar={onSelectCar}
             onSelectCompany={onSelectCompany}
             nearMiss={car.eshteELire === false}
-            freeInLabel={car.eshteELire === false ? freeInLabel(car.lirohetMe, dataFillimit) : null}
+            freeInLabel={car.eshteELire === false ? freeInLabel(car.lirohetMe, dataFillimit, t) : null}
             isFavorited={favoriteIds?.has(car.carId)}
             onToggleFavorite={onToggleFavorite}
           />

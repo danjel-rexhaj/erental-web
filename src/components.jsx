@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart, Truck } from "lucide-react";
 import { decodeJwt } from "./api";
 import { generateInvoicePdf } from "./invoicePdf";
-
-const MUAJT_KAL = ["Janar", "Shkurt", "Mars", "Prill", "Maj", "Qershor", "Korrik", "Gusht", "Shtator", "Tetor", "Nentor", "Dhjetor"];
-const DITET_KAL = ["H", "M", "M", "E", "P", "S", "D"];
+import { useLang } from "./useLang";
+import { monthName, weekdayInitials } from "./dateFormat";
 
 export function AvailabilityCalendar({ ranges = [] }) {
+  const { t, lang } = useLang();
   const [monthOffset, setMonthOffset] = useState(0);
   const today = new Date();
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
@@ -32,11 +32,11 @@ export function AvailabilityCalendar({ ranges = [] }) {
     <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 max-w-xs">
       <div className="flex items-center justify-between mb-2">
         <button type="button" onClick={() => setMonthOffset((m) => m - 1)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><ChevronLeft size={14} /></button>
-        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">{MUAJT_KAL[month]} {year}</p>
+        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">{monthName(month, lang)} {year}</p>
         <button type="button" onClick={() => setMonthOffset((m) => m + 1)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><ChevronRight size={14} /></button>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center">
-        {DITET_KAL.map((d, i) => <span key={i} className="text-[10px] text-slate-400">{d}</span>)}
+        {weekdayInitials(lang).map((d, i) => <span key={i} className="text-[10px] text-slate-400">{d}</span>)}
         {cells.map((day, i) => (
           <span
             key={i}
@@ -52,7 +52,7 @@ export function AvailabilityCalendar({ ranges = [] }) {
       </div>
       <div className="flex items-center gap-1.5 mt-2">
         <span className="w-2.5 h-2.5 rounded bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800" />
-        <span className="text-[10px] text-slate-400">E zene</span>
+        <span className="text-[10px] text-slate-400">{t("common.booked")}</span>
       </div>
     </div>
   );
@@ -66,6 +66,7 @@ function isoDate(year, month, day) {
 // Click a day to start a range, click a later free day to complete it; clicking a booked
 // day is ignored, and picking past a booked gap simply restarts the selection at that day.
 export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
+  const { t, lang } = useLang();
   const [monthOffset, setMonthOffset] = useState(0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -131,11 +132,11 @@ export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
     <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3">
       <div className="flex items-center justify-between mb-2">
         <button type="button" onClick={() => setMonthOffset((m) => m - 1)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><ChevronLeft size={14} /></button>
-        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">{MUAJT_KAL[month]} {year}</p>
+        <p className="text-xs font-semibold text-slate-700 dark:text-slate-200">{monthName(month, lang)} {year}</p>
         <button type="button" onClick={() => setMonthOffset((m) => m + 1)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><ChevronRight size={14} /></button>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center">
-        {DITET_KAL.map((d, i) => <span key={i} className="text-[10px] text-slate-400">{d}</span>)}
+        {weekdayInitials(lang).map((d, i) => <span key={i} className="text-[10px] text-slate-400">{d}</span>)}
         {cells.map((day, i) => {
           if (day == null) return <span key={i} />;
           const booked = isBooked(day);
@@ -165,11 +166,11 @@ export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
       <div className="flex items-center gap-3 mt-2">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800" />
-          <span className="text-[10px] text-slate-400">E zene</span>
+          <span className="text-[10px] text-slate-400">{t("common.booked")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded bg-emerald-500" />
-          <span className="text-[10px] text-slate-400">Zgjedhur</span>
+          <span className="text-[10px] text-slate-400">{t("common.selected")}</span>
         </div>
       </div>
     </div>
@@ -218,6 +219,7 @@ export function GhostButton({ children, className = "", ...props }) {
 }
 
 export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, successInfo, token, onClose }) {
+  const { t } = useLang();
   const confirmim = `ER-${String(successInfo.bookingId).padStart(6, "0")}`;
 
   async function downloadInvoice() {
@@ -244,22 +246,22 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
         <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-3">
           <CheckCircle2 size={28} className="text-emerald-600 dark:text-emerald-400" />
         </div>
-        <h3 className="text-lg font-bold text-center text-slate-900 dark:text-slate-100 mb-1">Pagesa u krye ✓</h3>
-        <p className="text-sm text-center text-slate-500 dark:text-slate-400 mb-4">Rezervimi yt per {car.marka} {car.modeli} u konfirmua.</p>
+        <h3 className="text-lg font-bold text-center text-slate-900 dark:text-slate-100 mb-1">{t("paymentSuccess.title")}</h3>
+        <p className="text-sm text-center text-slate-500 dark:text-slate-400 mb-4">{t("paymentSuccess.confirmedFor", { car: `${car.marka} ${car.modeli}` })}</p>
 
         <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 mb-4 text-xs space-y-1.5">
-          <div className="flex justify-between"><span className="text-slate-400">Konfirmimi</span><span className="font-semibold text-slate-900 dark:text-slate-100">{confirmim}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Datat</span><span className="font-semibold text-slate-900 dark:text-slate-100">{dataFillimit} → {dataPerfundimit}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Shuma e paguar</span><span className="font-semibold text-emerald-700 dark:text-emerald-400">{successInfo.amountPaid}€</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">{t("paymentSuccess.confirmation")}</span><span className="font-semibold text-slate-900 dark:text-slate-100">{confirmim}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">{t("paymentSuccess.dates")}</span><span className="font-semibold text-slate-900 dark:text-slate-100">{dataFillimit} → {dataPerfundimit}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">{t("paymentSuccess.amountPaid")}</span><span className="font-semibold text-emerald-700 dark:text-emerald-400">{successInfo.amountPaid}€</span></div>
         </div>
 
         <button
           onClick={downloadInvoice}
           className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 mb-2 hover:bg-slate-50 dark:hover:bg-slate-700"
         >
-          <Download size={15} /> Shkarko faturen
+          <Download size={15} /> {t("paymentSuccess.downloadInvoice")}
         </button>
-        <PrimaryButton onClick={onClose}>Kthehu</PrimaryButton>
+        <PrimaryButton onClick={onClose}>{t("paymentSuccess.close")}</PrimaryButton>
       </div>
     </div>
   );
@@ -275,6 +277,7 @@ export function CarPhoto({ car }) {
 }
 
 export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLabel, showCompany = true, isFavorited, onToggleFavorite }) {
+  const { t } = useLang();
   return (
     <div
       onClick={() => onSelectCar(car)}
@@ -297,7 +300,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
           <button
             onClick={(e) => { e.stopPropagation(); onToggleFavorite(car); }}
             className={`absolute right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition ${nearMiss && freeInLabel ? "top-10" : "top-2"}`}
-            title={isFavorited ? "Hiq nga te preferuarat" : "Shto te preferuarat"}
+            title={isFavorited ? t("common.favoriteRemove") : t("common.favoriteAdd")}
           >
             <Heart size={15} className={isFavorited ? "text-red-500 fill-red-500" : "text-slate-500 dark:text-slate-300"} />
           </button>
@@ -306,7 +309,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
       <div className="p-3">
         <div className="flex items-start justify-between">
           <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{car.marka} {car.modeli}</p>
-          <span className="text-xs font-bold text-white bg-slate-900 dark:bg-slate-700 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites}€/dite</span>
+          <span className="text-xs font-bold text-white bg-slate-900 dark:bg-slate-700 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites}€{t("common.perDaySuffix")}</span>
         </div>
         {showCompany && (
           <span
@@ -315,7 +318,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
           >
             <Building2 size={11} /> {car.company?.emri}
             {car.company?.eshteVerifikuar && <ShieldCheck size={11} className="text-emerald-600" />}
-            {car.company?.ofronDergimMakine && <Truck size={11} className="text-teal-600" title="Ofron dergim makine te klienti" />}
+            {car.company?.ofronDergimMakine && <Truck size={11} className="text-teal-600" title={t("common.offersDelivery")} />}
             {car.company?.avgRating != null && (
               <span className="flex items-center gap-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200 ml-1">
                 <Star size={11} className="text-amber-400 fill-amber-400" /> {car.company.avgRating} <span className="text-slate-400 dark:text-slate-500 font-normal">({car.company.reviewCount})</span>
@@ -333,7 +336,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
             onClick={(e) => { e.stopPropagation(); onSelectCar(car); }}
             className="text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1.5 rounded-lg transition"
           >
-            Rezervo
+            {t("common.reserve")}
           </button>
         </div>
       </div>
@@ -342,14 +345,17 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
 }
 
 export function StatusPill({ status }) {
+  const { t } = useLang();
   const map = {
-    pending: { cls: "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300", label: "Ne pritje" },
-    confirmed: { cls: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300", label: "Konfirmuar" },
-    completed: { cls: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300", label: "Perfunduar" },
-    cancelled: { cls: "bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300", label: "Anuluar" },
+    pending: { cls: "bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300", key: "common.status.pending" },
+    confirmed: { cls: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300", key: "common.status.confirmed" },
+    completed: { cls: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300", key: "common.status.completed" },
+    cancelled: { cls: "bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300", key: "common.status.cancelled" },
   };
-  const s = map[status] || { cls: "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300", label: status };
-  return <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>;
+  const s = map[status];
+  const cls = s?.cls || "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300";
+  const label = s ? t(s.key) : status;
+  return <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${cls}`}>{label}</span>;
 }
 
 const TIRANA = [41.3275, 19.8189];
@@ -375,6 +381,7 @@ function loadLeaflet(onReady) {
 }
 
 export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) {
+  const { t } = useLang();
   const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState([adresa, qyteti].filter(Boolean).join(", "));
   const [results, setResults] = useState([]);
@@ -411,14 +418,14 @@ export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) 
   }, [coords]);
 
   async function searchAddress() {
-    if (!query.trim()) { showError(new Error("Shkruaj diçka per te kerkuar.")); return; }
+    if (!query.trim()) { showError(new Error(t("locationPicker.errEmptyQuery"))); return; }
     setBusy(true);
     setResults([]);
     try {
       const q = encodeURIComponent(query);
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=al&q=${q}`);
       const data = await res.json();
-      if (!data.length) { showError(new Error("Nuk u gjet asgje me kete emer. Provo tjeter, ose kliko direkt ne harte per te vendosur piken.")); return; }
+      if (!data.length) { showError(new Error(t("locationPicker.errNoResults"))); return; }
       setResults(data);
     } catch (e) { showError(e); } finally { setBusy(false); }
   }
@@ -429,11 +436,11 @@ export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) 
   }
 
   function useGps() {
-    if (!navigator.geolocation) { showError(new Error("Shfletuesi yt nuk mbeshtet vendndodhjen.")); return; }
+    if (!navigator.geolocation) { showError(new Error(t("locationPicker.errNoGeoSupport"))); return; }
     setBusy(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => { onChange({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }); setBusy(false); },
-      () => { showError(new Error("Nuk u lejua akses ne vendndodhje.")); setBusy(false); },
+      () => { showError(new Error(t("locationPicker.errGeoDenied"))); setBusy(false); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
@@ -448,11 +455,11 @@ export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) 
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); searchAddress(); } }}
-          placeholder="Plaza Tirane, Rruga Kavajes..."
+          placeholder={t("locationPicker.searchPlaceholder")}
           className="flex-1 min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-teal-600"
         />
         <button type="button" onClick={searchAddress} disabled={busy} className={btnClass}>
-          <Search size={13} /> {busy ? "..." : "Kerko"}
+          <Search size={13} /> {busy ? "..." : t("common.search")}
         </button>
         <button type="button" onClick={useGps} disabled={busy} className={btnClass}>
           <Crosshair size={13} /> GPS
@@ -467,10 +474,10 @@ export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) 
           ))}
         </div>
       )}
-      <p className="text-[10px] text-slate-400 mt-1">Kerko me emer/adrese, ose kliko/terhiq piken direkt ne harte per ta vendosur vete.</p>
+      <p className="text-[10px] text-slate-400 mt-1">{t("locationPicker.hint")}</p>
       <div ref={mapElRef} className="mt-2 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 h-52" />
       {coords && (
-        <p className="flex items-center gap-1 text-[11px] text-teal-700 dark:text-teal-400 font-medium mt-1"><MapPin size={11} /> Vendndodhja u vendos</p>
+        <p className="flex items-center gap-1 text-[11px] text-teal-700 dark:text-teal-400 font-medium mt-1"><MapPin size={11} /> {t("locationPicker.locationSet")}</p>
       )}
     </div>
   );
