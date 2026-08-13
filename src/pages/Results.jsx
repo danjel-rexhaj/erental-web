@@ -3,7 +3,7 @@ import { CarCard } from "../components";
 import { CAR_CATEGORIES, AMENITIES, CAR_BRANDS } from "../carData";
 import { useLang } from "../useLang";
 
-const categoryLabel = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
+const categoryLabel = (key, t) => (CAR_CATEGORIES.some((c) => c.key === key) ? t(`category.${key}`) : key);
 const BRAND_ORDER = Object.keys(CAR_BRANDS);
 function sortByBrandPopularity(brands) {
   return [...brands].sort((a, b) => {
@@ -130,7 +130,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
                 </select>
                 <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={selectClass}>
                   <option value="">{t("results.allCategories")}</option>
-                  {categories.map((k) => <option key={k} value={k}>{categoryLabel(k)}</option>)}
+                  {categories.map((k) => <option key={k} value={k}>{categoryLabel(k, t)}</option>)}
                 </select>
                 <select
                   value={filters.vitiMin}
@@ -182,7 +182,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
                         : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
                     }`}
                   >
-                    {filters.amenities.includes(a.key) && <Check size={11} />} {a.label}
+                    {filters.amenities.includes(a.key) && <Check size={11} />} {t(`amenity.${a.key}`)}
                   </button>
                 ))}
               </div>

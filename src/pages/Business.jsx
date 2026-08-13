@@ -1023,7 +1023,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         <Field label={t("business.carField.plate")}><input required className={inputClass} value={form.targa} onChange={set("targa")} placeholder="AA123BB" /></Field>
         <Field label={t("business.carField.category")}>
           <select className={inputClass} value={form.kategoria} onChange={set("kategoria")}>
-            {CAR_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+            {CAR_CATEGORIES.map((c) => <option key={c.key} value={c.key}>{t(`category.${c.key}`)}</option>)}
           </select>
         </Field>
         <Field label={t("car.spec.seats")}><input type="number" className={inputClass} value={form.numriVendeve} onChange={set("numriVendeve")} /></Field>
@@ -1036,7 +1036,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         <div className="grid grid-cols-2 gap-1.5">
           {AMENITIES.map((a) => (
             <label key={a.key} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-              <input type="checkbox" checked={form.amenities.includes(a.key)} onChange={() => toggleAmenity(a.key)} /> {a.label}
+              <input type="checkbox" checked={form.amenities.includes(a.key)} onChange={() => toggleAmenity(a.key)} /> {t(`amenity.${a.key}`)}
             </label>
           ))}
         </div>

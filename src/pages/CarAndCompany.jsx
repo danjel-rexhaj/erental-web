@@ -18,7 +18,7 @@ function addDaysIso(iso, days) {
 }
 
 const companySelectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
-const categoryLabelCompany = (key) => CAR_CATEGORIES.find((c) => c.key === key)?.label || key;
+const categoryLabelCompany = (key, t) => (CAR_CATEGORIES.some((c) => c.key === key) ? t(`category.${key}`) : key);
 const BRAND_ORDER_COMPANY = Object.keys(CAR_BRANDS);
 function sortByBrandPopularityCompany(brands) {
   return [...brands].sort((a, b) => {
@@ -53,7 +53,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const mainPhoto = photos.find((p) => p.eshteKryesore) || photos[0];
   const [activePhoto, setActivePhoto] = useState(mainPhoto);
   const shown = activePhoto || mainPhoto;
-  const slotLabel = (kategoria) => PHOTO_SLOTS.find((s) => s.key === kategoria)?.label;
+  const slotLabel = (kategoria) => (PHOTO_SLOTS.some((s) => s.key === kategoria) ? t(`photoSlot.${kategoria}`) : undefined);
 
   useEffect(() => {
     apiFetch(`/Cars/${car.carId}/view`, token, { method: "POST" }).catch(() => {});
@@ -170,7 +170,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               <div className="flex flex-wrap gap-2">
                 {car.amenities.map((key) => (
                   <span key={key} className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
-                    <Check size={12} className="text-emerald-600 dark:text-emerald-400" /> {AMENITIES.find((a) => a.key === key)?.label || key}
+                    <Check size={12} className="text-emerald-600 dark:text-emerald-400" /> {AMENITIES.some((a) => a.key === key) ? t(`amenity.${key}`) : key}
                   </span>
                 ))}
               </div>
@@ -695,7 +695,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
               </select>
               <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={companySelectClass}>
                 <option value="">{t("results.allCategories")}</option>
-                {categories.map((k) => <option key={k} value={k}>{categoryLabelCompany(k)}</option>)}
+                {categories.map((k) => <option key={k} value={k}>{categoryLabelCompany(k, t)}</option>)}
               </select>
               <select
                 value={filters.vitiMin}
@@ -747,7 +747,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
                       : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
                   }`}
                 >
-                  {filters.amenities.includes(a.key) && <Check size={11} />} {a.label}
+                  {filters.amenities.includes(a.key) && <Check size={11} />} {t(`amenity.${a.key}`)}
                 </button>
               ))}
             </div>

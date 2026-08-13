@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Download, Share, X, PlusSquare } from "lucide-react";
+import { useLang } from "./useLang";
 
 // Android/Chrome (and desktop Chrome/Edge) fire beforeinstallprompt for an installable PWA — we
 // capture it so our own button can trigger the native install dialog with one click. iOS Safari
 // has no such API at all (Apple restricts "Add to Home Screen" to the manual Share-sheet action),
 // so there we can only show instructions instead of a real one-click install.
 export function InstallPwaButton() {
+  const { t } = useLang();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -52,30 +54,30 @@ export function InstallPwaButton() {
       <button
         onClick={handleClick}
         className="flex items-center gap-1.5 text-xs font-semibold text-white bg-emerald-700 rounded-full px-3 py-1.5 hover:bg-emerald-800 transition whitespace-nowrap shrink-0"
-        title="Shkarko ERental si aplikacion"
+        title={t("pwa.downloadTitle")}
       >
-        <Download size={13} /> Shkarko App
+        <Download size={13} /> {t("pwa.downloadApp")}
       </button>
 
       {showIosHelp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowIosHelp(false)}>
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
-              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Shto ERental ne ekranin kryesor</h3>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">{t("pwa.addToHomeScreen")}</h3>
               <button onClick={() => setShowIosHelp(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0"><X size={16} /></button>
             </div>
             <ol className="text-sm text-slate-700 dark:text-slate-200 space-y-4">
               <li className="flex items-center gap-3">
                 <span className="shrink-0 w-8 h-8 rounded-full bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">1</span>
-                <span className="flex items-center gap-1.5 flex-wrap">Shtyp ikonen <Share size={16} className="text-emerald-700 dark:text-emerald-400" /> "Share" poshte ne Safari.</span>
+                <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step1Before")} <Share size={16} className="text-emerald-700 dark:text-emerald-400" /> {t("pwa.step1After")}</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="shrink-0 w-8 h-8 rounded-full bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">2</span>
-                <span className="flex items-center gap-1.5 flex-wrap">Zgjidh <PlusSquare size={16} className="text-emerald-700 dark:text-emerald-400" /> "Add to Home Screen".</span>
+                <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step2Before")} <PlusSquare size={16} className="text-emerald-700 dark:text-emerald-400" /> {t("pwa.step2After")}</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="shrink-0 w-8 h-8 rounded-full bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">3</span>
-                <span>Shtyp "Add" — gati, ikona ERental del ne ekranin tend.</span>
+                <span>{t("pwa.step3")}</span>
               </li>
             </ol>
           </div>

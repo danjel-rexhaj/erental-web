@@ -40,27 +40,28 @@ export const CAR_BRANDS = {
   [OTHER_BRAND]: [],
 };
 
+// Display labels for these keys live in src/i18n.jsx under amenity.*/category.*, not here.
 export const AMENITIES = [
-  { key: "bluetooth", label: "Bluetooth" },
-  { key: "gps", label: "GPS / Navigacion" },
-  { key: "kamera_pas", label: "Kamera pas" },
-  { key: "sensore_parkimi", label: "Sensore parkimi" },
-  { key: "sedilje_lekuri", label: "Sedilje lekuri" },
-  { key: "sunroof", label: "Sunroof" },
-  { key: "usb", label: "USB / Karikim" },
-  { key: "sedilje_bebe", label: "Sedilje per bebe" },
-  { key: "sedilje_femije", label: "Sedilje per femije" },
-  { key: "traksion_4x4", label: "Traksion 4x4" },
-  { key: "bagazh_i_madh", label: "Bagazh i madh" },
+  { key: "bluetooth" },
+  { key: "gps" },
+  { key: "kamera_pas" },
+  { key: "sensore_parkimi" },
+  { key: "sedilje_lekuri" },
+  { key: "sunroof" },
+  { key: "usb" },
+  { key: "sedilje_bebe" },
+  { key: "sedilje_femije" },
+  { key: "traksion_4x4" },
+  { key: "bagazh_i_madh" },
 ];
 
 export const CAR_CATEGORIES = [
-  { key: "economy", label: "Ekonomike" },
-  { key: "compact", label: "E vogel / Kompakte" },
-  { key: "sedan", label: "Sedan" },
-  { key: "suv", label: "SUV" },
-  { key: "luxury", label: "Luks" },
-  { key: "van", label: "Van / Minibus" },
+  { key: "economy" },
+  { key: "compact" },
+  { key: "sedan" },
+  { key: "suv" },
+  { key: "luxury" },
+  { key: "van" },
 ];
 
 export const ALBANIAN_LOCATIONS = [
@@ -76,12 +77,13 @@ export const NATIONALITIES = [
   "Suedi", "Turqi", "SHBA", "Tjeter",
 ];
 
+// Display labels for these keys live in src/i18n.jsx under photoSlot.*, not here.
 export const PHOTO_SLOTS = [
-  { key: "front", label: "Para" },
-  { key: "back", label: "Mbrapa" },
-  { key: "left", label: "Anash (e majte)" },
-  { key: "right", label: "Anash (e djathte)" },
-  { key: "interior_front", label: "Brenda - vendet para" },
-  { key: "interior_back", label: "Brenda - vendet mbrapa" },
-  { key: "trunk", label: "Bagazhi" },
+  { key: "front" },
+  { key: "back" },
+  { key: "left" },
+  { key: "right" },
+  { key: "interior_front" },
+  { key: "interior_back" },
+  { key: "trunk" },
 ];

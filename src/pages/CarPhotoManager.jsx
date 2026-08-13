@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Upload, X as XIcon, Star } from "lucide-react";
 import { apiFetch } from "../api";
 import { PHOTO_SLOTS } from "../carData";
+import { useLang } from "../useLang";
 
 export default function CarPhotoManager({ carId, token, photos, onChanged, showError }) {
+  const { t } = useLang();
   const [busyKey, setBusyKey] = useState(null);
 
   const byCategory = {};
@@ -48,7 +50,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
 
   return (
     <div>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Foto ({totalCount}/7)</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{t("photos.count", { count: totalCount })}</p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {PHOTO_SLOTS.map((slot) => {
           const photo = byCategory[slot.key];
@@ -57,10 +59,10 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
           if (photo) {
             return (
               <div key={slot.key} className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-                <img src={photo.urlFotos} alt={slot.label} className="w-full h-20 object-cover" />
-                <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-1.5 py-0.5">{slot.label}</span>
+                <img src={photo.urlFotos} alt={t(`photoSlot.${slot.key}`)} className="w-full h-20 object-cover" />
+                <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-1.5 py-0.5">{t(`photoSlot.${slot.key}`)}</span>
                 {photo.eshteKryesore ? (
-                  <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-5 h-5 flex items-center justify-center" title="Foto kryesore">
+                  <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-5 h-5 flex items-center justify-center" title={t("business.mainPhoto")}>
                     <Star size={11} className="fill-current" />
                   </span>
                 ) : (
@@ -69,7 +71,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
                     onClick={() => handleSetMain(photo.photoId)}
                     disabled={busyKey === `main-${photo.photoId}`}
                     className="absolute top-1 left-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-amber-500"
-                    title="Beje foto kryesore"
+                    title={t("photos.makeMain")}
                   >
                     <Star size={11} />
                   </button>
@@ -94,7 +96,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
               }`}
             >
               <Upload size={14} />
-              <span className="text-[10px] leading-tight">{uploading ? "Duke ngarkuar..." : slot.label}</span>
+              <span className="text-[10px] leading-tight">{uploading ? t("common.loading") : t(`photoSlot.${slot.key}`)}</span>
               <input
                 type="file"
                 accept="image/*"
@@ -109,13 +111,13 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
 
       {others.length > 0 && (
         <div className="mt-3">
-          <p className="text-[11px] text-slate-400 mb-1">Foto te tjera</p>
+          <p className="text-[11px] text-slate-400 mb-1">{t("photos.otherPhotos")}</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {others.map((photo) => (
               <div key={photo.photoId} className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
                 <img src={photo.urlFotos} alt="" className="w-full h-20 object-cover" />
                 {photo.eshteKryesore ? (
-                  <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-5 h-5 flex items-center justify-center" title="Foto kryesore">
+                  <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-5 h-5 flex items-center justify-center" title={t("business.mainPhoto")}>
                     <Star size={11} className="fill-current" />
                   </span>
                 ) : (
@@ -124,7 +126,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
                     onClick={() => handleSetMain(photo.photoId)}
                     disabled={busyKey === `main-${photo.photoId}`}
                     className="absolute top-1 left-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-amber-500"
-                    title="Beje foto kryesore"
+                    title={t("photos.makeMain")}
                   >
                     <Star size={11} />
                   </button>
