@@ -1,5 +1,16 @@
 export const API_BASE = import.meta.env.VITE_API_BASE || "https://localhost:7096/api";
 
+// Not a React module, so no useLang() -- these two fallback strings (never backend-authored)
+// are looked up directly against the same localStorage key i18n.jsx itself reads from.
+const API_TEXT = {
+  sq: { networkDown: "S'u lidh dot me serverin. Kontrollo qe backend-i (Visual Studio) te jete duke punuar.", genericError: (status) => `Gabim ${status}` },
+  en: { networkDown: "Couldn't connect to the server. Check that the backend (Visual Studio) is running.", genericError: (status) => `Error ${status}` },
+};
+function apiText() {
+  const lang = localStorage.getItem("lang") === "en" ? "en" : "sq";
+  return API_TEXT[lang];
+}
+
 export function decodeJwt(token) {
   try {
     const payload = token.split(".")[1];
@@ -33,7 +44,7 @@ export function todayPlus(days) {
 // license photo endpoints. Returns an object URL good only in this tab; caller must revoke it.
 export async function apiFetchBlob(path, token) {
   const res = await fetch(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) throw new Error(`Gabim ${res.status}`);
+  if (!res.ok) throw new Error(apiText().genericError(res.status));
   const blob = await res.blob();
   return URL.createObjectURL(blob);
 }
@@ -48,7 +59,7 @@ export async function apiFetch(path, token, options = {}) {
   try {
     res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   } catch {
-    throw new Error("S'u lidh dot me serverin. Kontrollo qe backend-i (Visual Studio) te jete duke punuar.");
+    throw new Error(apiText().networkDown);
   }
   const text = await res.text();
   let data = null;
@@ -58,8 +69,8 @@ export async function apiFetch(path, token, options = {}) {
     data = text;
   }
   if (!res.ok) {
-    const msg = typeof data === "string" ? data : data?.message || data?.title || `Gabim ${res.status}`;
-    throw new Error(msg || `Gabim ${res.status}`);
+    const msg = typeof data === "string" ? data : data?.message || data?.title || apiText().genericError(res.status);
+    throw new Error(msg || apiText().genericError(res.status));
   }
   return data;
 }

@@ -219,7 +219,7 @@ export function GhostButton({ children, className = "", ...props }) {
 }
 
 export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, successInfo, token, onClose }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const confirmim = `ER-${String(successInfo.bookingId).padStart(6, "0")}`;
 
   async function downloadInvoice() {
@@ -237,6 +237,7 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
       clientLabel: decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
       company: car.company,
       cardLast4: successInfo.cardLast4,
+      lang,
     });
   }
 

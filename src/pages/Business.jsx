@@ -96,7 +96,7 @@ function PaymentBadge({ b }) {
 }
 
 function CompanyBookings({ token, showError, showOk, highlightBookingId, company, refreshKey, onChanged }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState(null);
@@ -180,6 +180,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
       clientLabel: `${b.klienti.emri} ${b.klienti.mbiemri}`,
       company,
       cardLast4: b.payment?.cardLast4,
+      lang,
     });
   }
 

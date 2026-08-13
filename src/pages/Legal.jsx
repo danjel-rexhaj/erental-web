@@ -184,7 +184,7 @@ export function Careers({ showError }) {
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">{t("legal.careers.subtitle")}</p>
       <a href={`mailto:${SUPPORT_EMAIL}`} className="text-xs text-emerald-700 dark:text-emerald-400 underline">{SUPPORT_EMAIL}</a>
       <form onSubmit={submit} className="mt-4">
-        <Field label={t("legal.careers.fullName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="Emri Mbiemri" /></Field>
+        <Field label={t("legal.careers.fullName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder={t("legal.careers.namePlaceholder")} /></Field>
         <Field label="Email"><input required type="email" className={inputClass} value={form.email} onChange={set("email")} placeholder="ti@email.com" /></Field>
         <Field label={t("legal.careers.desiredPosition")}><input className={inputClass} value={form.pozicioni} onChange={set("pozicioni")} placeholder={t("legal.careers.positionPlaceholder")} /></Field>
         <Field label={t("legal.careers.shortMessage")}>
