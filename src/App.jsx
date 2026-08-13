@@ -122,7 +122,7 @@ export default function App() {
     }
   }, []);
 
-  const { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications } = useNotifications(token, handleAvailabilityChanged, handleLiveNotification);
+  const { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications, connection: hubConnection } = useNotifications(token, handleAvailabilityChanged, handleLiveNotification);
 
   // ---- URL routing (hash-based: no server rewrite needed, refresh/back/forward all just work) ----
   const VIEW_TO_HASH = {
@@ -348,6 +348,7 @@ export default function App() {
             : () => go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`)}
           onSelectCompany={(id) => go(`/kompania/${id}?nga_faqja=makina&makina=${selectedCar.carId}`, { cars })}
           onGoToBookings={() => go("/rezervimet")}
+          hubConnection={hubConnection}
           token={token}
           needAuth={() => go("/profili")}
           goToProfile={() => go("/profili")}

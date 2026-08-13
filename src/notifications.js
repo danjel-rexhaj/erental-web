@@ -7,6 +7,9 @@ const HUB_URL = API_BASE.replace(/\/api$/, "") + "/hubs/notifications";
 export function useNotifications(token, onAvailabilityChanged, onNotification) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  // Set only once the connection actually reaches "Connected", so consumers that receive this
+  // (e.g. CarDetail joining a car's group) never invoke a hub method before it's ready.
+  const [connection, setConnection] = useState(null);
   const connectionRef = useRef(null);
   const availabilityCbRef = useRef(onAvailabilityChanged);
   availabilityCbRef.current = onAvailabilityChanged;
@@ -15,46 +18,44 @@ export function useNotifications(token, onAvailabilityChanged, onNotification) {
 
   useEffect(() => {
     if (!token) {
-      if (connectionRef.current) {
-        connectionRef.current.stop();
-        connectionRef.current = null;
-      }
       setNotifications([]);
       setUnreadCount(0);
-      return;
+    } else {
+      apiFetch("/Notifications", token)
+        .then((list) => {
+          setNotifications(list);
+          setUnreadCount(list.filter((n) => !n.isRead).length);
+        })
+        .catch(() => {});
     }
 
-    apiFetch("/Notifications", token)
-      .then((list) => {
-        setNotifications(list);
-        setUnreadCount(list.filter((n) => !n.isRead).length);
-      })
-      .catch(() => {});
-
+    // The hub itself isn't [Authorize]-gated (car availability updates are public), so the
+    // connection is opened even when logged out — only the accessTokenFactory is conditional.
     let cancelled = false;
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(HUB_URL, { accessTokenFactory: () => token })
+    const conn = new signalR.HubConnectionBuilder()
+      .withUrl(HUB_URL, token ? { accessTokenFactory: () => token } : {})
       .withAutomaticReconnect()
       .build();
 
-    connection.on("notification", (data) => {
+    conn.on("notification", (data) => {
       setNotifications((prev) => [{ ...data, isRead: false }, ...prev].slice(0, 30));
       setUnreadCount((c) => c + 1);
       if (notificationCbRef.current) notificationCbRef.current(data);
     });
 
-    connection.on("availabilityChanged", (data) => {
+    conn.on("availabilityChanged", (data) => {
       if (availabilityCbRef.current) availabilityCbRef.current(data);
     });
 
-    connection.start().catch((err) => {
-      if (!cancelled) console.error("SignalR error:", err);
-    });
-    connectionRef.current = connection;
+    conn.start()
+      .then(() => { if (!cancelled) setConnection(conn); })
+      .catch((err) => { if (!cancelled) console.error("SignalR error:", err); });
+    connectionRef.current = conn;
 
     return () => {
       cancelled = true;
-      connection.stop();
+      setConnection(null);
+      conn.stop();
     };
   }, [token]);
 
@@ -75,5 +76,5 @@ export function useNotifications(token, onAvailabilityChanged, onNotification) {
     apiFetch("/Notifications", token, { method: "DELETE" }).catch(() => {});
   }, [token]);
 
-  return { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications };
+  return { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications, connection };
 }

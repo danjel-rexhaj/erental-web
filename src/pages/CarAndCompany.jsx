@@ -30,7 +30,7 @@ function sortByBrandPopularityCompany(brands) {
   });
 }
 
-export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner, favoriteIds, onToggleFavorite }) {
+export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner, favoriteIds, onToggleFavorite, hubConnection }) {
   const { t, lang } = useLang();
   const [bookedRanges, setBookedRanges] = useState([]);
   const [hasLicense, setHasLicense] = useState(null);
@@ -62,6 +62,23 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   useEffect(() => {
     apiFetch(`/Cars/${car.carId}/availability`, null).then(setBookedRanges).catch(() => {});
   }, [car.carId]);
+
+  // Live-updates the calendar when the business blocks/unblocks dates or a booking gets
+  // confirmed/cancelled elsewhere, without the client needing to refresh this page.
+  useEffect(() => {
+    if (!hubConnection) return;
+    hubConnection.invoke("JoinCarGroup", car.carId).catch(() => {});
+    const onAvailabilityChanged = (data) => {
+      if (data?.carId === car.carId) {
+        apiFetch(`/Cars/${car.carId}/availability`, null).then(setBookedRanges).catch(() => {});
+      }
+    };
+    hubConnection.on("availabilityChanged", onAvailabilityChanged);
+    return () => {
+      hubConnection.off("availabilityChanged", onAvailabilityChanged);
+      hubConnection.invoke("LeaveCarGroup", car.carId).catch(() => {});
+    };
+  }, [hubConnection, car.carId]);
 
   useEffect(() => {
     if (!token) return;
