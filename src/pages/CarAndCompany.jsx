@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal } from "../components";
 import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS } from "../carData";
@@ -181,42 +181,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             </div>
             <div className="flex items-center justify-between mt-2">
               {matchedOffer ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full w-fit">Çmim special për {days} net</span>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full w-fit">Çmim special për {days} ditë</span>
               ) : (
                 <p className="text-xs text-slate-500 dark:text-slate-400">{days} dite × {car.cmimiDites}€</p>
               )}
             </div>
             <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
           </div>
-
-          {car.priceOffers && car.priceOffers.length > 0 && (
-            <div className="mt-5">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Oferta te disponueshme</p>
-              <div className="flex flex-wrap gap-2">
-                {car.priceOffers.map((o) => {
-                  const active = o.dite === days;
-                  return (
-                    <button
-                      key={o.dite}
-                      type="button"
-                      onClick={() => {
-                        const from = activeFrom || new Date().toISOString().split("T")[0];
-                        setSelFrom(from);
-                        setSelTo(addDaysIso(from, o.dite));
-                      }}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition ${
-                        active
-                          ? "text-white bg-teal-600 border-teal-600"
-                          : "text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-teal-400 dark:hover:border-teal-600"
-                      }`}
-                    >
-                      {o.dite} net · {o.cmimiTotal}€
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
           <div className="mt-5">
             <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
@@ -257,29 +228,66 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           )}
         </div>
 
-        {car.company?.qyteti && (
-          <div className="lg:col-span-3 lg:row-start-2 order-3 border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
-
-            {mapEmbedUrl && (
-              <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
-                <iframe
-                  title="Vendndodhja e biznesit"
-                  src={mapEmbedUrl}
-                  className="w-full h-64 border-0"
-                />
+        {(car.priceOffers?.length > 0 || car.company?.qyteti) && (
+          <div className="lg:col-span-3 lg:row-start-2 order-3 flex flex-col gap-5">
+            {car.priceOffers && car.priceOffers.length > 0 && (
+              <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><Tag size={16} className="text-teal-600 dark:text-teal-400" /> Oferta te disponueshme</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">Zgjidh nje kohezgjatje per te perfituar nga cmimi i posacem.</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {car.priceOffers.map((o) => {
+                    const active = o.dite === days;
+                    const perDite = (o.cmimiTotal / o.dite).toFixed(0);
+                    return (
+                      <button
+                        key={o.dite}
+                        type="button"
+                        onClick={() => {
+                          const from = activeFrom || new Date().toISOString().split("T")[0];
+                          setSelFrom(from);
+                          setSelTo(addDaysIso(from, o.dite));
+                        }}
+                        className={`text-left rounded-xl border p-3 transition ${
+                          active
+                            ? "border-teal-600 bg-teal-50 dark:bg-teal-900/20"
+                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-teal-300 dark:hover:border-teal-700"
+                        }`}
+                      >
+                        <p className={`text-xs font-semibold ${active ? "text-teal-700 dark:text-teal-300" : "text-slate-500 dark:text-slate-400"}`}>{o.dite} ditë</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{o.cmimiTotal}€</p>
+                        <p className="text-[11px] text-slate-400">~{perDite}€/ditë</p>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
-            <a
-              href={directionsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-4 py-2.5"
-            >
-              <MapPin size={15} /> Merr udhezime
-            </a>
+            {car.company?.qyteti && (
+              <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-teal-600 dark:text-teal-400" /> Ku ndodhet dhe merret makina</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
+
+                {mapEmbedUrl && (
+                  <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
+                    <iframe
+                      title="Vendndodhja e biznesit"
+                      src={mapEmbedUrl}
+                      className="w-full h-64 border-0"
+                    />
+                  </div>
+                )}
+
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-700 hover:bg-teal-800 rounded-xl px-4 py-2.5"
+                >
+                  <MapPin size={15} /> Merr udhezime
+                </a>
+              </div>
+            )}
           </div>
         )}
 
