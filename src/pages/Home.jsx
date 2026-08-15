@@ -123,7 +123,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
       </div>
 
       <div className="mt-6 overflow-x-auto">
-        <div className="flex gap-3 w-max">
+        <div className="flex gap-3 w-max sm:w-full sm:grid sm:grid-cols-3 lg:grid-cols-6">
           {[
             { Icon: Lock, title: t("home.trustFeesTitle"), sub: t("home.trustFeesSub") },
             { Icon: RotateCcw, title: t("home.trustCancelTitle"), sub: t("home.trustCancelSub") },
@@ -132,13 +132,14 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             { Icon: Zap, title: t("home.trustClickTitle"), sub: t("home.trustClickSub") },
             { Icon: Clock, title: t("home.trustFastTitle"), sub: t("home.trustFastSub") },
           ].map(({ Icon, title, sub }, i) => (
-            <div key={i} className="shrink-0 w-[160px] flex flex-col gap-2.5 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 bg-white dark:bg-slate-800">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-500 dark:from-emerald-600 dark:to-teal-600 flex items-center justify-center shrink-0">
-                <Icon size={18} className="text-white" />
+            <div key={i} className="shrink-0 w-[160px] sm:w-auto flex flex-col gap-2.5 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-5 bg-white dark:bg-slate-800">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-500 dark:from-emerald-600 dark:to-teal-600 flex items-center justify-center shrink-0">
+                <Icon size={18} className="text-white sm:hidden" />
+                <Icon size={22} className="text-white hidden sm:block" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight">{title}</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">{sub}</p>
+                <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">{title}</p>
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-tight mt-0.5">{sub}</p>
               </div>
             </div>
           ))}

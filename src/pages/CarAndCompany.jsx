@@ -347,31 +347,33 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
                 <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><Tag size={16} className="text-sky-600 dark:text-teal-400" /> {t("car.priceOffers.title")}</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{t("car.priceOffers.subtitle")}</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {car.priceOffers.map((o) => {
-                    const active = o.dite === days;
-                    const perDite = (o.cmimiTotal / o.dite).toFixed(0);
-                    return (
-                      <button
-                        key={o.dite}
-                        type="button"
-                        onClick={() => {
-                          const from = activeFrom || new Date().toISOString().split("T")[0];
-                          setSelFrom(from);
-                          setSelTo(addDaysIso(from, o.dite));
-                        }}
-                        className={`text-left rounded-xl border p-3 transition ${
-                          active
-                            ? "border-sky-600 bg-sky-50 dark:bg-teal-900/20"
-                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-sky-300 dark:hover:border-teal-700"
-                        }`}
-                      >
-                        <p className={`text-xs font-semibold ${active ? "text-sky-600 dark:text-teal-300" : "text-slate-500 dark:text-slate-400"}`}>{t("car.daysCount", { count: o.dite })}</p>
-                        <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{o.cmimiTotal}€</p>
-                        <p className="text-[11px] text-slate-400">{t("car.priceOffers.approxPerDay", { price: perDite })}</p>
-                      </button>
-                    );
-                  })}
+                <div className="overflow-x-auto">
+                  <div className="flex gap-3 w-max sm:w-full sm:grid sm:grid-cols-3">
+                    {car.priceOffers.map((o) => {
+                      const active = o.dite === days;
+                      const perDite = (o.cmimiTotal / o.dite).toFixed(0);
+                      return (
+                        <button
+                          key={o.dite}
+                          type="button"
+                          onClick={() => {
+                            const from = activeFrom || new Date().toISOString().split("T")[0];
+                            setSelFrom(from);
+                            setSelTo(addDaysIso(from, o.dite));
+                          }}
+                          className={`shrink-0 w-[130px] sm:w-auto text-left rounded-xl border p-3 transition ${
+                            active
+                              ? "border-sky-600 bg-sky-50 dark:bg-teal-900/20"
+                              : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-sky-300 dark:hover:border-teal-700"
+                          }`}
+                        >
+                          <p className={`text-xs font-semibold ${active ? "text-sky-600 dark:text-teal-300" : "text-slate-500 dark:text-slate-400"}`}>{t("car.daysCount", { count: o.dite })}</p>
+                          <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{o.cmimiTotal}€</p>
+                          <p className="text-[11px] text-slate-400">{t("car.priceOffers.approxPerDay", { price: perDite })}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
