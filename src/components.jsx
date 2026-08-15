@@ -68,9 +68,15 @@ function isoDate(year, month, day) {
 // day is ignored, and picking past a booked gap simply restarts the selection at that day.
 export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
   const { t, lang } = useLang();
-  const [monthOffset, setMonthOffset] = useState(0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  // Open straight to the already-selected month (e.g. dates carried over from a search)
+  // instead of always showing the current month and making the user page forward manually.
+  const [monthOffset, setMonthOffset] = useState(() => {
+    if (!selFrom) return 0;
+    const sel = new Date(selFrom);
+    return (sel.getFullYear() - today.getFullYear()) * 12 + (sel.getMonth() - today.getMonth());
+  });
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();

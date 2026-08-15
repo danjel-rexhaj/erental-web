@@ -6,6 +6,31 @@ import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS } from "../carData";
 import { useLang } from "../useLang";
 import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
 
+// PayPal's card-form billing address defaults to whatever locale we tell it — without an explicit
+// `locale` param it tends to fall back to the merchant account's own country instead of the buyer's,
+// forcing the buyer to manually re-pick their country/flag every time. We detect it once per session
+// from the buyer's IP and map it to a PayPal-supported locale so the form opens pre-set correctly.
+const PAYPAL_LOCALE_BY_COUNTRY = {
+  AL: "en_US", IT: "it_IT", GB: "en_GB", DE: "de_DE", FR: "fr_FR", ES: "es_ES",
+  US: "en_US", GR: "en_US", XK: "en_US", MK: "en_US", CH: "de_DE", AT: "de_DE",
+  BE: "fr_FR", NL: "nl_NL", PT: "pt_PT", PL: "pl_PL",
+};
+let cachedPaypalLocale = null;
+async function detectPaypalLocale() {
+  if (cachedPaypalLocale) return cachedPaypalLocale;
+  const stored = sessionStorage.getItem("paypalLocale");
+  if (stored) return (cachedPaypalLocale = stored);
+  try {
+    const res = await fetch("https://ipapi.co/country/");
+    const country = (await res.text()).trim().toUpperCase();
+    cachedPaypalLocale = PAYPAL_LOCALE_BY_COUNTRY[country] || "en_US";
+  } catch {
+    cachedPaypalLocale = "en_US";
+  }
+  sessionStorage.setItem("paypalLocale", cachedPaypalLocale);
+  return cachedPaypalLocale;
+}
+
 function formatShortDate(iso, lang) {
   const d = new Date(iso);
   if (isNaN(d)) return iso;
@@ -454,13 +479,19 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
     }
 
     let script = document.getElementById("paypal-sdk");
+    const onScriptError = () => setSdkError(t("booking.paymentSystemLoadError"));
     if (!script) {
       script = document.createElement("script");
       script.id = "paypal-sdk";
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=buttons&currency=EUR`;
-      document.body.appendChild(script);
+      detectPaypalLocale().then((locale) => {
+        if (cancelled || document.getElementById("paypal-sdk")) return;
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=buttons&currency=EUR&locale=${locale}`;
+        script.addEventListener("load", renderButtons);
+        script.addEventListener("error", onScriptError);
+        document.body.appendChild(script);
+      });
+      return () => { cancelled = true; setButtonReady(false); };
     }
-    const onScriptError = () => setSdkError(t("booking.paymentSystemLoadError"));
     script.addEventListener("load", renderButtons);
     script.addEventListener("error", onScriptError);
     return () => {
@@ -554,7 +585,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
               <Loader2 size={14} className="animate-spin" /> {t("booking.openingCardForm")}
             </div>
           )}
-          <div className={loading || showRefundPolicy || !buttonReady ? "hidden" : ""} ref={buttonsRef} />
+          <div className={`rounded-xl overflow-hidden bg-white p-1.5 ${loading || showRefundPolicy || !buttonReady ? "hidden" : ""}`} ref={buttonsRef} />
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
         </div>
       )}
