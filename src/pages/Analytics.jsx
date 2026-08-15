@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronDown } from "lucide-react";
+import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronDown, Trash2 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiFetch } from "../api";
 import { inputClass, StatusPill } from "../components";
@@ -597,6 +597,15 @@ function AdminCarsPanel({ token, showError, showOk }) {
     } catch (e) { showError && showError(e); }
   }
 
+  async function remove(c) {
+    if (!window.confirm(t("analytics.confirmDeleteCar", { car: `${c.marka} ${c.modeli}` }))) return;
+    try {
+      await apiFetch(`/Cars/${c.carId}`, token, { method: "DELETE" });
+      setCars((list) => list.filter((x) => x.carId !== c.carId));
+      showOk && showOk(t("analytics.carDeleted"));
+    } catch (e) { showError && showError(e); }
+  }
+
   if (!cars) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
 
   return (
@@ -639,8 +648,9 @@ function AdminCarsPanel({ token, showError, showOk }) {
                   <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{c.company?.emri}</td>
                   <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">{c.cmimiDites}€</td>
                   <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.statusi}</td>
-                  <td className="px-4 py-2.5 text-right">
+                  <td className="px-4 py-2.5 text-right whitespace-nowrap">
                     <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={13} /></button>
+                    <button onClick={() => remove(c)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 ml-2"><Trash2 size={13} /></button>
                   </td>
                 </>
               )}
