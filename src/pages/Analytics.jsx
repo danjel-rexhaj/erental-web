@@ -425,13 +425,13 @@ function AdminUsersPanel({ token, showError, showOk }) {
 
   function startEdit(u) {
     setEditingId(u.userId);
-    setForm({ emri: u.emri, mbiemri: u.mbiemri, telefoni: u.telefoni || "" });
+    setForm({ emri: u.emri, mbiemri: u.mbiemri, telefoni: u.telefoni || "", email: u.email });
   }
 
   async function save() {
     try {
-      await apiFetch(`/Users/${editingId}`, token, { method: "PUT", body: JSON.stringify(form) });
-      setUsers((list) => list.map((u) => (u.userId === editingId ? { ...u, ...form } : u)));
+      const updated = await apiFetch(`/Users/${editingId}`, token, { method: "PUT", body: JSON.stringify(form) });
+      setUsers((list) => list.map((u) => (u.userId === editingId ? { ...u, ...updated } : u)));
       setEditingId(null);
       showOk && showOk(t("analytics.userUpdated"));
     } catch (e) { showError && showError(e); }
@@ -461,7 +461,7 @@ function AdminUsersPanel({ token, showError, showOk }) {
                     <input className={inputClass + " text-xs py-1"} value={form.emri} onChange={(e) => setForm((f) => ({ ...f, emri: e.target.value }))} />
                     <input className={inputClass + " text-xs py-1"} value={form.mbiemri} onChange={(e) => setForm((f) => ({ ...f, mbiemri: e.target.value }))} />
                   </td>
-                  <td className="px-4 py-2 text-slate-400 text-xs whitespace-nowrap">{u.email}</td>
+                  <td className="px-4 py-2"><input type="email" className={inputClass + " text-xs py-1"} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} /></td>
                   <td className="px-4 py-2"><input className={inputClass + " text-xs py-1"} value={form.telefoni} onChange={(e) => setForm((f) => ({ ...f, telefoni: e.target.value }))} /></td>
                   <td className="px-4 py-2 text-slate-400 text-xs whitespace-nowrap">{u.dataRegjistrimit ? formatLocaleDate(u.dataRegjistrimit, lang) : "-"}</td>
                   <td className="px-4 py-2 text-slate-400 text-xs">{u.hasCompany ? t("common.yes") : t("common.no")}</td>

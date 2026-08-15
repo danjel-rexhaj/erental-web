@@ -300,6 +300,11 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             </div>
             <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("home.standardTimes")}</p>
+            {car.company?.ofronDergimMakine && (
+              <p className="flex items-center gap-1 text-[11px] text-sky-600 dark:text-teal-400 font-medium mt-1">
+                <Truck size={12} /> {t("car.deliveryReminder")}
+              </p>
+            )}
           </div>
 
           <div className="mt-5">
