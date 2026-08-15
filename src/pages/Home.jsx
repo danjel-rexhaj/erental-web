@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, BadgeCheck, RotateCcw, Calendar, ArrowRight, MapPin, Clock, Lock, Zap } from "lucide-react";
+import { ShieldCheck, BadgeCheck, RotateCcw, Calendar, ArrowRight, MapPin, Clock, Lock, Zap, ChevronDown, HelpCircle } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton } from "../components";
 import { useLang } from "../useLang";
@@ -15,6 +15,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
   const { t } = useLang();
   const [companies, setCompanies] = useState([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [openFaq, setOpenFaq] = useState(null);
 
   useEffect(() => {
     apiFetch("/Companies", null).then((data) => {
@@ -172,6 +173,33 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
           </div>
         </div>
       )}
+
+      <div className="mt-10">
+        <div className="flex items-center gap-2 mb-4">
+          <HelpCircle size={18} className="text-sky-600 dark:text-emerald-400" />
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("home.faqTitle")}</h2>
+        </div>
+        <div className="flex flex-col gap-2">
+          {[1, 2, 3, 4, 5, 6].map((i) => {
+            const open = openFaq === i;
+            return (
+              <div key={i} className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden bg-white dark:bg-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(open ? null : i)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left"
+                >
+                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t(`home.faq${i}Q`)}</span>
+                  <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+                </button>
+                {open && (
+                  <p className="px-4 pb-4 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t(`home.faq${i}A`)}</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
