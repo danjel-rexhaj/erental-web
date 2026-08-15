@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Calendar, ArrowRight, MapPin, Clock } from "lucide-react";
+import { ShieldCheck, Calendar, ArrowRight, MapPin, Clock, Lock, Zap } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton } from "../components";
 import { useLang } from "../useLang";
@@ -53,10 +53,10 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 text-white text-xs font-semibold bg-black/40 backdrop-blur-sm border border-white/20 rounded-full pl-2.5 pr-3 py-1.5 shadow-lg">
           <Clock size={13} className="text-cyan-300 dark:text-teal-300" />
-          <span>Check-in</span>
+          <span className="hidden sm:inline">Check-in</span>
           <ArrowRight size={11} className="opacity-60" />
-          <span>Check-out</span>
-          <span className="opacity-70 font-normal">· 10:00</span>
+          <span className="hidden sm:inline">Check-out</span>
+          <span className="opacity-70 font-normal">10:00</span>
         </div>
         <div className="relative flex flex-col justify-end min-h-[560px] sm:min-h-[520px] p-6 sm:p-12">
           <span className="inline-flex items-center gap-1.5 text-white text-xs font-semibold tracking-wide uppercase bg-gradient-to-r from-sky-500 to-cyan-500 dark:from-teal-500 dark:to-emerald-600 rounded-full px-3 py-1.5 w-fit mb-4 shadow-lg shadow-sky-900/30 dark:shadow-teal-900/30">
@@ -119,6 +119,25 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             <PrimaryButton onClick={onSearch} disabled={loading} className="sm:w-48 mb-3">{loading ? t("home.searching") : t("home.search")}</PrimaryButton>
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+        {[
+          { Icon: Lock, title: t("home.trustFeesTitle"), sub: t("home.trustFeesSub") },
+          { Icon: Zap, title: t("home.trustClickTitle"), sub: t("home.trustClickSub") },
+          { Icon: ShieldCheck, title: t("home.trustVerifiedTitle"), sub: t("home.trustVerifiedSub") },
+          { Icon: Clock, title: t("home.trustFastTitle"), sub: t("home.trustFastSub") },
+        ].map(({ Icon, title, sub }, i) => (
+          <div key={i} className="flex items-center gap-2.5 border border-slate-200 dark:border-slate-700 rounded-2xl px-3 py-3 bg-white dark:bg-slate-800">
+            <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+              <Icon size={16} className="text-sky-600 dark:text-emerald-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">{title}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight truncate">{sub}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {(loadingCompanies || loop.length > 0) && (
