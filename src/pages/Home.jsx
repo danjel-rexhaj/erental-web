@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Calendar, ArrowRight, MapPin, Clock, Lock, Zap } from "lucide-react";
+import { ShieldCheck, BadgeCheck, RotateCcw, Calendar, ArrowRight, MapPin, Clock, Lock, Zap } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton } from "../components";
 import { useLang } from "../useLang";
@@ -121,23 +121,27 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-        {[
-          { Icon: Lock, title: t("home.trustFeesTitle"), sub: t("home.trustFeesSub") },
-          { Icon: Zap, title: t("home.trustClickTitle"), sub: t("home.trustClickSub") },
-          { Icon: ShieldCheck, title: t("home.trustVerifiedTitle"), sub: t("home.trustVerifiedSub") },
-          { Icon: Clock, title: t("home.trustFastTitle"), sub: t("home.trustFastSub") },
-        ].map(({ Icon, title, sub }, i) => (
-          <div key={i} className="flex items-center gap-2.5 border border-slate-200 dark:border-slate-700 rounded-2xl px-3 py-3 bg-white dark:bg-slate-800">
-            <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-              <Icon size={16} className="text-sky-600 dark:text-emerald-400" />
+      <div className="mt-6 overflow-x-auto">
+        <div className="flex gap-3 w-max">
+          {[
+            { Icon: Lock, title: t("home.trustFeesTitle"), sub: t("home.trustFeesSub") },
+            { Icon: RotateCcw, title: t("home.trustCancelTitle"), sub: t("home.trustCancelSub") },
+            { Icon: ShieldCheck, title: t("home.trustSecureTitle"), sub: t("home.trustSecureSub") },
+            { Icon: BadgeCheck, title: t("home.trustVerifiedTitle"), sub: t("home.trustVerifiedSub") },
+            { Icon: Zap, title: t("home.trustClickTitle"), sub: t("home.trustClickSub") },
+            { Icon: Clock, title: t("home.trustFastTitle"), sub: t("home.trustFastSub") },
+          ].map(({ Icon, title, sub }, i) => (
+            <div key={i} className="shrink-0 w-[160px] flex flex-col gap-2.5 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 bg-white dark:bg-slate-800">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-500 dark:from-emerald-600 dark:to-teal-600 flex items-center justify-center shrink-0">
+                <Icon size={18} className="text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight">{title}</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">{sub}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">{title}</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight truncate">{sub}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {(loadingCompanies || loop.length > 0) && (
