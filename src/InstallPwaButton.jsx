@@ -4,14 +4,18 @@ import { useLang } from "./useLang";
 
 // Android/Chrome (and desktop Chrome/Edge) fire beforeinstallprompt for an installable PWA — we
 // capture it so our own button can trigger the native install dialog with one click. iOS Safari
-// has no such API at all (Apple restricts "Add to Home Screen" to the manual Share-sheet action),
-// so there we can only show instructions instead of a real one-click install.
+// has no such API at all (Apple restricts "Add to Home Screen" to the manual Share-sheet action).
+// Samsung Internet is the third case: it doesn't reliably fire beforeinstallprompt either, but
+// unlike iOS it's not detectable up front — so instead of hiding the button (which used to mean
+// no install option ever appeared there), we give the event a grace period and fall back to
+// generic "use your browser's menu" instructions if it never arrives.
 export function InstallPwaButton() {
   const { t } = useLang();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [showIosHelp, setShowIosHelp] = useState(false);
+  const [promptGraceElapsed, setPromptGraceElapsed] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     const standalone = window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -30,14 +34,17 @@ export function InstallPwaButton() {
     }
     window.addEventListener("appinstalled", onInstalled);
 
+    const graceTimer = setTimeout(() => setPromptGraceElapsed(true), 2500);
+
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
       window.removeEventListener("appinstalled", onInstalled);
+      clearTimeout(graceTimer);
     };
   }, []);
 
   if (isStandalone) return null;
-  if (!deferredPrompt && !isIOS) return null;
+  if (!deferredPrompt && !isIOS && !promptGraceElapsed) return null;
 
   async function handleClick() {
     if (deferredPrompt) {
@@ -46,7 +53,7 @@ export function InstallPwaButton() {
       setDeferredPrompt(null);
       return;
     }
-    setShowIosHelp(true);
+    setShowHelp(true);
   }
 
   return (
@@ -59,27 +66,40 @@ export function InstallPwaButton() {
         <Download size={13} /> {t("pwa.downloadApp")}
       </button>
 
-      {showIosHelp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowIosHelp(false)}>
+      {showHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowHelp(false)}>
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-sm w-full max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">{t("pwa.addToHomeScreen")}</h3>
-              <button onClick={() => setShowIosHelp(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0"><X size={16} /></button>
+              <button onClick={() => setShowHelp(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0"><X size={16} /></button>
             </div>
-            <ol className="text-sm text-slate-700 dark:text-slate-200 space-y-4">
-              <li className="flex items-center gap-3">
-                <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">1</span>
-                <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step1Before")} <Share size={16} className="text-sky-600 dark:text-emerald-400" /> {t("pwa.step1After")}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">2</span>
-                <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step2Before")} <PlusSquare size={16} className="text-sky-600 dark:text-emerald-400" /> {t("pwa.step2After")}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">3</span>
-                <span>{t("pwa.step3")}</span>
-              </li>
-            </ol>
+            {isIOS ? (
+              <ol className="text-sm text-slate-700 dark:text-slate-200 space-y-4">
+                <li className="flex items-center gap-3">
+                  <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">1</span>
+                  <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step1Before")} <Share size={16} className="text-sky-600 dark:text-emerald-400" /> {t("pwa.step1After")}</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">2</span>
+                  <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step2Before")} <PlusSquare size={16} className="text-sky-600 dark:text-emerald-400" /> {t("pwa.step2After")}</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">3</span>
+                  <span>{t("pwa.step3")}</span>
+                </li>
+              </ol>
+            ) : (
+              <ol className="text-sm text-slate-700 dark:text-slate-200 space-y-4">
+                <li className="flex items-center gap-3">
+                  <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">1</span>
+                  <span>{t("pwa.genericStep1")}</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">2</span>
+                  <span>{t("pwa.genericStep2")}</span>
+                </li>
+              </ol>
+            )}
           </div>
         </div>
       )}

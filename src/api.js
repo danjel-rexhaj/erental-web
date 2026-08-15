@@ -69,6 +69,13 @@ export async function apiFetch(path, token, options = {}) {
     data = text;
   }
   if (!res.ok) {
+    // The stored token can go stale (expiry, or the account changed server-side) while the app
+    // still thinks it's logged in — every call then fails silently until the user manually logs
+    // out and back in. Broadcasting this lets App.jsx clear the session and prompt a fresh login
+    // instead of leaving the UI in a half-authenticated, everything-is-broken state.
+    if (res.status === 401 && token) {
+      window.dispatchEvent(new Event("erental:sessionExpired"));
+    }
     const msg = typeof data === "string" ? data : data?.message || data?.title || apiText().genericError(res.status);
     throw new Error(msg || apiText().genericError(res.status));
   }

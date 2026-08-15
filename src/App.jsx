@@ -49,6 +49,21 @@ export default function App() {
     localStorage.setItem("erental_theme", theme);
   }, [theme]);
 
+  // A stored token can go stale (expired, or the account changed server-side) while the app
+  // still shows the user as logged in — apiFetch broadcasts this event on any 401 so we can
+  // clear the session and explain why, instead of leaving every action silently failing.
+  useEffect(() => {
+    function onSessionExpired() {
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem("erental_auth");
+      showError(new Error(t("app.sessionExpired")));
+    }
+    window.addEventListener("erental:sessionExpired", onSessionExpired);
+    return () => window.removeEventListener("erental:sessionExpired", onSessionExpired);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   // Browse flow state lives here so it persists across sub-page navigation
