@@ -15,7 +15,7 @@ function sortByBrandPopularity(brands) {
   });
 }
 
-const selectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/40 transition";
+const selectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-emerald-900/40 transition";
 
 function freeInLabel(lirohetMe, dataFillimit, t) {
   const days = Math.round((new Date(lirohetMe) - new Date(dataFillimit)) / 86400000);
@@ -92,7 +92,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
             onClick={() => setShowFilters((s) => !s)}
             className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition ${
               showFilters || activeFilterCount > 0
-                ? "border-sky-300 dark:border-sky-600 text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20"
+                ? "border-sky-300 dark:border-emerald-600 text-sky-600 dark:text-emerald-400 bg-sky-50 dark:bg-emerald-900/20"
                 : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
             }`}
           >

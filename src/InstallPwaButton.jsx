@@ -53,7 +53,7 @@ export function InstallPwaButton() {
     <>
       <button
         onClick={handleClick}
-        className="flex items-center gap-1.5 text-xs font-semibold text-white bg-sky-600 rounded-full px-3 py-1.5 hover:bg-sky-700 transition whitespace-nowrap shrink-0"
+        className="flex items-center gap-1.5 text-xs font-semibold text-white bg-sky-600 dark:bg-emerald-700 rounded-full px-3 py-1.5 hover:bg-sky-700 dark:hover:bg-emerald-800 transition whitespace-nowrap shrink-0"
         title={t("pwa.downloadTitle")}
       >
         <Download size={13} /> {t("pwa.downloadApp")}
@@ -68,15 +68,15 @@ export function InstallPwaButton() {
             </div>
             <ol className="text-sm text-slate-700 dark:text-slate-200 space-y-4">
               <li className="flex items-center gap-3">
-                <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 text-white text-sm font-bold flex items-center justify-center">1</span>
-                <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step1Before")} <Share size={16} className="text-sky-600 dark:text-sky-400" /> {t("pwa.step1After")}</span>
+                <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">1</span>
+                <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step1Before")} <Share size={16} className="text-sky-600 dark:text-emerald-400" /> {t("pwa.step1After")}</span>
               </li>
               <li className="flex items-center gap-3">
-                <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 text-white text-sm font-bold flex items-center justify-center">2</span>
-                <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step2Before")} <PlusSquare size={16} className="text-sky-600 dark:text-sky-400" /> {t("pwa.step2After")}</span>
+                <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">2</span>
+                <span className="flex items-center gap-1.5 flex-wrap">{t("pwa.step2Before")} <PlusSquare size={16} className="text-sky-600 dark:text-emerald-400" /> {t("pwa.step2After")}</span>
               </li>
               <li className="flex items-center gap-3">
-                <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 text-white text-sm font-bold flex items-center justify-center">3</span>
+                <span className="shrink-0 w-8 h-8 rounded-full bg-sky-600 dark:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center">3</span>
                 <span>{t("pwa.step3")}</span>
               </li>
             </ol>

@@ -42,7 +42,7 @@ function addDaysIso(iso, days) {
   return d.toISOString().split("T")[0];
 }
 
-const companySelectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-sky-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/40 transition";
+const companySelectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-emerald-900/40 transition";
 const categoryLabelCompany = (key, t) => (CAR_CATEGORIES.some((c) => c.key === key) ? t(`category.${key}`) : key);
 const BRAND_ORDER_COMPANY = Object.keys(CAR_BRANDS);
 function sortByBrandPopularityCompany(brands) {
@@ -175,7 +175,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   key={p.photoId}
                   type="button"
                   onClick={() => setActivePhoto(p)}
-                  className={`relative rounded-xl overflow-hidden border h-16 ${shown?.photoId === p.photoId ? "border-sky-600 dark:border-sky-500 ring-2 ring-sky-200 dark:ring-sky-900/40" : "border-slate-200 dark:border-slate-700"}`}
+                  className={`relative rounded-xl overflow-hidden border h-16 ${shown?.photoId === p.photoId ? "border-sky-600 dark:border-emerald-500 ring-2 ring-sky-200 dark:ring-emerald-900/40" : "border-slate-200 dark:border-slate-700"}`}
                 >
                   <img src={p.urlFotos} alt={slotLabel(p.kategoria) || ""} className="w-full h-full object-cover" />
                   {slotLabel(p.kategoria) && (
@@ -190,10 +190,10 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli} · {car.viti}</p>
           <button
             onClick={() => onSelectCompany(car.companyId)}
-            className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-sky-300 dark:hover:border-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition group"
+            className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-sky-300 dark:hover:border-emerald-600 hover:bg-sky-50 dark:hover:bg-emerald-900/20 transition group"
           >
-            <Building2 size={14} className="text-sky-600 dark:text-sky-400 shrink-0" />
-            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-sky-600 dark:group-hover:text-sky-400">{car.company?.emri}</span>
+            <Building2 size={14} className="text-sky-600 dark:text-emerald-400 shrink-0" />
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-sky-600 dark:group-hover:text-emerald-400">{car.company?.emri}</span>
             <span className="text-xs text-slate-400 flex items-center gap-0.5"><MapPin size={11} /> {car.company?.qyteti}</span>
           </button>
 
@@ -220,12 +220,12 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           )}
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mt-5">
-            <div className="flex items-center gap-1.5 text-sm font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 rounded-lg px-2.5 py-1.5 w-fit">
+            <div className="flex items-center gap-1.5 text-sm font-bold text-sky-600 dark:text-emerald-400 bg-sky-50 dark:bg-emerald-900/30 rounded-lg px-2.5 py-1.5 w-fit">
               <Calendar size={14} /> {formatShortDate(activeFrom, lang)} → {formatShortDate(activeTo, lang)}
             </div>
             <div className="flex items-center justify-between mt-2">
               {matchedOffer ? (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-900/30 px-2 py-0.5 rounded-full w-fit">{t("car.specialPriceFor", { days })}</span>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-cyan-700 dark:text-teal-300 bg-cyan-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full w-fit">{t("car.specialPriceFor", { days })}</span>
               ) : (
                 <p className="text-xs text-slate-500 dark:text-slate-400">{t("car.pricePerDay", { days, price: car.cmimiDites })}</p>
               )}
@@ -277,7 +277,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           <div className="lg:col-span-3 lg:row-start-2 order-3 flex flex-col gap-5">
             {car.priceOffers && car.priceOffers.length > 0 && (
               <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><Tag size={16} className="text-sky-600 dark:text-sky-400" /> {t("car.priceOffers.title")}</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><Tag size={16} className="text-sky-600 dark:text-teal-400" /> {t("car.priceOffers.title")}</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">{t("car.priceOffers.subtitle")}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {car.priceOffers.map((o) => {
@@ -294,11 +294,11 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                         }}
                         className={`text-left rounded-xl border p-3 transition ${
                           active
-                            ? "border-sky-600 bg-sky-50 dark:bg-sky-900/20"
-                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-sky-300 dark:hover:border-sky-700"
+                            ? "border-sky-600 bg-sky-50 dark:bg-teal-900/20"
+                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-sky-300 dark:hover:border-teal-700"
                         }`}
                       >
-                        <p className={`text-xs font-semibold ${active ? "text-sky-600 dark:text-sky-400" : "text-slate-500 dark:text-slate-400"}`}>{t("car.daysCount", { count: o.dite })}</p>
+                        <p className={`text-xs font-semibold ${active ? "text-sky-600 dark:text-teal-300" : "text-slate-500 dark:text-slate-400"}`}>{t("car.daysCount", { count: o.dite })}</p>
                         <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{o.cmimiTotal}€</p>
                         <p className="text-[11px] text-slate-400">{t("car.priceOffers.approxPerDay", { price: perDite })}</p>
                       </button>
@@ -310,7 +310,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
 
             {car.company?.qyteti && (
               <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-sky-600 dark:text-sky-400" /> {t("car.pickupTitle")}</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-sky-600 dark:text-teal-400" /> {t("car.pickupTitle")}</h3>
                 <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
 
                 {mapEmbedUrl && (
@@ -327,7 +327,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   href={directionsUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-xl px-4 py-2.5"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-sky-600 dark:bg-teal-700 hover:bg-sky-700 dark:hover:bg-teal-800 rounded-xl px-4 py-2.5"
                 >
                   <MapPin size={15} /> {t("common.getDirections")}
                 </a>
@@ -340,11 +340,11 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           <div className="lg:col-span-5 order-4 border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-sky-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
                   {car.company.logoUrl ? (
                     <img src={car.company.logoUrl} alt={car.company.emri} className="w-full h-full object-cover" />
                   ) : (
-                    <Building2 size={28} className="text-sky-600 dark:text-sky-400" />
+                    <Building2 size={28} className="text-sky-600 dark:text-emerald-400" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -354,7 +354,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                       <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> {t("common.verified")}</span>
                     )}
                     {car.company.ofronDergimMakine && (
-                      <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> {t("common.deliveryBadge")}</span>
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-teal-300 bg-sky-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> {t("common.deliveryBadge")}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400 mt-1.5">
@@ -654,11 +654,11 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
 
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-8">
         <div className="flex items-center lg:items-stretch gap-4">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-sky-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
             {company.logoUrl ? (
               <img src={company.logoUrl} alt={company.emri} className="w-full h-full object-cover" />
             ) : (
-              <Building2 size={28} className="text-sky-600 dark:text-sky-400" />
+              <Building2 size={28} className="text-sky-600 dark:text-emerald-400" />
             )}
           </div>
           <div className="flex-1 lg:flex-initial min-w-0 flex flex-col justify-center gap-1.5">
@@ -668,7 +668,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><ShieldCheck size={11} /> {t("common.verified")}</span>
               )}
               {company.ofronDergimMakine && (
-                <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> {t("common.deliveryBadge")}</span>
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-teal-300 bg-sky-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> {t("common.deliveryBadge")}</span>
               )}
             </div>
             <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400">
@@ -687,7 +687,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
                 href={directionsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="lg:hidden inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-xl px-3 py-2 whitespace-nowrap"
+                className="lg:hidden inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-sky-600 dark:bg-teal-700 hover:bg-sky-700 dark:hover:bg-teal-800 rounded-xl px-3 py-2 whitespace-nowrap"
               >
                 <MapPin size={13} /> {t("common.getDirections")}
               </a>
@@ -715,7 +715,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
           onClick={() => setShowFilters((s) => !s)}
           className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition ${
             showFilters || activeFilterCount > 0
-              ? "border-sky-300 dark:border-sky-600 text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20"
+              ? "border-sky-300 dark:border-emerald-600 text-sky-600 dark:text-emerald-400 bg-sky-50 dark:bg-emerald-900/20"
               : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
           }`}
         >
