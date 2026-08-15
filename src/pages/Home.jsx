@@ -48,8 +48,12 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 text-white text-xs font-semibold bg-black/40 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1.5 shadow-lg">
-          <Clock size={13} /> {t("home.standardTimesShort")}
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 text-white text-xs font-semibold bg-black/40 backdrop-blur-sm border border-white/20 rounded-full pl-2.5 pr-3 py-1.5 shadow-lg">
+          <Clock size={13} className="text-teal-300" />
+          <span>Check-in</span>
+          <ArrowRight size={11} className="opacity-60" />
+          <span>Check-out</span>
+          <span className="opacity-70 font-normal">· 10:00</span>
         </div>
         <div className="relative flex flex-col justify-end min-h-[560px] sm:min-h-[520px] p-6 sm:p-12">
           <span className="inline-flex items-center gap-1.5 text-white text-xs font-semibold tracking-wide uppercase bg-gradient-to-r from-teal-500 to-emerald-600 rounded-full px-3 py-1.5 w-fit mb-4 shadow-lg shadow-teal-900/30">
