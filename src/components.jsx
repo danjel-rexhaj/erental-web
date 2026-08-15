@@ -317,7 +317,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
       <div className="p-3">
         <div className="flex items-start justify-between">
           <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{car.marka} {car.modeli}</p>
-          <span className="text-xs font-bold text-slate-900 dark:text-white px-2 py-1 dark:bg-slate-900 dark:rounded-lg whitespace-nowrap">{car.cmimiDites}€{t("common.perDaySuffix")}</span>
+          <span className="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites}€{t("common.perDaySuffix")}</span>
         </div>
         {showCompany && (
           <span
