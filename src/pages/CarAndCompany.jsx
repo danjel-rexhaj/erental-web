@@ -56,6 +56,68 @@ function sortByBrandPopularityCompany(brands) {
   });
 }
 
+// Full-screen photo viewer — mirrors the license-photo zoom pattern (object-contain, dark
+// overlay) but adds prev/next navigation via arrow buttons, keyboard arrows, and touch swipe.
+function PhotoLightbox({ photos, startIndex, onClose }) {
+  const [index, setIndex] = useState(startIndex);
+  const touchStartX = useRef(null);
+
+  function next() { setIndex((i) => (i + 1) % photos.length); }
+  function prev() { setIndex((i) => (i - 1 + photos.length) % photos.length); }
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "ArrowRight") next();
+      else if (e.key === "ArrowLeft") prev();
+      else if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photos.length]);
+
+  function onTouchStart(e) { touchStartX.current = e.touches[0].clientX; }
+  function onTouchEnd(e) {
+    if (touchStartX.current == null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 40) { if (delta > 0) prev(); else next(); }
+    touchStartX.current = null;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-4"
+      onClick={onClose}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      <img src={photos[index]?.urlFotos} alt="" className="max-w-full max-h-full object-contain" onClick={(e) => e.stopPropagation()} />
+      <button onClick={onClose} className="absolute top-4 right-4 text-white bg-black/50 rounded-full w-9 h-9 flex items-center justify-center hover:bg-black/70">
+        <X size={20} />
+      </button>
+      {photos.length > 1 && (
+        <>
+          <button
+            onClick={(e) => { e.stopPropagation(); prev(); }}
+            className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 rounded-full w-10 h-10 flex items-center justify-center"
+          >
+            <ChevronLeft size={22} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); next(); }}
+            className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 rounded-full w-10 h-10 flex items-center justify-center"
+          >
+            <ChevronRight size={22} />
+          </button>
+          <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-xs font-medium bg-black/40 px-2.5 py-1 rounded-full">
+            {index + 1}/{photos.length}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelectCompany, token, needAuth, goToProfile, showError, showOk, isBusinessOwner, favoriteIds, onToggleFavorite, hubConnection }) {
   const { t, lang } = useLang();
   const [bookedRanges, setBookedRanges] = useState([]);
@@ -78,6 +140,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const photos = (car.carPhotos || []).filter(Boolean);
   const mainPhoto = photos.find((p) => p.eshteKryesore) || photos[0];
   const [activePhoto, setActivePhoto] = useState(mainPhoto);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const shown = activePhoto || mainPhoto;
   const slotLabel = (kategoria) => (PHOTO_SLOTS.some((s) => s.key === kategoria) ? t(`photoSlot.${kategoria}`) : undefined);
 
@@ -137,8 +200,9 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <img
               src={shown?.urlFotos}
               alt={`${car.marka} ${car.modeli}`}
-              className="w-full h-72 object-cover bg-slate-100 dark:bg-slate-800"
+              className="w-full h-72 object-cover bg-slate-100 dark:bg-slate-800 cursor-zoom-in"
               onError={(e) => (e.currentTarget.style.display = "none")}
+              onClick={() => setLightboxOpen(true)}
             />
             {photos.length > 1 && (
               <>
@@ -185,6 +249,9 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 </button>
               ))}
             </div>
+          )}
+          {lightboxOpen && (
+            <PhotoLightbox photos={photos} startIndex={Math.max(0, photos.findIndex((p) => p.photoId === shown?.photoId))} onClose={() => setLightboxOpen(false)} />
           )}
         </div>
         <div className="lg:col-span-2 lg:row-start-1 lg:row-span-2 order-2">
