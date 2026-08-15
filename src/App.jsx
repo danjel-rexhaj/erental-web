@@ -135,6 +135,9 @@ export default function App() {
     if (n.target === "business_booking" || n.target === "client_booking" || n.target === "leave_review") {
       setBookingsRefreshKey((k) => k + 1);
     }
+    if (n.target === "whatsapp_verified") {
+      updateUser({ whatsappVerified: true });
+    }
   }, []);
 
   const { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications, connection: hubConnection } = useNotifications(token, handleAvailabilityChanged, handleLiveNotification);

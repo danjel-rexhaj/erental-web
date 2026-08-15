@@ -18,6 +18,19 @@ function looksAlbanian(phone) {
   return /^(\+355|00355|0)6\d{7,8}$/.test(digits);
 }
 
+const PHONE_PREFIXES = [
+  { code: "+355", flag: "🇦🇱" },
+  { code: "+383", flag: "🇽🇰" },
+  { code: "+389", flag: "🇲🇰" },
+  { code: "+382", flag: "🇲🇪" },
+  { code: "+30", flag: "🇬🇷" },
+  { code: "+39", flag: "🇮🇹" },
+  { code: "+49", flag: "🇩🇪" },
+  { code: "+41", flag: "🇨🇭" },
+  { code: "+44", flag: "🇬🇧" },
+  { code: "+1", flag: "🇺🇸" },
+];
+
 export function AuthGate({ onGo, text }) {
   const { t } = useLang();
   return (
@@ -35,7 +48,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
   const [loading, setLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [hasWhatsapp, setHasWhatsapp] = useState(false);
-  const [form, setForm] = useState({ emri: "", mbiemri: "", email: "", password: "", telefoni: "", kombesia: "Shqiperi" });
+  const [form, setForm] = useState({ emri: "", mbiemri: "", email: "", password: "", telefoni: "", telefoniPrefix: "+355", kombesia: "Shqiperi" });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const [forgotStep, setForgotStep] = useState("request");
@@ -53,7 +66,9 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
     setLoading(true);
     try {
       if (mode === "register") {
-        await apiFetch("/Auth/register", null, { method: "POST", body: JSON.stringify({ ...form, hasWhatsapp }) });
+        const { telefoniPrefix, ...rest } = form;
+        const telefoni = telefoniPrefix === "+355" ? form.telefoni : `${telefoniPrefix}${form.telefoni.replace(/^0+/, "")}`;
+        await apiFetch("/Auth/register", null, { method: "POST", body: JSON.stringify({ ...rest, telefoni, hasWhatsapp }) });
         goTo("verifyEmail", { email: form.email, emri: form.emri });
       } else {
         const data = await apiFetch("/Auth/login", null, { method: "POST", body: JSON.stringify({ email: form.email, password: form.password }) });
@@ -125,7 +140,16 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
           </div>
         )}
         <Field label="Email"><input required type="email" className={inputClass} value={form.email} onChange={set("email")} placeholder="ti@email.com" /></Field>
-        {mode === "register" && <Field label={t("auth.phone")}><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder="0691234567" /></Field>}
+        {mode === "register" && (
+          <Field label={t("auth.phone")}>
+            <div className="flex gap-1.5">
+              <select className={`${inputClass} w-24 shrink-0`} value={form.telefoniPrefix} onChange={set("telefoniPrefix")}>
+                {PHONE_PREFIXES.map((p) => <option key={p.code} value={p.code}>{p.flag} {p.code}</option>)}
+              </select>
+              <input required className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder={form.telefoniPrefix === "+355" ? "0691234567" : "691234567"} />
+            </div>
+          </Field>
+        )}
         {mode === "register" && (
           <Field label={t("auth.nationality")}>
             <select className={inputClass} value={form.kombesia} onChange={set("kombesia")}>
@@ -133,7 +157,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
             </select>
           </Field>
         )}
-        {mode === "register" && form.telefoni && !looksAlbanian(form.telefoni) && (
+        {mode === "register" && form.telefoniPrefix === "+355" && form.telefoni && !looksAlbanian(form.telefoni) && (
           <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 mb-3">
             {t("auth.phoneNotAlbanianWarning")}
           </p>
