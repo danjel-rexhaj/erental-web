@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, Calendar, ArrowRight, MapPin } from "lucide-react";
+import { ShieldCheck, Calendar, ArrowRight, MapPin, Clock } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton } from "../components";
 import { useLang } from "../useLang";
@@ -48,6 +48,9 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex items-center gap-1.5 text-white text-xs font-semibold bg-black/40 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1.5 shadow-lg">
+          <Clock size={13} /> {t("home.standardTimesShort")}
+        </div>
         <div className="relative flex flex-col justify-end min-h-[560px] sm:min-h-[520px] p-6 sm:p-12">
           <span className="inline-flex items-center gap-1.5 text-white text-xs font-semibold tracking-wide uppercase bg-gradient-to-r from-teal-500 to-emerald-600 rounded-full px-3 py-1.5 w-fit mb-4 shadow-lg shadow-teal-900/30">
             {t("home.badge")}
@@ -108,7 +111,6 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             </div>
             <PrimaryButton onClick={onSearch} disabled={loading} className="sm:w-48 mb-3">{loading ? t("home.searching") : t("home.search")}</PrimaryButton>
           </div>
-          <p className="text-slate-300 text-xs mt-3">{t("home.standardTimes")}</p>
         </div>
       </div>
 
