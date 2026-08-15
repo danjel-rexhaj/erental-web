@@ -288,8 +288,13 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           )}
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mt-5">
-            <div className="flex items-center gap-1.5 text-sm font-bold text-sky-600 dark:text-emerald-400 bg-sky-50 dark:bg-emerald-900/30 rounded-lg px-2.5 py-1.5 w-fit">
-              <Calendar size={14} /> {formatShortDate(activeFrom, lang)} → {formatShortDate(activeTo, lang)}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 text-sm font-bold text-sky-600 dark:text-emerald-400 bg-sky-50 dark:bg-emerald-900/30 rounded-lg px-2.5 py-1.5 w-fit">
+                <Calendar size={14} /> {formatShortDate(activeFrom, lang)} → {formatShortDate(activeTo, lang)}
+              </div>
+              <div className="flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                <Clock size={12} /> Check-in <ArrowRight size={10} className="opacity-50" /> Check-out <span className="opacity-60 font-normal">· 10:00</span>
+              </div>
             </div>
             <div className="flex items-center justify-between mt-2">
               {matchedOffer ? (
@@ -301,8 +306,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("home.standardTimes")}</p>
             {car.company?.ofronDergimMakine && (
-              <p className="flex items-center gap-1 text-[11px] text-sky-600 dark:text-teal-400 font-medium mt-1">
-                <Truck size={12} /> {t("car.deliveryReminder")}
+              <p className="flex items-center gap-1 text-xs text-sky-600 dark:text-teal-400 font-medium mt-1">
+                <Truck size={13} /> {t("car.deliveryReminder")}
               </p>
             )}
           </div>
