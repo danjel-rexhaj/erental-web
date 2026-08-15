@@ -42,12 +42,12 @@ function StatCard({ icon: Icon, label, value, onClick, active }) {
       onClick={onClick}
       className={`border rounded-2xl p-4 flex items-center gap-3 text-left w-full ${
         active
-          ? "border-emerald-400 dark:border-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/20"
+          ? "border-sky-400 dark:border-sky-600 bg-sky-50/50 dark:bg-sky-900/20"
           : "border-slate-200 dark:border-slate-700"
-      } ${onClick ? "hover:border-emerald-300 dark:hover:border-emerald-600 transition cursor-pointer" : ""}`}
+      } ${onClick ? "hover:border-sky-300 dark:hover:border-sky-600 transition cursor-pointer" : ""}`}
     >
-      <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-        <Icon size={18} className="text-emerald-700 dark:text-emerald-400" />
+      <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center shrink-0">
+        <Icon size={18} className="text-sky-600 dark:text-sky-400" />
       </div>
       <div className="min-w-0">
         <p className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-none truncate">{value}</p>
@@ -93,7 +93,7 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
       </div>
 
       {showViews && (
-        <div className="border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4">
+        <div className="border border-sky-200 dark:border-sky-800 rounded-2xl p-4">
           <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3">{t("analytics.mostViewedCars")}</h3>
           {data.viewsPerCar.length === 0 ? (
             <p className="text-sm text-slate-400 text-center py-4">{t("analytics.noViewsYet")}</p>
@@ -245,7 +245,7 @@ function TransactionsTable({ token, showError, admin = false }) {
       {visibleCount < payments.length && (
         <button
           onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-          className="w-full text-center text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 mt-3"
+          className="w-full text-center text-xs font-semibold text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 mt-3"
         >
           {t("analytics.showMoreCount", { count: payments.length - visibleCount })}
         </button>
@@ -466,7 +466,7 @@ function AdminUsersPanel({ token, showError, showOk }) {
                   <td className="px-4 py-2 text-slate-400 text-xs whitespace-nowrap">{u.dataRegjistrimit ? formatLocaleDate(u.dataRegjistrimit, lang) : "-"}</td>
                   <td className="px-4 py-2 text-slate-400 text-xs">{u.hasCompany ? t("common.yes") : t("common.no")}</td>
                   <td className="px-4 py-2 text-right whitespace-nowrap">
-                    <button onClick={save} className="text-emerald-700 dark:text-emerald-400"><Check size={14} /></button>
+                    <button onClick={save} className="text-sky-600 dark:text-sky-400"><Check size={14} /></button>
                     <button onClick={() => setEditingId(null)} className="text-slate-400 ml-2"><X size={14} /></button>
                   </td>
                 </>
@@ -478,7 +478,7 @@ function AdminUsersPanel({ token, showError, showOk }) {
                   <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{u.dataRegjistrimit ? formatLocaleDate(u.dataRegjistrimit, lang) : "-"}</td>
                   <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{u.hasCompany ? t("common.yes") : t("common.no")}</td>
                   <td className="px-4 py-2.5 text-right">
-                    <button onClick={() => startEdit(u)} className="text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400"><Pencil size={13} /></button>
+                    <button onClick={() => startEdit(u)} className="text-slate-400 hover:text-sky-600 dark:hover:text-sky-400"><Pencil size={13} /></button>
                   </td>
                 </>
               )}
@@ -546,7 +546,7 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
                   </td>
                   <td className="px-4 py-2 text-slate-400 text-xs">{c.eshteVerifikuar ? t("common.yes") : t("common.no")}</td>
                   <td className="px-4 py-2 text-right whitespace-nowrap">
-                    <button onClick={save} className="text-emerald-700 dark:text-emerald-400"><Check size={14} /></button>
+                    <button onClick={save} className="text-sky-600 dark:text-sky-400"><Check size={14} /></button>
                     <button onClick={() => setEditingId(null)} className="text-slate-400 ml-2"><X size={14} /></button>
                   </td>
                 </>
@@ -558,7 +558,7 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
                   <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.statusi}</td>
                   <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.eshteVerifikuar ? t("common.yes") : t("common.no")}</td>
                   <td className="px-4 py-2.5 text-right">
-                    <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400"><Pencil size={13} /></button>
+                    <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-sky-400"><Pencil size={13} /></button>
                   </td>
                 </>
               )}
@@ -628,7 +628,7 @@ function AdminCarsPanel({ token, showError, showOk }) {
                     </select>
                   </td>
                   <td className="px-4 py-2 text-right whitespace-nowrap">
-                    <button onClick={save} className="text-emerald-700 dark:text-emerald-400"><Check size={14} /></button>
+                    <button onClick={save} className="text-sky-600 dark:text-sky-400"><Check size={14} /></button>
                     <button onClick={() => setEditingId(null)} className="text-slate-400 ml-2"><X size={14} /></button>
                   </td>
                 </>
@@ -640,7 +640,7 @@ function AdminCarsPanel({ token, showError, showOk }) {
                   <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">{c.cmimiDites}€</td>
                   <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.statusi}</td>
                   <td className="px-4 py-2.5 text-right">
-                    <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400"><Pencil size={13} /></button>
+                    <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-sky-400"><Pencil size={13} /></button>
                   </td>
                 </>
               )}
@@ -773,9 +773,9 @@ export function AdminLogins({ token, showError, refreshKey }) {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">
-          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 disabled:text-slate-300 dark:disabled:text-slate-600">{t("analytics.back")}</button>
+          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="text-xs font-semibold text-sky-600 dark:text-sky-400 disabled:text-slate-300 dark:disabled:text-slate-600">{t("analytics.back")}</button>
           <span className="text-xs text-slate-500 dark:text-slate-400">{page} / {totalPages}</span>
-          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 disabled:text-slate-300 dark:disabled:text-slate-600">{t("analytics.forward")}</button>
+          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="text-xs font-semibold text-sky-600 dark:text-sky-400 disabled:text-slate-300 dark:disabled:text-slate-600">{t("analytics.forward")}</button>
         </div>
       )}
     </div>

@@ -157,7 +157,7 @@ export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
               disabled={booked || past}
               className={`text-[11px] h-7 flex items-center justify-center rounded-lg transition ${
                 selected
-                  ? "bg-emerald-500 text-white font-semibold"
+                  ? "bg-sky-500 text-white font-semibold"
                   : booked
                     ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 font-semibold cursor-not-allowed"
                     : past
@@ -176,7 +176,7 @@ export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
           <span className="text-[10px] text-slate-400">{t("common.booked")}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded bg-emerald-500" />
+          <span className="w-2.5 h-2.5 rounded bg-sky-500" />
           <span className="text-[10px] text-slate-400">{t("common.selected")}</span>
         </div>
       </div>
@@ -184,7 +184,7 @@ export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
   );
 }
 
-export const inputClass = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-emerald-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-900/40 transition";
+export const inputClass = "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-sky-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-sky-100 dark:focus:ring-sky-900/40 transition";
 
 export function Notice({ notice, onClose }) {
   if (!notice) return null;
@@ -218,7 +218,7 @@ export function Field({ label, children }) {
 }
 
 export function PrimaryButton({ children, className = "", ...props }) {
-  return <button {...props} className={`w-full rounded-xl bg-emerald-700 text-white text-sm font-semibold py-2.5 hover:bg-emerald-800 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none ${className}`}>{children}</button>;
+  return <button {...props} className={`w-full rounded-xl bg-sky-600 text-white text-sm font-semibold py-2.5 hover:bg-sky-700 active:scale-[0.99] transition disabled:opacity-50 disabled:pointer-events-none ${className}`}>{children}</button>;
 }
 
 export function GhostButton({ children, className = "", ...props }) {
@@ -322,11 +322,11 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
         {showCompany && (
           <span
             onClick={(e) => { e.stopPropagation(); onSelectCompany(car.companyId); }}
-            className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:underline flex items-center gap-1 mt-1 w-fit cursor-pointer"
+            className="text-xs text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 hover:underline flex items-center gap-1 mt-1 w-fit cursor-pointer"
           >
             <Building2 size={11} /> {car.company?.emri}
             {car.company?.eshteVerifikuar && <ShieldCheck size={11} className="text-emerald-600" />}
-            {car.company?.ofronDergimMakine && <Truck size={11} className="text-teal-600" title={t("common.offersDelivery")} />}
+            {car.company?.ofronDergimMakine && <Truck size={11} className="text-sky-600" title={t("common.offersDelivery")} />}
             {car.company?.avgRating != null && (
               <span className="flex items-center gap-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200 ml-1">
                 <Star size={11} className="text-amber-400 fill-amber-400" /> {car.company.avgRating} <span className="text-slate-400 dark:text-slate-500 font-normal">({car.company.reviewCount})</span>
@@ -342,7 +342,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onSelectCar(car); }}
-            className="text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1.5 rounded-lg transition"
+            className="text-[11px] font-bold text-white bg-sky-600 hover:bg-sky-700 px-2.5 py-1.5 rounded-lg transition"
           >
             {t("common.reserve")}
           </button>
@@ -464,7 +464,7 @@ export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) 
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); searchAddress(); } }}
           placeholder={t("locationPicker.searchPlaceholder")}
-          className="flex-1 min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-teal-600"
+          className="flex-1 min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-sky-600"
         />
         <button type="button" onClick={searchAddress} disabled={busy} className={btnClass}>
           <Search size={13} /> {busy ? "..." : t("common.search")}
@@ -485,7 +485,7 @@ export function LocationPicker({ adresa, qyteti, coords, onChange, showError }) 
       <p className="text-[10px] text-slate-400 mt-1">{t("locationPicker.hint")}</p>
       <div ref={mapElRef} className="mt-2 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 h-52" />
       {coords && (
-        <p className="flex items-center gap-1 text-[11px] text-teal-700 dark:text-teal-400 font-medium mt-1"><MapPin size={11} /> {t("locationPicker.locationSet")}</p>
+        <p className="flex items-center gap-1 text-[11px] text-sky-600 dark:text-sky-400 font-medium mt-1"><MapPin size={11} /> {t("locationPicker.locationSet")}</p>
       )}
     </div>
   );
@@ -533,7 +533,7 @@ export function AmenityPicker({ selected, onToggle }) {
               <span className="flex items-center gap-1.5">
                 {t(`amenityCategory.${cat.key}`)}
                 {selectedCount > 0 && (
-                  <span className="text-[10px] font-bold text-white bg-emerald-600 rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">{selectedCount}</span>
+                  <span className="text-[10px] font-bold text-white bg-sky-600 rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">{selectedCount}</span>
                 )}
               </span>
               <ChevronDown size={14} className={`text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />

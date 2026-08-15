@@ -514,7 +514,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
                 <button
                   onClick={() => (l.tab ? goHash(`/biznesi?tab=${l.tab}`) : setView(l.key))}
                   className={`text-sm font-medium px-3 py-1.5 rounded-lg transition ${
-                    view === l.key && (!l.tab || l.tab === businessTab) ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                    view === l.key && (!l.tab || l.tab === businessTab) ? "text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
                   {l.label}
@@ -526,7 +526,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
                 onClick={() => setMoreOpen((s) => !s)}
                 onBlur={() => setTimeout(() => setMoreOpen(false), 150)}
                 className={`text-sm font-medium px-3 py-1.5 rounded-lg transition ${
-                  moreLinks.some((l) => l.key === view) ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                  moreLinks.some((l) => l.key === view) ? "text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                 }`}
               >
                 {t("nav.more")}
@@ -617,7 +617,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
             </div>
           )}
           {loggedIn && (
-            <button onClick={() => { setView("auth"); setMenuOpen(false); }} className="hidden sm:flex w-8 h-8 rounded-full bg-emerald-700 items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
+            <button onClick={() => { setView("auth"); setMenuOpen(false); }} className="hidden sm:flex w-8 h-8 rounded-full bg-sky-600 items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
               {user?.fotoProfili ? (
                 <img src={user.fotoProfili} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -630,7 +630,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
           ) : (
             <button
               onClick={() => setView("auth")}
-              className="hidden md:block rounded-xl bg-emerald-700 text-white text-sm font-semibold px-4 py-1.5 hover:bg-emerald-800 transition"
+              className="hidden md:block rounded-xl bg-sky-600 text-white text-sm font-semibold px-4 py-1.5 hover:bg-sky-700 transition"
             >
               {t("nav.login")}
             </button>
@@ -652,7 +652,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
               <button
                 onClick={() => { if (l.tab) goHash(`/biznesi?tab=${l.tab}`); else setView(l.key); setMenuOpen(false); }}
                 className={`text-sm font-medium px-3 py-2 rounded-lg text-left transition ${
-                  view === l.key && (!l.tab || l.tab === businessTab) ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "text-slate-600 dark:text-slate-300"
+                  view === l.key && (!l.tab || l.tab === businessTab) ? "text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30" : "text-slate-600 dark:text-slate-300"
                 }`}
               >
                 {l.label}
@@ -670,7 +670,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
               </button>
             </>
           ) : (
-            <button onClick={() => { setView("auth"); setMenuOpen(false); }} className="text-sm font-semibold px-3 py-2 rounded-lg text-left text-emerald-700">
+            <button onClick={() => { setView("auth"); setMenuOpen(false); }} className="text-sm font-semibold px-3 py-2 rounded-lg text-left text-sky-600">
               {t("nav.loginRegister")}
             </button>
           )}

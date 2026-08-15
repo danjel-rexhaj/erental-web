@@ -92,7 +92,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
             <label
               key={slot.key}
               className={`flex flex-col items-center justify-center gap-1 h-20 rounded-xl border border-dashed text-center px-1 ${
-                capReached ? "border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed" : "border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                capReached ? "border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed" : "border-sky-300 dark:border-sky-700 text-sky-600 dark:text-sky-400 cursor-pointer hover:bg-sky-50 dark:hover:bg-sky-900/20"
               }`}
             >
               <Upload size={14} />

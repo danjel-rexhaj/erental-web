@@ -97,7 +97,7 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
         <div
           key={b.bookingId}
           id={`booking-${b.bookingId}`}
-          className={`border rounded-2xl p-4 transition bg-white dark:bg-slate-800 ${highlightBookingId === b.bookingId ? "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/40" : "border-slate-200 dark:border-slate-700"}`}
+          className={`border rounded-2xl p-4 transition bg-white dark:bg-slate-800 ${highlightBookingId === b.bookingId ? "border-sky-400 dark:border-sky-500 ring-2 ring-sky-200 dark:ring-sky-900/40" : "border-slate-200 dark:border-slate-700"}`}
         >
           <div className="flex items-start justify-between">
             <div>
@@ -110,7 +110,7 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
 
           {b.paymentMethod && b.paymentMethod !== "cash" && (
             <>
-              <p className="text-[11px] text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-0.5">
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
                 <CreditCard size={11} />
                 {b.paymentMethod === "paypal_full"
                   ? t("booking.fullyPaidCard")

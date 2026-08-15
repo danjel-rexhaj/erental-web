@@ -22,7 +22,7 @@ export function AuthGate({ onGo, text }) {
   const { t } = useLang();
   return (
     <div className="flex flex-col items-center justify-center text-center px-8 py-20 gap-4">
-      <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center"><Lock size={22} className="text-emerald-700 dark:text-emerald-400" /></div>
+      <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center"><Lock size={22} className="text-sky-600 dark:text-sky-400" /></div>
       <p className="text-sm text-slate-500 dark:text-slate-400">{text}</p>
       <PrimaryButton onClick={onGo} className="max-w-[160px]">{t("nav.login")}</PrimaryButton>
     </div>
@@ -103,7 +103,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
           </form>
         )}
         <button onClick={() => { setMode("login"); setForgotStep("request"); }} className="w-full text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
-          {t("auth.backTo")} <span className="text-emerald-700 dark:text-emerald-400 font-semibold underline">{t("nav.login")}</span>
+          {t("auth.backTo")} <span className="text-sky-600 dark:text-sky-400 font-semibold underline">{t("nav.login")}</span>
         </button>
       </div>
     );
@@ -147,7 +147,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
         <Field label={t("auth.password")}><input required type="password" className={inputClass} value={form.password} onChange={set("password")} placeholder="••••••••" /></Field>
 
         {mode === "login" && (
-          <button type="button" onClick={() => setMode("forgot")} className="text-xs text-emerald-700 dark:text-emerald-400 underline -mt-2 mb-4 block">
+          <button type="button" onClick={() => setMode("forgot")} className="text-xs text-sky-600 dark:text-sky-400 underline -mt-2 mb-4 block">
             {t("auth.forgotPassword")}
           </button>
         )}
@@ -156,8 +156,8 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
           <label className="flex items-start gap-2 mb-4 text-xs text-slate-600 dark:text-slate-300">
             <input type="checkbox" className="mt-0.5" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} />
             <span>
-              {t("auth.acceptPrefix")} <button type="button" onClick={() => goTo && goTo("terms")} className="text-emerald-700 dark:text-emerald-400 underline">{t("auth.termsOfService")}</button> {t("auth.and")}{" "}
-              <button type="button" onClick={() => goTo && goTo("privacy")} className="text-emerald-700 dark:text-emerald-400 underline">{t("auth.privacyPolicy")}</button>.
+              {t("auth.acceptPrefix")} <button type="button" onClick={() => goTo && goTo("terms")} className="text-sky-600 dark:text-sky-400 underline">{t("auth.termsOfService")}</button> {t("auth.and")}{" "}
+              <button type="button" onClick={() => goTo && goTo("privacy")} className="text-sky-600 dark:text-sky-400 underline">{t("auth.privacyPolicy")}</button>.
               {" "}{t("auth.marketplaceDisclaimer")}
             </span>
           </label>
@@ -167,7 +167,7 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
       </form>
       <button onClick={() => setMode(mode === "login" ? "register" : "login")} className="w-full text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
         {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
-        <span className="text-emerald-700 dark:text-emerald-400 font-semibold underline">{mode === "login" ? t("auth.register") : t("nav.login")}</span>
+        <span className="text-sky-600 dark:text-sky-400 font-semibold underline">{mode === "login" ? t("auth.register") : t("nav.login")}</span>
       </button>
     </div>
   );
@@ -184,7 +184,7 @@ export function VerifyView({ initialData, onAuth, showError, showOk, goTo }) {
     return (
       <div className="max-w-md mx-auto py-16 text-center">
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{t("auth.pendingRegNotFound")}</p>
-        <button onClick={() => goTo && goTo("auth")} className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 underline">{t("auth.backToRegister")}</button>
+        <button onClick={() => goTo && goTo("auth")} className="text-sm font-semibold text-sky-600 dark:text-sky-400 underline">{t("auth.backToRegister")}</button>
       </div>
     );
   }
@@ -215,8 +215,8 @@ export function VerifyView({ initialData, onAuth, showError, showOk, goTo }) {
 
   return (
     <div className="max-w-md mx-auto py-8 text-center">
-      <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
-        <MailCheck size={28} className="text-emerald-700 dark:text-emerald-400" />
+      <div className="w-16 h-16 rounded-full bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center mx-auto mb-4">
+        <MailCheck size={28} className="text-sky-600 dark:text-sky-400" />
       </div>
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">{t("auth.verifyEmailTitle")}</h1>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("auth.codeSentTo", { email: initialData?.email })}</p>
@@ -237,7 +237,7 @@ export function VerifyView({ initialData, onAuth, showError, showOk, goTo }) {
         <PrimaryButton type="submit" disabled={loading || code.length !== 6}>{loading ? t("auth.verifying") : t("auth.verify")}</PrimaryButton>
       </form>
 
-      <button onClick={resend} disabled={resending || cooldown > 0} className="text-xs text-emerald-700 dark:text-emerald-400 underline mt-4 disabled:no-underline disabled:text-slate-400">
+      <button onClick={resend} disabled={resending || cooldown > 0} className="text-xs text-sky-600 dark:text-sky-400 underline mt-4 disabled:no-underline disabled:text-slate-400">
         {resending ? t("common.sending") : cooldown > 0 ? t("auth.waitSeconds", { seconds: cooldown }) : t("auth.resendCode")}
       </button>
     </div>
@@ -372,7 +372,7 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
     <div className="max-w-lg mx-auto py-6 sm:py-8 flex flex-col gap-5">
       <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-8 flex flex-col items-center text-center">
         <div className="relative">
-          <div className="w-24 h-24 rounded-full bg-emerald-700 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+          <div className="w-24 h-24 rounded-full bg-sky-600 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
             {user?.fotoProfili ? (
               <img src={user.fotoProfili} alt="Foto profili" className="w-full h-full object-cover" />
             ) : (
@@ -467,7 +467,7 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
             />
             <PrimaryButton type="submit" disabled={loading} className="mt-2">{loading ? t("auth.verifying") : t("auth.verify")}</PrimaryButton>
           </form>
-          <button onClick={resend} disabled={resending} className="text-xs text-emerald-700 dark:text-emerald-400 underline mt-2">
+          <button onClick={resend} disabled={resending} className="text-xs text-sky-600 dark:text-sky-400 underline mt-2">
             {resending ? t("common.sending") : t("auth.sendNewCode")}
           </button>
         </div>

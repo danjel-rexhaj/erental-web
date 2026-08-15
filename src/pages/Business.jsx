@@ -50,7 +50,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       {tabs.length > 0 && (
         <div className="flex mb-6 gap-2">
           {tabs.map((t) => (
-            <button key={t.key} onClick={() => setTab(t.key)} className={`text-xs font-semibold px-3 py-1.5 rounded-full ${tab === t.key ? "bg-emerald-700 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}>
+            <button key={t.key} onClick={() => setTab(t.key)} className={`text-xs font-semibold px-3 py-1.5 rounded-full ${tab === t.key ? "bg-sky-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}>
               {t.label}
             </button>
           ))}
@@ -88,7 +88,7 @@ function PaymentBadge({ b }) {
   const shumaPaguar = b.payment?.shumaPaguarOnline ?? 0;
   const mbetetCash = (b.cmimiTotal - shumaPaguar).toFixed(2);
   return (
-    <p className="text-[11px] text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-0.5">
+    <p className="text-[11px] text-emerald-700 dark:text-emerald-400 flex items-center gap-1 mt-0.5">
       <CreditCard size={11} />
       {b.paymentMethod === "paypal_full"
         ? t("booking.fullyPaidCard")
@@ -197,7 +197,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
     <div
       key={b.bookingId}
       id={`booking-${b.bookingId}`}
-      className={`border rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/40" : "border-slate-200 dark:border-slate-700"}`}
+      className={`border rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-sky-400 dark:border-sky-500 ring-2 ring-sky-200 dark:ring-sky-900/40" : "border-slate-200 dark:border-slate-700"}`}
     >
       <div className="flex items-start justify-between">
         <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
@@ -306,7 +306,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
               <div
                 key={b.bookingId}
                 id={`booking-${b.bookingId}`}
-                className={`border bg-amber-50/40 dark:bg-amber-900/20 rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/40" : "border-amber-200 dark:border-amber-800/60"}`}
+                className={`border bg-amber-50/40 dark:bg-amber-900/20 rounded-2xl p-4 transition ${highlightBookingId === b.bookingId ? "border-sky-400 dark:border-sky-500 ring-2 ring-sky-200 dark:ring-sky-900/40" : "border-amber-200 dark:border-amber-800/60"}`}
               >
                 <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
                 <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500">{confirmim(b)}</p>
@@ -360,7 +360,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                       placeholder={t("business.rejectReasonPlaceholder")}
                       rows={2}
                       autoFocus
-                      className="w-full text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 mb-2 outline-none focus:border-emerald-600 dark:focus:border-emerald-500"
+                      className="w-full text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-lg px-2 py-1.5 mb-2 outline-none focus:border-sky-600 dark:focus:border-sky-500"
                     />
                     <div className="flex gap-2">
                       <GhostButton onClick={() => reject(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs py-2 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/60 hover:bg-red-50 dark:hover:bg-red-900/20">
@@ -574,21 +574,21 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center">
-          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">0€</p>
+          <p className="text-2xl font-bold text-sky-600 dark:text-sky-400 mb-1">0€</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">{t("business.startCost")}</p>
         </div>
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center">
-          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">24-48h</p>
+          <p className="text-2xl font-bold text-sky-600 dark:text-sky-400 mb-1">24-48h</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">{t("business.fastVerification")}</p>
         </div>
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center flex flex-col items-center justify-center">
-          <MessageCircle size={20} className="text-emerald-700 dark:text-emerald-400 mb-1" />
+          <MessageCircle size={20} className="text-sky-600 dark:text-sky-400 mb-1" />
           <p className="text-xs text-slate-500 dark:text-slate-400">{t("business.support")} <a href="https://wa.me/355688208868" target="_blank" rel="noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">WhatsApp</a></p>
         </div>
       </div>
 
       <div className="max-w-md mx-auto">
-        <div className="flex items-center gap-2 mb-1"><Building2 size={20} className="text-emerald-700 dark:text-emerald-400" /><h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("business.registerBusiness")}</h2></div>
+        <div className="flex items-center gap-2 mb-1"><Building2 size={20} className="text-sky-600 dark:text-sky-400" /><h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("business.registerBusiness")}</h2></div>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("business.willUseAccountEmail")}</p>
         <form onSubmit={submit}>
           <Field label={t("business.businessName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="AutoRent Tirana" /></Field>
@@ -683,11 +683,11 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6">
         <div className="flex flex-col lg:flex-row lg:items-stretch gap-4">
           <div className="flex items-center gap-4 min-w-0">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
               {company.logoUrl ? (
                 <img src={company.logoUrl} alt={company.emri} className="w-full h-full object-cover" />
               ) : (
-                <Building2 size={28} className="text-emerald-700 dark:text-emerald-400" />
+                <Building2 size={28} className="text-sky-600 dark:text-sky-400" />
               )}
             </div>
             <div className="min-w-0 flex-1 lg:flex-initial">
@@ -699,7 +699,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
                   <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Clock size={12} /> {t("common.status.pending")}</span>
                 )}
                 {company.ofronDergimMakine && (
-                  <span className="flex items-center gap-1 text-[11px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={12} /> {t("common.deliveryBadge")}</span>
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={12} /> {t("common.deliveryBadge")}</span>
                 )}
                 {!editingDetails && (
                   <button onClick={() => setEditingDetails(true)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" title={t("auth.editData")}>
@@ -735,7 +735,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
                   </div>
                 </div>
               ) : !editingDetails && (
-                <button onClick={() => setEditingLocation(true)} className={`flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 mt-2.5 w-fit border transition ${company.latitude != null ? "border-teal-300 dark:border-teal-700 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+                <button onClick={() => setEditingLocation(true)} className={`flex items-center gap-1.5 text-[11px] font-semibold rounded-full px-2.5 py-1 mt-2.5 w-fit border transition ${company.latitude != null ? "border-sky-300 dark:border-sky-700 bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                   <MapPin size={11} /> {company.latitude != null ? t("business.exactLocationSetChange") : t("business.setExactLocation")}
                 </button>
               )}
@@ -770,7 +770,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
         <>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{t("business.myCars", { count: cars.length })}</h3>
-            <button onClick={() => setShowAddCar((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 underline"><Plus size={14} /> {t("business.addCar")}</button>
+            <button onClick={() => setShowAddCar((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-sky-600 dark:text-sky-400 underline"><Plus size={14} /> {t("business.addCar")}</button>
           </div>
 
           {showAddCar && <div className="max-w-xl"><AddCarForm token={token} companyId={company.companyId} onDone={() => { setShowAddCar(false); reload(); }} showError={showError} showOk={showOk} /></div>}
@@ -1098,7 +1098,7 @@ function BusinessCarCard({ car, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen(car.carId)}
-      className="text-left border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-sm transition"
+      className="text-left border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden hover:border-sky-300 dark:hover:border-sky-600 hover:shadow-sm transition"
     >
       <CarPhoto car={car} />
       <div className="p-3">
@@ -1106,7 +1106,7 @@ function BusinessCarCard({ car, onOpen }) {
           <div><p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{car.marka} {car.modeli}</p><p className="text-xs text-slate-500 dark:text-slate-400">{car.targa} · {car.cmimiDites}€/dite</p></div>
           <CarStatusBadge statusi={car.statusi} />
         </div>
-        <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold mt-3">{t("business.viewDetails")}</p>
+        <p className="text-xs text-sky-600 dark:text-sky-400 font-semibold mt-3">{t("business.viewDetails")}</p>
       </div>
     </button>
   );
@@ -1235,7 +1235,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
                   key={p.photoId}
                   type="button"
                   onClick={() => setPreviewPhoto(p)}
-                  className={`relative rounded-xl overflow-hidden border-2 ${p.photoId === shownPhoto?.photoId ? "border-emerald-500" : "border-transparent hover:border-slate-300 dark:hover:border-slate-600"}`}
+                  className={`relative rounded-xl overflow-hidden border-2 ${p.photoId === shownPhoto?.photoId ? "border-sky-500" : "border-transparent hover:border-slate-300 dark:hover:border-slate-600"}`}
                 >
                   <img src={p.urlFotos} alt="" className="w-full h-16 object-cover" />
                   {p.eshteKryesore && (
@@ -1251,7 +1251,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
           <GhostButton
             type="button"
             onClick={toggleCalendar}
-            className={`flex items-center justify-center gap-1.5 py-2 mt-4 ${showCalendar ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
+            className={`flex items-center justify-center gap-1.5 py-2 mt-4 ${showCalendar ? "border-sky-300 dark:border-sky-600 text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20" : ""}`}
           >
             <Calendar size={13} />{showCalendar ? t("business.closeCalendar") : t("business.bookingCalendar")}
           </GhostButton>
@@ -1321,14 +1321,14 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
             <GhostButton
               type="button"
               onClick={handleToggleEdit}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${editing ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${editing ? "border-sky-300 dark:border-sky-600 text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20" : ""}`}
             >
               <Pencil size={13} />{editing ? t("business.closeEditing") : t("business.editDetailsBtn")}
             </GhostButton>
             <GhostButton
               type="button"
               onClick={handleTogglePhotos}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${managingPhotos ? "border-emerald-300 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : ""}`}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 ${managingPhotos ? "border-sky-300 dark:border-sky-600 text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20" : ""}`}
             >
               <Upload size={13} />{managingPhotos ? t("business.closePhotos") : t("business.managePhotosBtn")}
             </GhostButton>
@@ -1435,7 +1435,7 @@ function AdminPending({ token, showError, showOk }) {
           <p className="text-xs text-slate-500 dark:text-slate-400">{c.qyteti} · NIPT {c.nipt}</p>
           <p className="text-xs text-slate-400">{c.email} · {c.telefoni}</p>
           {c.certifikataUrl ? (
-            <a href={c.certifikataUrl} target="_blank" rel="noreferrer" className="text-xs text-emerald-700 dark:text-emerald-400 underline mt-2 block">
+            <a href={c.certifikataUrl} target="_blank" rel="noreferrer" className="text-xs text-sky-600 dark:text-sky-400 underline mt-2 block">
               {t("business.viewNiptCert")}
             </a>
           ) : (

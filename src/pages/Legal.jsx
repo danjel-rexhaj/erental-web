@@ -11,22 +11,22 @@ export function About() {
   const { t } = useLang();
   return (
     <div className="max-w-2xl mx-auto py-8">
-      <div className="flex items-center gap-2 mb-1"><Info size={20} className="text-emerald-700 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.about.title")}</h1></div>
+      <div className="flex items-center gap-2 mb-1"><Info size={20} className="text-sky-600 dark:text-sky-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.about.title")}</h1></div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">{t("legal.about.subtitle")}</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center">
-          <CarIcon size={22} className="mx-auto text-emerald-700 dark:text-emerald-400 mb-2" />
+          <CarIcon size={22} className="mx-auto text-sky-600 dark:text-sky-400 mb-2" />
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("legal.about.compareTitle")}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("legal.about.compareBody")}</p>
         </div>
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center">
-          <ShieldCheck size={22} className="mx-auto text-emerald-700 dark:text-emerald-400 mb-2" />
+          <ShieldCheck size={22} className="mx-auto text-sky-600 dark:text-sky-400 mb-2" />
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("legal.about.verifiedTitle")}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("legal.about.verifiedBody")}</p>
         </div>
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center">
-          <Users size={22} className="mx-auto text-emerald-700 dark:text-emerald-400 mb-2" />
+          <Users size={22} className="mx-auto text-sky-600 dark:text-sky-400 mb-2" />
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("legal.about.noMiddlemanTitle")}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("legal.about.noMiddlemanBody")}</p>
         </div>
@@ -46,7 +46,7 @@ export function Contact() {
   const { t } = useLang();
   return (
     <div className="max-w-sm mx-auto py-12 text-center">
-      <div className="flex items-center justify-center gap-2 mb-1"><Mail size={20} className="text-emerald-700 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.contact.title")}</h1></div>
+      <div className="flex items-center justify-center gap-2 mb-1"><Mail size={20} className="text-sky-600 dark:text-sky-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.contact.title")}</h1></div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">{t("legal.contact.subtitle")}</p>
 
       <div className="flex flex-col gap-4">
@@ -77,7 +77,7 @@ export function Privacy() {
   const { t } = useLang();
   return (
     <div className="max-w-2xl mx-auto py-8">
-      <div className="flex items-center gap-2 mb-1"><Shield size={20} className="text-emerald-700 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.privacy.title")}</h1></div>
+      <div className="flex items-center gap-2 mb-1"><Shield size={20} className="text-sky-600 dark:text-sky-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.privacy.title")}</h1></div>
       <p className="text-xs text-slate-400 mb-6">{t("legal.lastUpdated")}</p>
 
       <div className="space-y-5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -99,7 +99,7 @@ export function Privacy() {
         </section>
         <section>
           <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{t("legal.privacy.s5Title")}</h2>
-          <p>{t("legal.privacy.contactPrefix")} <a href={`mailto:${SUPPORT_EMAIL}`} className="text-emerald-700 dark:text-emerald-400 underline">{SUPPORT_EMAIL}</a></p>
+          <p>{t("legal.privacy.contactPrefix")} <a href={`mailto:${SUPPORT_EMAIL}`} className="text-sky-600 dark:text-sky-400 underline">{SUPPORT_EMAIL}</a></p>
         </section>
       </div>
     </div>
@@ -110,11 +110,11 @@ export function Terms() {
   const { t } = useLang();
   return (
     <div className="max-w-2xl mx-auto py-8">
-      <div className="flex items-center gap-2 mb-1"><FileText size={20} className="text-emerald-700 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.terms.title")}</h1></div>
+      <div className="flex items-center gap-2 mb-1"><FileText size={20} className="text-sky-600 dark:text-sky-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.terms.title")}</h1></div>
       <p className="text-xs text-slate-400 mb-6">{t("legal.lastUpdated")}</p>
 
       <div className="space-y-5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-        <section className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-4">
+        <section className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800/60 rounded-xl p-4">
           <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{t("legal.terms.marketplaceTitle")}</h2>
           <p>{t("legal.terms.marketplaceBody1")} <strong>{t("legal.terms.marketplaceBodyBold")}</strong> {t("legal.terms.marketplaceBody2")}</p>
         </section>
@@ -171,7 +171,7 @@ export function Careers({ showError }) {
   if (sent) {
     return (
       <div className="max-w-md mx-auto py-16 text-center">
-        <CheckCircle2 size={32} className="mx-auto text-emerald-600 dark:text-emerald-400 mb-3" />
+        <CheckCircle2 size={32} className="mx-auto text-sky-600 dark:text-sky-400 mb-3" />
         <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("legal.careers.thanksTitle")}</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{t("legal.careers.thanksBody")}</p>
       </div>
@@ -180,9 +180,9 @@ export function Careers({ showError }) {
 
   return (
     <div className="max-w-md mx-auto py-8">
-      <div className="flex items-center gap-2 mb-1"><Briefcase size={20} className="text-emerald-700 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.careers.title")}</h1></div>
+      <div className="flex items-center gap-2 mb-1"><Briefcase size={20} className="text-sky-600 dark:text-sky-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.careers.title")}</h1></div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">{t("legal.careers.subtitle")}</p>
-      <a href={`mailto:${SUPPORT_EMAIL}`} className="text-xs text-emerald-700 dark:text-emerald-400 underline">{SUPPORT_EMAIL}</a>
+      <a href={`mailto:${SUPPORT_EMAIL}`} className="text-xs text-sky-600 dark:text-sky-400 underline">{SUPPORT_EMAIL}</a>
       <form onSubmit={submit} className="mt-4">
         <Field label={t("legal.careers.fullName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder={t("legal.careers.namePlaceholder")} /></Field>
         <Field label="Email"><input required type="email" className={inputClass} value={form.email} onChange={set("email")} placeholder="ti@email.com" /></Field>
