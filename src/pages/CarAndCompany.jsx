@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker } from "../components";
 import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS } from "../carData";
@@ -41,6 +41,7 @@ function addDaysIso(iso, days) {
   d.setDate(d.getDate() + days);
   return d.toISOString().split("T")[0];
 }
+const todayIso = () => new Date().toISOString().split("T")[0];
 
 const companySelectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-emerald-900/40 transition";
 const categoryLabelCompany = (key, t) => (CAR_CATEGORIES.some((c) => c.key === key) ? t(`category.${key}`) : key);
@@ -606,12 +607,40 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
 
 const COMPANY_FILTERS_DEFAULT = { marka: "", modeli: "", kategoria: "", karburanti: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" };
 
-export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds, onToggleFavorite }) {
+function companyFreeInLabel(lirohetMe, lang) {
+  return formatShortDate(lirohetMe, lang);
+}
+
+export function CompanyProfile({ company, cars, dataFillimit, dataPerfundimit, onDatesChange, onBack, onSelectCar, favoriteIds, onToggleFavorite }) {
   const { t, lang } = useLang();
   const [filters, setFilters] = useState(COMPANY_FILTERS_DEFAULT);
   const [showFilters, setShowFilters] = useState(false);
+  const [fullCars, setFullCars] = useState(null);
+
+  const companyId = company?.companyId;
+
+  // The cars list handed down from the search flow only ever contains cars available for
+  // whatever dates were last searched (or none) — visiting a business's own profile should
+  // show its whole fleet, with currently-booked cars flagged rather than hidden entirely.
+  useEffect(() => {
+    if (!companyId) return;
+    let cancelled = false;
+    setFullCars(null);
+    const url = dataFillimit && dataPerfundimit
+      ? `/Cars/available?dataFillimit=${dataFillimit}&dataPerfundimit=${dataPerfundimit}&companyId=${companyId}`
+      : "/Cars";
+    apiFetch(url, null)
+      .then((data) => {
+        if (cancelled) return;
+        setFullCars(dataFillimit && dataPerfundimit ? data : data.filter((c) => c.companyId === companyId));
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [companyId, dataFillimit, dataPerfundimit]);
 
   if (!company) return null;
+
+  const baseCars = fullCars ?? cars;
 
   const lat = company.latitude;
   const lng = company.longitude;
@@ -622,10 +651,10 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.adresa ? company.adresa + ", " : ""}${company.qyteti || ""}, Shqiperi`)}`;
   const mapEmbedUrl = hasCoords ? getMapEmbedUrl(lat, lng) : null;
 
-  const brands = sortByBrandPopularityCompany([...new Set(cars.map((c) => c.marka).filter(Boolean))]);
-  const models = [...new Set(cars.filter((c) => !filters.marka || c.marka === filters.marka).map((c) => c.modeli).filter(Boolean))].sort();
-  const categories = [...new Set(cars.map((c) => c.kategoria).filter(Boolean))].sort();
-  const years = [...new Set(cars.map((c) => c.viti).filter(Boolean))].sort((a, b) => b - a);
+  const brands = sortByBrandPopularityCompany([...new Set(baseCars.map((c) => c.marka).filter(Boolean))]);
+  const models = [...new Set(baseCars.filter((c) => !filters.marka || c.marka === filters.marka).map((c) => c.modeli).filter(Boolean))].sort();
+  const categories = [...new Set(baseCars.map((c) => c.kategoria).filter(Boolean))].sort();
+  const years = [...new Set(baseCars.map((c) => c.viti).filter(Boolean))].sort((a, b) => b - a);
 
   function toggleAmenity(key) {
     setFilters((f) => ({
@@ -634,7 +663,7 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
     }));
   }
 
-  let visibleCars = cars.filter((c) =>
+  let visibleCars = baseCars.filter((c) =>
     (!filters.marka || c.marka === filters.marka) &&
     (!filters.modeli || c.modeli === filters.modeli) &&
     (!filters.kategoria || c.kategoria === filters.kategoria) &&
@@ -708,8 +737,39 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
         </div>
       </div>
 
+      <div className="flex items-center gap-2 mb-4 flex-wrap text-xs">
+        <Calendar size={14} className="text-slate-400 shrink-0" />
+        {dataFillimit && dataPerfundimit ? (
+          <>
+            <input
+              type="date"
+              value={dataFillimit}
+              min={todayIso()}
+              onChange={(e) => onDatesChange?.(e.target.value, dataPerfundimit && e.target.value >= dataPerfundimit ? addDaysIso(e.target.value, 1) : dataPerfundimit)}
+              className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:border-sky-600 dark:focus:border-emerald-500"
+            />
+            <ArrowRight size={12} className="text-slate-300 shrink-0" />
+            <input
+              type="date"
+              value={dataPerfundimit}
+              min={addDaysIso(dataFillimit, 1)}
+              onChange={(e) => onDatesChange?.(dataFillimit, e.target.value)}
+              className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:border-sky-600 dark:focus:border-emerald-500"
+            />
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onDatesChange?.(todayIso(), addDaysIso(todayIso(), 1))}
+            className="text-sky-600 dark:text-emerald-400 font-semibold underline"
+          >
+            {t("company.pickDates")}
+          </button>
+        )}
+      </div>
+
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("company.carsOfTitle", { name: company.emri })} ({visibleCars.length}{visibleCars.length !== cars.length ? ` ${t("company.ofTotal", { total: cars.length })}` : ""})</h2>
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("company.carsOfTitle", { name: company.emri })} ({visibleCars.length}{visibleCars.length !== baseCars.length ? ` ${t("company.ofTotal", { total: baseCars.length })}` : ""})</h2>
         <button
           type="button"
           onClick={() => setShowFilters((s) => !s)}
@@ -800,7 +860,16 @@ export function CompanyProfile({ company, cars, onBack, onSelectCar, favoriteIds
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {visibleCars.map((car) => (
-            <CarCard key={car.carId} car={car} onSelectCar={onSelectCar} showCompany={false} isFavorited={favoriteIds?.has(car.carId)} onToggleFavorite={onToggleFavorite} />
+            <CarCard
+              key={car.carId}
+              car={car}
+              onSelectCar={onSelectCar}
+              showCompany={false}
+              isFavorited={favoriteIds?.has(car.carId)}
+              onToggleFavorite={onToggleFavorite}
+              nearMiss={car.eshteELire === false}
+              freeInLabel={car.eshteELire === false ? t("company.bookedUntil", { date: companyFreeInLabel(car.lirohetMe, lang) }) : null}
+            />
           ))}
         </div>
       )}

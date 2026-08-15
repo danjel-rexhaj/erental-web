@@ -330,6 +330,9 @@ export default function App() {
         <CompanyProfile
           company={company}
           cars={companyCars}
+          dataFillimit={dataFillimit}
+          dataPerfundimit={dataPerfundimit}
+          onDatesChange={(from, to) => { setDataFillimit(from); setDataPerfundimit(to); }}
           onBack={companyProfileFromCarId
             ? () => go(`/makina/${companyProfileFromCarId}?nga=${dataFillimit}&deri=${dataPerfundimit}`, selectedCar?.carId === companyProfileFromCarId ? { car: selectedCar } : undefined)
             : () => go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`)}
