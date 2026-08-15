@@ -317,7 +317,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
       <div className="p-3">
         <div className="flex items-start justify-between">
           <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{car.marka} {car.modeli}</p>
-          <span className="text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 dark:from-slate-900 dark:to-slate-900 px-2 py-1 rounded-lg whitespace-nowrap shadow-sm shadow-amber-900/20 dark:shadow-none">{car.cmimiDites}€{t("common.perDaySuffix")}</span>
+          <span className="text-xs font-bold text-white bg-slate-900 dark:bg-slate-700 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites}€{t("common.perDaySuffix")}</span>
         </div>
         {showCompany && (
           <span
@@ -342,7 +342,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onSelectCar(car); }}
-            className="text-[11px] font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 dark:from-emerald-600 dark:to-emerald-600 dark:hover:from-emerald-700 dark:hover:to-emerald-700 px-2.5 py-1.5 rounded-lg transition"
+            className="text-[11px] font-bold text-white bg-sky-600 dark:bg-emerald-600 hover:bg-sky-700 dark:hover:bg-emerald-700 px-2.5 py-1.5 rounded-lg transition"
           >
             {t("common.reserve")}
           </button>
