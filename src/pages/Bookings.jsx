@@ -14,7 +14,7 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
   const [cancellingId, setCancellingId] = useState(null);
   const [cancelInfo, setCancelInfo] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
-  const [showCancelled, setShowCancelled] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -88,11 +88,14 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
   if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">{t("booking.emptyTitle")}</p></div>;
 
+  // A completed booking stays in the active list until reviewed (so the review prompt
+  // doesn't get buried in history), then moves alongside cancelled ones once done.
+  const isReviewed = (b) => b.reviews && b.reviews.length > 0;
   const STATUS_PRIORITY = { confirmed: 0, completed: 1, pending: 2 };
   const activeBookings = bookings
-    .filter((b) => b.statusi !== "cancelled")
+    .filter((b) => b.statusi !== "cancelled" && !(b.statusi === "completed" && isReviewed(b)))
     .sort((a, b) => (STATUS_PRIORITY[a.statusi] ?? 3) - (STATUS_PRIORITY[b.statusi] ?? 3));
-  const cancelledBookings = bookings.filter((b) => b.statusi === "cancelled");
+  const historyBookings = bookings.filter((b) => b.statusi === "cancelled" || (b.statusi === "completed" && isReviewed(b)));
 
   const renderCard = (b) => (
         <div
@@ -244,18 +247,18 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
         {activeBookings.map(renderCard)}
       </div>
 
-      {cancelledBookings.length > 0 && (
+      {historyBookings.length > 0 && (
         <div className="mt-6">
           <button
-            onClick={() => setShowCancelled((s) => !s)}
+            onClick={() => setShowHistory((s) => !s)}
             className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           >
-            <ChevronDown size={16} className={`transition-transform ${showCancelled ? "rotate-180" : ""}`} />
-            {t("booking.cancelledSection", { count: cancelledBookings.length })}
+            <ChevronDown size={16} className={`transition-transform ${showHistory ? "rotate-180" : ""}`} />
+            {t("booking.historySection", { count: historyBookings.length })}
           </button>
-          {showCancelled && (
+          {showHistory && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
-              {cancelledBookings.map(renderCard)}
+              {historyBookings.map(renderCard)}
             </div>
           )}
         </div>

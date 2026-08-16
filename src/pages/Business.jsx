@@ -141,7 +141,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   const [reason, setReason] = useState("");
   const [deletingId, setDeletingId] = useState(null);
   const [licenseModalId, setLicenseModalId] = useState(null);
-  const [showCancelled, setShowCancelled] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -225,9 +225,9 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
   if (bookings.length === 0) return <div className="text-center py-16 px-8"><Calendar size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">{t("business.emptyBookings")}</p></div>;
 
-  const confirmedGroup = bookings.filter((b) => b.statusi === "confirmed" || b.statusi === "completed");
+  const confirmedGroup = bookings.filter((b) => b.statusi === "confirmed");
   const pending = bookings.filter((b) => b.statusi === "pending");
-  const cancelledGroup = bookings.filter((b) => b.statusi === "cancelled");
+  const historyGroup = bookings.filter((b) => b.statusi === "cancelled" || b.statusi === "completed");
 
   const renderHistoryCard = (b) => (
     <div
@@ -300,34 +300,6 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
             {t("booking.delete")}
           </button>
         )
-      )}
-    </div>
-  );
-
-  const renderCancelledCard = (b) => (
-    <div key={b.bookingId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
-      <div className="flex items-start justify-between">
-        <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
-        <StatusPill status={b.statusi} />
-      </div>
-      <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">{confirmim(b)}</p>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {b.klienti.emri} {b.klienti.mbiemri}</p>
-      {b.arsyejaRefuzimit && (
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-slate-800 rounded-lg px-2 py-1.5">
-          <span className="font-semibold">{t("business.reasonLabel")}</span> {b.arsyejaRefuzimit}
-        </p>
-      )}
-      {deletingId === b.bookingId ? (
-        <div className="flex items-center gap-2 mt-3">
-          <button onClick={() => removeBooking(b.bookingId)} disabled={actingId === b.bookingId} className="text-xs font-semibold text-red-600 dark:text-red-400 underline">
-            {actingId === b.bookingId ? t("booking.deleting") : t("booking.confirmDelete")}
-          </button>
-          <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 dark:text-slate-500 underline">{t("booking.cancel")}</button>
-        </div>
-      ) : (
-        <button onClick={() => setDeletingId(b.bookingId)} className="text-xs text-slate-400 dark:text-slate-500 underline mt-3">
-          {t("booking.delete")}
-        </button>
       )}
     </div>
   );
@@ -441,18 +413,18 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
         </div>
       )}
 
-      {cancelledGroup.length > 0 && (
+      {historyGroup.length > 0 && (
         <div>
           <button
-            onClick={() => setShowCancelled((s) => !s)}
+            onClick={() => setShowHistory((s) => !s)}
             className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
           >
-            <ChevronDown size={16} className={`transition-transform ${showCancelled ? "rotate-180" : ""}`} />
-            {t("business.cancelledCount", { count: cancelledGroup.length })}
+            <ChevronDown size={16} className={`transition-transform ${showHistory ? "rotate-180" : ""}`} />
+            {t("business.historyCount", { count: historyGroup.length })}
           </button>
-          {showCancelled && (
+          {showHistory && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
-              {cancelledGroup.map(renderCancelledCard)}
+              {historyGroup.map(renderHistoryCard)}
             </div>
           )}
         </div>
