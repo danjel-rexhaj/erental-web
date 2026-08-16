@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronLeft, ChevronRight, Trash2, Search } from "lucide-react";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiFetch } from "../api";
 import { inputClass, StatusPill, PrimaryButton, GhostButton } from "../components";
 import { useLang } from "../useLang";
@@ -98,6 +98,22 @@ function SearchBox({ value, onChange, placeholder }) {
   );
 }
 
+const PIE_COLORS = ["#0284c7", "#059669", "#d97706", "#7c3aed", "#db2777", "#0891b2", "#65a30d", "#dc2626", "#4f46e5", "#ca8a04"];
+
+function CarPieChart({ data, dataKey }) {
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <PieChart>
+        <Pie data={data} dataKey={dataKey} nameKey="makina" cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={2}>
+          {data.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+        </Pie>
+        <Tooltip />
+        <Legend wrapperStyle={{ fontSize: 11 }} />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
 function StatCard({ icon: Icon, label, value, onClick, active }) {
   const Tag = onClick ? "button" : "div";
   return (
@@ -142,6 +158,7 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
 
   const monthly = data.monthly.map((m) => ({ label: entryLabel(m, lang), rezervime: m.rezervime, teArdhura: Math.round(m.teArdhura) }));
   const viewsChart = data.viewsPerCar.map((v) => ({ makina: v.makina, shikime: v.shikime }));
+  const bookingsChart = (data.bookingsPerCar || []).map((v) => ({ makina: v.makina, rezervime: v.rezervime }));
 
   return (
     <div className={`flex flex-col gap-6 transition-opacity ${loading ? "opacity-50" : ""}`}>
@@ -178,15 +195,16 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
         {viewsChart.length === 0 ? (
           <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noViewsYet")}</p>
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={viewsChart}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="makina" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="shikime" fill="#047857" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <CarPieChart data={viewsChart} dataKey="shikime" />
+        )}
+      </div>
+
+      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-4">{t("analytics.bookingsPerCar")}</h3>
+        {bookingsChart.length === 0 ? (
+          <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noBookingsYet")}</p>
+        ) : (
+          <CarPieChart data={bookingsChart} dataKey="rezervime" />
         )}
       </div>
 
