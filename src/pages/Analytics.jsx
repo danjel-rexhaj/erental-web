@@ -270,6 +270,51 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
   );
 }
 
+function AdminPanelPage({ icon: Icon, titleKey, onBack, children }) {
+  const { t } = useLang();
+  return (
+    <div>
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6"><ChevronLeft size={16} /> {t("common.back")}</button>
+      <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mb-4">
+        <Icon size={18} /> {t(titleKey)}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+export function AdminUsersPage({ token, showError, showOk, onBack }) {
+  return (
+    <AdminPanelPage icon={UsersIcon} titleKey="analytics.metric.users" onBack={onBack}>
+      <AdminUsersPanel token={token} showError={showError} showOk={showOk} />
+    </AdminPanelPage>
+  );
+}
+
+export function AdminCompaniesPage({ token, showError, showOk, onBack }) {
+  return (
+    <AdminPanelPage icon={Building2} titleKey="analytics.metric.companies" onBack={onBack}>
+      <AdminCompaniesPanel token={token} showError={showError} showOk={showOk} />
+    </AdminPanelPage>
+  );
+}
+
+export function AdminCarsPage({ token, showError, showOk, onBack }) {
+  return (
+    <AdminPanelPage icon={CarIcon} titleKey="analytics.metric.cars" onBack={onBack}>
+      <AdminCarsPanel token={token} showError={showError} showOk={showOk} />
+    </AdminPanelPage>
+  );
+}
+
+export function AdminBookingsPage({ token, showError, showOk, onBack }) {
+  return (
+    <AdminPanelPage icon={CalendarIcon} titleKey="analytics.metric.bookings" onBack={onBack}>
+      <AdminBookingsPanel token={token} showError={showError} showOk={showOk} />
+    </AdminPanelPage>
+  );
+}
+
 const PAGE_SIZE = 15;
 
 function TransactionsTable({ payments, admin = false }) {
@@ -346,7 +391,7 @@ const METRICS = [
   { key: "verifications", labelKey: "analytics.metric.verifications", color: "#be185d" },
 ];
 
-export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPending, onGoTransactions }) {
+export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPending, onGoTransactions, onGoPanel }) {
   const { t, lang } = useLang();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -354,11 +399,6 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
   const [metric, setMetric] = useState("users");
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
-  const [activePanel, setActivePanel] = useState(null);
-
-  function togglePanel(key) {
-    setActivePanel((p) => (p === key ? null : key));
-  }
 
   useEffect(() => {
     setLoading(true);
@@ -386,10 +426,10 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <StatCard icon={UsersIcon} label={t("analytics.metric.users")} value={data.totals.totalUsers} active={activePanel === "users"} onClick={() => togglePanel("users")} />
-        <StatCard icon={Building2} label={t("analytics.metric.companies")} value={data.totals.totalCompanies} active={activePanel === "companies"} onClick={() => togglePanel("companies")} />
-        <StatCard icon={CarIcon} label={t("analytics.metric.cars")} value={data.totals.totalCars} active={activePanel === "cars"} onClick={() => togglePanel("cars")} />
-        <StatCard icon={CalendarIcon} label={t("analytics.metric.bookings")} value={data.totals.totalBookings} active={activePanel === "bookings"} onClick={() => togglePanel("bookings")} />
+        <StatCard icon={UsersIcon} label={t("analytics.metric.users")} value={data.totals.totalUsers} onClick={() => onGoPanel("users")} />
+        <StatCard icon={Building2} label={t("analytics.metric.companies")} value={data.totals.totalCompanies} onClick={() => onGoPanel("companies")} />
+        <StatCard icon={CarIcon} label={t("analytics.metric.cars")} value={data.totals.totalCars} onClick={() => onGoPanel("cars")} />
+        <StatCard icon={CalendarIcon} label={t("analytics.metric.bookings")} value={data.totals.totalBookings} onClick={() => onGoPanel("bookings")} />
         <StatCard icon={Clock} label={t("analytics.pendingVerification")} value={data.totals.pendingVerifications} onClick={onGoPending} />
       </div>
 
@@ -397,11 +437,6 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
         <StatCard icon={TrendingUp} label={t("analytics.totalPlatformRevenue")} value={`${data.totals.totalPlatformRevenue.toFixed(2)}€`} onClick={onGoTransactions} />
         <StatCard icon={Wallet} label={t("analytics.ourProfit")} value={`${data.totals.totalPlatformProfit.toFixed(2)}€`} />
       </div>
-
-      {activePanel === "users" && <AdminUsersPanel token={token} showError={showError} showOk={showOk} />}
-      {activePanel === "companies" && <AdminCompaniesPanel token={token} showError={showError} showOk={showOk} />}
-      {activePanel === "cars" && <AdminCarsPanel token={token} showError={showError} showOk={showOk} />}
-      {activePanel === "bookings" && <AdminBookingsPanel token={token} showError={showError} showOk={showOk} />}
 
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
         <div className="flex items-center justify-between mb-4 gap-2">

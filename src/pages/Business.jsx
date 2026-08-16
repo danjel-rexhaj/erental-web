@@ -5,7 +5,7 @@ import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, Lo
 import { generateInvoicePdf } from "../invoicePdf";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
-import { BusinessAnalytics, AdminAnalytics, AdminLogins, TransactionsPage } from "./Analytics";
+import { BusinessAnalytics, AdminAnalytics, AdminLogins, TransactionsPage, AdminUsersPage, AdminCompaniesPage, AdminCarsPage, AdminBookingsPage } from "./Analytics";
 import { useLang } from "../useLang";
 
 export default function Business({ token, showError, showOk, isAdmin, tab, setTab, carId, setCarId, highlightBookingId, refreshKey }) {
@@ -59,8 +59,12 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       {tab === "admin" && <AdminPending token={token} showError={showError} showOk={showOk} />}
       {tab === "whatsapp" && <AdminWhatsapp token={token} showError={showError} showOk={showOk} />}
       {tab === "amenity-suggestions" && <AdminAmenitySuggestions token={token} showError={showError} showOk={showOk} />}
-      {tab === "admin-analytics" && <AdminAnalytics token={token} showError={showError} showOk={showOk} refreshKey={analyticsRefreshKey} onGoPending={() => setTab("admin")} onGoTransactions={() => setTab("admin-transactions")} />}
+      {tab === "admin-analytics" && <AdminAnalytics token={token} showError={showError} showOk={showOk} refreshKey={analyticsRefreshKey} onGoPending={() => setTab("admin")} onGoTransactions={() => setTab("admin-transactions")} onGoPanel={(key) => setTab(`admin-${key}`)} />}
       {tab === "admin-transactions" && <TransactionsPage token={token} showError={showError} admin onBack={() => setTab("admin-analytics")} />}
+      {tab === "admin-users" && <AdminUsersPage token={token} showError={showError} showOk={showOk} onBack={() => setTab("admin-analytics")} />}
+      {tab === "admin-companies" && <AdminCompaniesPage token={token} showError={showError} showOk={showOk} onBack={() => setTab("admin-analytics")} />}
+      {tab === "admin-cars" && <AdminCarsPage token={token} showError={showError} showOk={showOk} onBack={() => setTab("admin-analytics")} />}
+      {tab === "admin-bookings" && <AdminBookingsPage token={token} showError={showError} showOk={showOk} onBack={() => setTab("admin-analytics")} />}
       {tab === "admin-logins" && <AdminLogins token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
       {tab === "analytics" && <BusinessAnalytics token={token} showError={showError} refreshKey={analyticsRefreshKey} onGoBookings={() => setTab("bookings")} onGoTransactions={() => setTab("transactions")} />}
       {tab === "transactions" && <TransactionsPage token={token} showError={showError} businessName={company?.emri} onBack={() => setTab("analytics")} />}
