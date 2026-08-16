@@ -15,6 +15,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
   const { t } = useLang();
   const [companies, setCompanies] = useState([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [faqSectionOpen, setFaqSectionOpen] = useState(false);
   const [openFaqs, setOpenFaqs] = useState(new Set());
 
   useEffect(() => {
@@ -176,43 +177,43 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
       )}
 
       <div className="mt-10">
-        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setFaqSectionOpen((s) => !s)}
+          className="w-full flex items-center justify-between gap-2 mb-4"
+        >
           <div className="flex items-center gap-2">
             <HelpCircle size={18} className="text-sky-600 dark:text-emerald-400" />
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("home.faqTitle")}</h2>
           </div>
-          <button
-            type="button"
-            onClick={() => setOpenFaqs((prev) => (prev.size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6])))}
-            className="text-xs font-semibold text-sky-600 dark:text-emerald-400 underline"
-          >
-            {openFaqs.size === 6 ? t("home.faqCollapseAll") : t("home.faqExpandAll")}
-          </button>
-        </div>
-        <div className="flex flex-col gap-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => {
-            const open = openFaqs.has(i);
-            return (
-              <div key={i} className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden bg-white dark:bg-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setOpenFaqs((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(i)) next.delete(i); else next.add(i);
-                    return next;
-                  })}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left"
-                >
-                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t(`home.faq${i}Q`)}</span>
-                  <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
-                </button>
-                {open && (
-                  <p className="px-4 pb-4 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t(`home.faq${i}A`)}</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
+          <ChevronDown size={18} className={`text-slate-400 shrink-0 transition-transform ${faqSectionOpen ? "rotate-180" : ""}`} />
+        </button>
+        {faqSectionOpen && (
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => {
+              const open = openFaqs.has(i);
+              return (
+                <div key={i} className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden bg-white dark:bg-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaqs((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(i)) next.delete(i); else next.add(i);
+                      return next;
+                    })}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left"
+                  >
+                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t(`home.faq${i}Q`)}</span>
+                    <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+                  </button>
+                  {open && (
+                    <p className="px-4 pb-4 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t(`home.faq${i}A`)}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
