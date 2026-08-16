@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronLeft, Trash2 } from "lucide-react";
+import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronLeft, ChevronRight, Trash2, Search } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiFetch } from "../api";
 import { inputClass, StatusPill, PrimaryButton, GhostButton } from "../components";
@@ -33,6 +33,69 @@ function PeriodSelect({ period, setPeriod }) {
 
 function periodQuery(period) {
   return period.unit === "days" ? { days: period.value } : { months: period.value };
+}
+
+const ADMIN_PAGE_SIZE = 20;
+
+// Matches the ER-000123 confirmation number shown on the client's contract/receipt
+// (see components.jsx PaymentSuccess and invoicePdf.js) so admin search can look it up the same way.
+const bookingRef = (id) => `ER-${String(id).padStart(6, "0")}`;
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (prev && p - prev > 1) result.push("…");
+    result.push(p);
+    prev = p;
+  }
+  return result;
+}
+
+function Pager({ page, totalPages, setPage }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-center gap-1 mt-4 flex-wrap">
+      <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold text-slate-500 dark:text-slate-400 disabled:opacity-30">
+        <ChevronLeft size={14} />
+      </button>
+      {pageNumbers(page, totalPages).map((p, i) =>
+        p === "…" ? (
+          <span key={`e${i}`} className="w-7 h-7 flex items-center justify-center text-xs text-slate-300 dark:text-slate-600">…</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => setPage(p)}
+            className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold ${
+              p === page ? "bg-sky-600 dark:bg-emerald-600 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            {p}
+          </button>
+        )
+      )}
+      <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold text-slate-500 dark:text-slate-400 disabled:opacity-30">
+        <ChevronRight size={14} />
+      </button>
+    </div>
+  );
+}
+
+function SearchBox({ value, onChange, placeholder }) {
+  return (
+    <div className="relative w-full sm:w-64">
+      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full pl-8 pr-3 py-2 text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800"
+      />
+    </div>
+  );
 }
 
 function StatCard({ icon: Icon, label, value, onClick, active }) {
@@ -177,6 +240,7 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
   const [fromMonth, setFromMonth] = useState(thisMonth);
   const [toMonth, setToMonth] = useState(thisMonth);
   const [downloading, setDownloading] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -194,6 +258,23 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
   const { from, toExclusive } = monthRange(fromMonth, toMonth);
   const filtered = (payments || []).filter((p) => p.dataPageses && new Date(p.dataPageses) >= from && new Date(p.dataPageses) < toExclusive);
   const periodLabel = fromMonth === toMonth ? monthLabel(fromMonth, lang) : `${monthLabel(fromMonth, lang)} – ${monthLabel(toMonth, lang)}`;
+
+  const q = search.trim().toLowerCase();
+  const searched = q
+    ? filtered.filter((p) => {
+        const ref = p.booking?.bookingId ? bookingRef(p.booking.bookingId).toLowerCase() : "";
+        const haystack = [
+          ref,
+          p.paypalCaptureId,
+          p.klienti?.emri,
+          p.klienti?.mbiemri,
+          p.car?.marka,
+          p.car?.modeli,
+          p.biznesi?.emri,
+        ].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(q);
+      })
+    : filtered;
 
   function exportCsv() {
     const headers = [t("analytics.col.date"), t("analytics.col.reference"), t("analytics.col.client"), t("analytics.col.car"), ...(admin ? [t("analytics.col.business")] : []), t("analytics.col.method"), t("analytics.col.paid"), t("analytics.col.commission"), t("analytics.col.netBusiness"), t("analytics.col.status")];
@@ -257,13 +338,20 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
         <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noTransactionsYet")}</p>
       ) : (
         <>
-          <div className="flex gap-2 mb-4">
-            <GhostButton type="button" onClick={exportCsv} className="w-fit text-xs py-2 px-3.5">{t("analytics.exportCsv")}</GhostButton>
-            <PrimaryButton type="button" onClick={downloadStatement} disabled={downloading} className="w-fit text-xs py-2 px-3.5">
-              {downloading ? t("common.loading") : t("analytics.downloadStatement")}
-            </PrimaryButton>
+          <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
+            <div className="flex gap-2">
+              <GhostButton type="button" onClick={exportCsv} className="w-fit text-xs py-2 px-3.5">{t("analytics.exportCsv")}</GhostButton>
+              <PrimaryButton type="button" onClick={downloadStatement} disabled={downloading} className="w-fit text-xs py-2 px-3.5">
+                {downloading ? t("common.loading") : t("analytics.downloadStatement")}
+              </PrimaryButton>
+            </div>
+            <SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchTransactions")} />
           </div>
-          <TransactionsTable payments={filtered} admin={admin} />
+          {searched.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
+          ) : (
+            <TransactionsTable payments={searched} admin={admin} />
+          )}
         </>
       )}
     </div>
@@ -315,17 +403,29 @@ export function AdminBookingsPage({ token, showError, showOk, onBack }) {
   );
 }
 
-const PAGE_SIZE = 15;
-
 function TransactionsTable({ payments, admin = false }) {
   const { t, lang } = useLang();
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(payments.length / ADMIN_PAGE_SIZE));
+  // Depend on a content fingerprint, not the array reference, so paging isn't reset by
+  // unrelated parent re-renders (e.g. toggling the PDF-download spinner) recomputing the same list.
+  const depKey = payments.length ? `${payments.length}-${payments[0]?.paymentId}-${payments[payments.length - 1]?.paymentId}` : "0";
 
-  const visible = payments.slice(0, visibleCount);
+  useEffect(() => { setPage(1); }, [depKey]);
+
+  const visible = payments.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+
+  function statusPill(statusi) {
+    if (statusi === "completed") return <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">{t("analytics.statusSuccess")}</span>;
+    if (statusi === "refunded") return <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">{t("analytics.statusRefunded")}</span>;
+    if (statusi === "refund_failed") return <span className="text-[11px] font-semibold text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full whitespace-nowrap">{t("analytics.statusRefundFailed")}</span>;
+    if (statusi === "not_refunded") return <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">{t("analytics.statusNotRefunded")}</span>;
+    return <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full whitespace-nowrap">{statusi}</span>;
+  }
 
   return (
     <div>
-      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
+      <div className="hidden sm:block border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
           <tr>
@@ -353,32 +453,46 @@ function TransactionsTable({ payments, admin = false }) {
               <td className="px-4 py-2.5 text-right text-slate-900 dark:text-slate-100 font-semibold whitespace-nowrap">{p.shumaPaguarOnline != null ? `${p.shumaPaguarOnline}€` : "-"}</td>
               <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400 whitespace-nowrap">{p.komisioni != null ? `${p.komisioni.toFixed(2)}€` : "-"}</td>
               <td className="px-4 py-2.5 text-right text-slate-900 dark:text-slate-100 font-semibold whitespace-nowrap">{p.shumaBiznesit != null ? `${p.shumaBiznesit.toFixed(2)}€` : "-"}</td>
-              <td className="px-4 py-2.5">
-                {p.statusi === "completed" ? (
-                  <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">{t("analytics.statusSuccess")}</span>
-                ) : p.statusi === "refunded" ? (
-                  <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">{t("analytics.statusRefunded")}</span>
-                ) : p.statusi === "refund_failed" ? (
-                  <span className="text-[11px] font-semibold text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full whitespace-nowrap">{t("analytics.statusRefundFailed")}</span>
-                ) : p.statusi === "not_refunded" ? (
-                  <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">{t("analytics.statusNotRefunded")}</span>
-                ) : (
-                  <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full whitespace-nowrap">{p.statusi}</span>
-                )}
-              </td>
+              <td className="px-4 py-2.5">{statusPill(p.statusi)}</td>
             </tr>
           ))}
         </tbody>
       </table>
       </div>
-      {visibleCount < payments.length && (
-        <button
-          onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-          className="w-full text-center text-xs font-semibold text-sky-600 dark:text-emerald-400 hover:text-sky-700 dark:hover:text-emerald-300 mt-3"
-        >
-          {t("analytics.showMoreCount", { count: payments.length - visibleCount })}
-        </button>
-      )}
+
+      <div className="sm:hidden flex flex-col gap-3">
+        {visible.map((p) => (
+          <div key={p.paymentId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="min-w-0">
+                <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{p.klienti?.emri} {p.klienti?.mbiemri}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{p.car?.marka} {p.car?.modeli}{admin && p.biznesi?.emri ? ` · ${p.biznesi.emri}` : ""}</p>
+              </div>
+              {statusPill(p.statusi)}
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+              <span>{p.dataPageses ? formatLocaleDate(p.dataPageses, lang) : "-"}</span>
+              <span>{p.metodaPageses === "paypal_full" ? t("analytics.methodFull") : t("analytics.methodDeposit")}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 border-t border-slate-100 dark:border-slate-800 pt-2">
+              <div>
+                <p className="text-[10px] uppercase text-slate-400">{t("analytics.col.paid")}</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{p.shumaPaguarOnline != null ? `${p.shumaPaguarOnline}€` : "-"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase text-slate-400">{t("analytics.col.commission")}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{p.komisioni != null ? `${p.komisioni.toFixed(2)}€` : "-"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase text-slate-400">{t("analytics.col.netBusiness")}</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{p.shumaBiznesit != null ? `${p.shumaBiznesit.toFixed(2)}€` : "-"}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Pager page={page} totalPages={totalPages} setPage={setPage} />
     </div>
   );
 }
@@ -532,10 +646,14 @@ function AdminUsersPanel({ token, showError, showOk }) {
   const [users, setUsers] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({});
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     apiFetch("/Users", token).then(setUsers).catch((e) => showError && showError(e));
   }, [token]);
+
+  useEffect(() => { setPage(1); }, [search]);
 
   function startEdit(u) {
     setEditingId(u.userId);
@@ -553,54 +671,105 @@ function AdminUsersPanel({ token, showError, showOk }) {
 
   if (!users) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
 
+  const q = search.trim().toLowerCase();
+  const filteredUsers = q
+    ? users.filter((u) => [u.emri, u.mbiemri, u.email, u.telefoni].filter(Boolean).join(" ").toLowerCase().includes(q))
+    : users;
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ADMIN_PAGE_SIZE));
+  const visibleUsers = filteredUsers.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
-          <tr>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.name")}</th>
-            <th className="text-left px-4 py-2.5">Email</th>
-            <th className="text-left px-4 py-2.5">{t("auth.phone")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.registered")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.businessShort")}</th>
-            <th className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.userId} className="border-t border-slate-100 dark:border-slate-800">
-              {editingId === u.userId ? (
-                <>
-                  <td className="px-4 py-2 flex gap-1">
-                    <input className={inputClass + " text-xs py-1"} value={form.emri} onChange={(e) => setForm((f) => ({ ...f, emri: e.target.value }))} />
-                    <input className={inputClass + " text-xs py-1"} value={form.mbiemri} onChange={(e) => setForm((f) => ({ ...f, mbiemri: e.target.value }))} />
-                  </td>
-                  <td className="px-4 py-2"><input type="email" className={inputClass + " text-xs py-1"} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} /></td>
-                  <td className="px-4 py-2"><input className={inputClass + " text-xs py-1"} value={form.telefoni} onChange={(e) => setForm((f) => ({ ...f, telefoni: e.target.value }))} /></td>
-                  <td className="px-4 py-2 text-slate-400 text-xs whitespace-nowrap">{u.dataRegjistrimit ? formatLocaleDate(u.dataRegjistrimit, lang) : "-"}</td>
-                  <td className="px-4 py-2 text-slate-400 text-xs">{u.hasCompany ? t("common.yes") : t("common.no")}</td>
-                  <td className="px-4 py-2 text-right whitespace-nowrap">
-                    <button onClick={save} className="text-sky-600 dark:text-emerald-400"><Check size={14} /></button>
-                    <button onClick={() => setEditingId(null)} className="text-slate-400 ml-2"><X size={14} /></button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{u.emri} {u.mbiemri}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{u.email}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{u.telefoni || "-"}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{u.dataRegjistrimit ? formatLocaleDate(u.dataRegjistrimit, lang) : "-"}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{u.hasCompany ? t("common.yes") : t("common.no")}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    <button onClick={() => startEdit(u)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={13} /></button>
-                  </td>
-                </>
-              )}
+    <>
+      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchUsers")} /></div>
+      {filteredUsers.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
+      ) : (
+      <>
+      <div className="hidden sm:block border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
+            <tr>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.name")}</th>
+              <th className="text-left px-4 py-2.5">Email</th>
+              <th className="text-left px-4 py-2.5">{t("auth.phone")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.registered")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.businessShort")}</th>
+              <th className="px-4 py-2.5" />
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {visibleUsers.map((u) => (
+              <tr key={u.userId} className="border-t border-slate-100 dark:border-slate-800">
+                {editingId === u.userId ? (
+                  <>
+                    <td className="px-4 py-2 flex gap-1">
+                      <input className={inputClass + " text-xs py-1"} value={form.emri} onChange={(e) => setForm((f) => ({ ...f, emri: e.target.value }))} />
+                      <input className={inputClass + " text-xs py-1"} value={form.mbiemri} onChange={(e) => setForm((f) => ({ ...f, mbiemri: e.target.value }))} />
+                    </td>
+                    <td className="px-4 py-2"><input type="email" className={inputClass + " text-xs py-1"} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} /></td>
+                    <td className="px-4 py-2"><input className={inputClass + " text-xs py-1"} value={form.telefoni} onChange={(e) => setForm((f) => ({ ...f, telefoni: e.target.value }))} /></td>
+                    <td className="px-4 py-2 text-slate-400 text-xs whitespace-nowrap">{u.dataRegjistrimit ? formatLocaleDate(u.dataRegjistrimit, lang) : "-"}</td>
+                    <td className="px-4 py-2 text-slate-400 text-xs">{u.hasCompany ? t("common.yes") : t("common.no")}</td>
+                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                      <button onClick={save} className="text-sky-600 dark:text-emerald-400"><Check size={14} /></button>
+                      <button onClick={() => setEditingId(null)} className="text-slate-400 ml-2"><X size={14} /></button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{u.emri} {u.mbiemri}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{u.email}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{u.telefoni || "-"}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{u.dataRegjistrimit ? formatLocaleDate(u.dataRegjistrimit, lang) : "-"}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{u.hasCompany ? t("common.yes") : t("common.no")}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      <button onClick={() => startEdit(u)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={13} /></button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="sm:hidden flex flex-col gap-3">
+        {visibleUsers.map((u) => (
+          <div key={u.userId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5">
+            {editingId === u.userId ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-1.5">
+                  <input className={inputClass + " text-xs py-1.5"} value={form.emri} onChange={(e) => setForm((f) => ({ ...f, emri: e.target.value }))} placeholder={t("analytics.col.name")} />
+                  <input className={inputClass + " text-xs py-1.5"} value={form.mbiemri} onChange={(e) => setForm((f) => ({ ...f, mbiemri: e.target.value }))} />
+                </div>
+                <input type="email" className={inputClass + " text-xs py-1.5"} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="Email" />
+                <input className={inputClass + " text-xs py-1.5"} value={form.telefoni} onChange={(e) => setForm((f) => ({ ...f, telefoni: e.target.value }))} placeholder={t("auth.phone")} />
+                <div className="flex gap-3 mt-1">
+                  <button onClick={save} className="text-sky-600 dark:text-emerald-400 flex items-center gap-1 text-xs font-semibold"><Check size={14} /> {t("common.save")}</button>
+                  <button onClick={() => setEditingId(null)} className="text-slate-400 flex items-center gap-1 text-xs font-semibold"><X size={14} /> {t("common.cancel")}</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{u.emri} {u.mbiemri}</p>
+                  <button onClick={() => startEdit(u)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 shrink-0"><Pencil size={14} /></button>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{u.email}</p>
+                <div className="flex items-center justify-between text-xs text-slate-400 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <span>{u.telefoni || "-"}</span>
+                  <span>{u.dataRegjistrimit ? formatLocaleDate(u.dataRegjistrimit, lang) : "-"}</span>
+                  <span>{t("analytics.col.businessShort")}: {u.hasCompany ? t("common.yes") : t("common.no")}</span>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+      <Pager page={page} totalPages={totalPages} setPage={setPage} />
+      </>
+      )}
+    </>
   );
 }
 
@@ -609,10 +778,14 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
   const [companies, setCompanies] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({});
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     apiFetch("/Companies", null).then(setCompanies).catch((e) => showError && showError(e));
   }, []);
+
+  useEffect(() => { setPage(1); }, [search]);
 
   function startEdit(c) {
     setEditingId(c.companyId);
@@ -630,57 +803,109 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
 
   if (!companies) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
 
+  const q = search.trim().toLowerCase();
+  const filteredCompanies = q
+    ? companies.filter((c) => [c.emri, c.qyteti, c.telefoni].filter(Boolean).join(" ").toLowerCase().includes(q))
+    : companies;
+  const totalPages = Math.max(1, Math.ceil(filteredCompanies.length / ADMIN_PAGE_SIZE));
+  const visibleCompanies = filteredCompanies.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
-          <tr>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.name")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.city")}</th>
-            <th className="text-left px-4 py-2.5">{t("auth.phone")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.status")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.verified")}</th>
-            <th className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody>
-          {companies.map((c) => (
-            <tr key={c.companyId} className="border-t border-slate-100 dark:border-slate-800">
-              {editingId === c.companyId ? (
-                <>
-                  <td className="px-4 py-2"><input className={inputClass + " text-xs py-1"} value={form.emri} onChange={(e) => setForm((f) => ({ ...f, emri: e.target.value }))} /></td>
-                  <td className="px-4 py-2"><input className={inputClass + " text-xs py-1"} value={form.qyteti} onChange={(e) => setForm((f) => ({ ...f, qyteti: e.target.value }))} /></td>
-                  <td className="px-4 py-2"><input className={inputClass + " text-xs py-1"} value={form.telefoni} onChange={(e) => setForm((f) => ({ ...f, telefoni: e.target.value }))} /></td>
-                  <td className="px-4 py-2">
-                    <select className={inputClass + " text-xs py-1"} value={form.statusi} onChange={(e) => setForm((f) => ({ ...f, statusi: e.target.value }))}>
-                      <option value="active">active</option>
-                      <option value="inactive">inactive</option>
-                      <option value="suspended">suspended</option>
-                    </select>
-                  </td>
-                  <td className="px-4 py-2 text-slate-400 text-xs">{c.eshteVerifikuar ? t("common.yes") : t("common.no")}</td>
-                  <td className="px-4 py-2 text-right whitespace-nowrap">
-                    <button onClick={save} className="text-sky-600 dark:text-emerald-400"><Check size={14} /></button>
-                    <button onClick={() => setEditingId(null)} className="text-slate-400 ml-2"><X size={14} /></button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{c.emri}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.qyteti || "-"}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{c.telefoni || "-"}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.statusi}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.eshteVerifikuar ? t("common.yes") : t("common.no")}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={13} /></button>
-                  </td>
-                </>
-              )}
+    <>
+      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchCompanies")} /></div>
+      {filteredCompanies.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
+      ) : (
+      <>
+      <div className="hidden sm:block border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
+            <tr>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.name")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.city")}</th>
+              <th className="text-left px-4 py-2.5">{t("auth.phone")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.status")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.verified")}</th>
+              <th className="px-4 py-2.5" />
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {visibleCompanies.map((c) => (
+              <tr key={c.companyId} className="border-t border-slate-100 dark:border-slate-800">
+                {editingId === c.companyId ? (
+                  <>
+                    <td className="px-4 py-2"><input className={inputClass + " text-xs py-1"} value={form.emri} onChange={(e) => setForm((f) => ({ ...f, emri: e.target.value }))} /></td>
+                    <td className="px-4 py-2"><input className={inputClass + " text-xs py-1"} value={form.qyteti} onChange={(e) => setForm((f) => ({ ...f, qyteti: e.target.value }))} /></td>
+                    <td className="px-4 py-2"><input className={inputClass + " text-xs py-1"} value={form.telefoni} onChange={(e) => setForm((f) => ({ ...f, telefoni: e.target.value }))} /></td>
+                    <td className="px-4 py-2">
+                      <select className={inputClass + " text-xs py-1"} value={form.statusi} onChange={(e) => setForm((f) => ({ ...f, statusi: e.target.value }))}>
+                        <option value="active">active</option>
+                        <option value="inactive">inactive</option>
+                        <option value="suspended">suspended</option>
+                      </select>
+                    </td>
+                    <td className="px-4 py-2 text-slate-400 text-xs">{c.eshteVerifikuar ? t("common.yes") : t("common.no")}</td>
+                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                      <button onClick={save} className="text-sky-600 dark:text-emerald-400"><Check size={14} /></button>
+                      <button onClick={() => setEditingId(null)} className="text-slate-400 ml-2"><X size={14} /></button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{c.emri}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.qyteti || "-"}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{c.telefoni || "-"}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.statusi}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.eshteVerifikuar ? t("common.yes") : t("common.no")}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={13} /></button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="sm:hidden flex flex-col gap-3">
+        {visibleCompanies.map((c) => (
+          <div key={c.companyId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5">
+            {editingId === c.companyId ? (
+              <div className="flex flex-col gap-2">
+                <input className={inputClass + " text-xs py-1.5"} value={form.emri} onChange={(e) => setForm((f) => ({ ...f, emri: e.target.value }))} placeholder={t("analytics.col.name")} />
+                <input className={inputClass + " text-xs py-1.5"} value={form.qyteti} onChange={(e) => setForm((f) => ({ ...f, qyteti: e.target.value }))} placeholder={t("analytics.col.city")} />
+                <input className={inputClass + " text-xs py-1.5"} value={form.telefoni} onChange={(e) => setForm((f) => ({ ...f, telefoni: e.target.value }))} placeholder={t("auth.phone")} />
+                <select className={inputClass + " text-xs py-1.5"} value={form.statusi} onChange={(e) => setForm((f) => ({ ...f, statusi: e.target.value }))}>
+                  <option value="active">active</option>
+                  <option value="inactive">inactive</option>
+                  <option value="suspended">suspended</option>
+                </select>
+                <div className="flex gap-3 mt-1">
+                  <button onClick={save} className="text-sky-600 dark:text-emerald-400 flex items-center gap-1 text-xs font-semibold"><Check size={14} /> {t("common.save")}</button>
+                  <button onClick={() => setEditingId(null)} className="text-slate-400 flex items-center gap-1 text-xs font-semibold"><X size={14} /> {t("common.cancel")}</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{c.emri}</p>
+                  <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 shrink-0"><Pencil size={14} /></button>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{c.qyteti || "-"} · {c.telefoni || "-"}</p>
+                <div className="flex items-center justify-between text-xs text-slate-400 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <span>{t("analytics.col.status")}: {c.statusi}</span>
+                  <span>{t("analytics.col.verified")}: {c.eshteVerifikuar ? t("common.yes") : t("common.no")}</span>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+      <Pager page={page} totalPages={totalPages} setPage={setPage} />
+      </>
+      )}
+    </>
   );
 }
 
@@ -689,6 +914,7 @@ function AdminCarsPanel({ token, showError, showOk }) {
   const [cars, setCars] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({});
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     apiFetch("/Cars", null).then(setCars).catch((e) => showError && showError(e));
@@ -722,69 +948,115 @@ function AdminCarsPanel({ token, showError, showOk }) {
 
   if (!cars) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
 
+  const totalPages = Math.max(1, Math.ceil(cars.length / ADMIN_PAGE_SIZE));
+  const visibleCars = cars.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
-          <tr>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.car")}</th>
-            <th className="text-left px-4 py-2.5">{t("business.carField.plate")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.business")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.pricePerDay")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.status")}</th>
-            <th className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody>
-          {cars.map((c) => (
-            <tr key={c.carId} className="border-t border-slate-100 dark:border-slate-800">
-              {editingId === c.carId ? (
-                <>
-                  <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{c.marka} {c.modeli}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.targa}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{c.company?.emri}</td>
-                  <td className="px-4 py-2"><input type="number" className={inputClass + " text-xs py-1 w-20"} value={form.cmimiDites} onChange={(e) => setForm((f) => ({ ...f, cmimiDites: e.target.value }))} /></td>
-                  <td className="px-4 py-2">
-                    <select className={inputClass + " text-xs py-1"} value={form.statusi} onChange={(e) => setForm((f) => ({ ...f, statusi: e.target.value }))}>
-                      <option value="active">active</option>
-                      <option value="inactive">inactive</option>
-                    </select>
-                  </td>
-                  <td className="px-4 py-2 text-right whitespace-nowrap">
-                    <button onClick={save} className="text-sky-600 dark:text-emerald-400"><Check size={14} /></button>
-                    <button onClick={() => setEditingId(null)} className="text-slate-400 ml-2"><X size={14} /></button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{c.marka} {c.modeli}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.targa}</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{c.company?.emri}</td>
-                  <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">{c.cmimiDites}€</td>
-                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.statusi}</td>
-                  <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                    <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={13} /></button>
-                    <button onClick={() => remove(c)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 ml-2"><Trash2 size={13} /></button>
-                  </td>
-                </>
-              )}
+    <>
+      <div className="hidden sm:block border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
+            <tr>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.car")}</th>
+              <th className="text-left px-4 py-2.5">{t("business.carField.plate")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.business")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.pricePerDay")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.status")}</th>
+              <th className="px-4 py-2.5" />
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {visibleCars.map((c) => (
+              <tr key={c.carId} className="border-t border-slate-100 dark:border-slate-800">
+                {editingId === c.carId ? (
+                  <>
+                    <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{c.marka} {c.modeli}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.targa}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{c.company?.emri}</td>
+                    <td className="px-4 py-2"><input type="number" className={inputClass + " text-xs py-1 w-20"} value={form.cmimiDites} onChange={(e) => setForm((f) => ({ ...f, cmimiDites: e.target.value }))} /></td>
+                    <td className="px-4 py-2">
+                      <select className={inputClass + " text-xs py-1"} value={form.statusi} onChange={(e) => setForm((f) => ({ ...f, statusi: e.target.value }))}>
+                        <option value="active">active</option>
+                        <option value="inactive">inactive</option>
+                      </select>
+                    </td>
+                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                      <button onClick={save} className="text-sky-600 dark:text-emerald-400"><Check size={14} /></button>
+                      <button onClick={() => setEditingId(null)} className="text-slate-400 ml-2"><X size={14} /></button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{c.marka} {c.modeli}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.targa}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{c.company?.emri}</td>
+                    <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 text-xs whitespace-nowrap">{c.cmimiDites}€</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.statusi}</td>
+                    <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                      <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={13} /></button>
+                      <button onClick={() => remove(c)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 ml-2"><Trash2 size={13} /></button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="sm:hidden flex flex-col gap-3">
+        {visibleCars.map((c) => (
+          <div key={c.carId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5">
+            {editingId === c.carId ? (
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{c.marka} {c.modeli}</p>
+                <input type="number" className={inputClass + " text-xs py-1.5"} value={form.cmimiDites} onChange={(e) => setForm((f) => ({ ...f, cmimiDites: e.target.value }))} placeholder={t("analytics.col.pricePerDay")} />
+                <select className={inputClass + " text-xs py-1.5"} value={form.statusi} onChange={(e) => setForm((f) => ({ ...f, statusi: e.target.value }))}>
+                  <option value="active">active</option>
+                  <option value="inactive">inactive</option>
+                </select>
+                <div className="flex gap-3 mt-1">
+                  <button onClick={save} className="text-sky-600 dark:text-emerald-400 flex items-center gap-1 text-xs font-semibold"><Check size={14} /> {t("common.save")}</button>
+                  <button onClick={() => setEditingId(null)} className="text-slate-400 flex items-center gap-1 text-xs font-semibold"><X size={14} /> {t("common.cancel")}</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{c.marka} {c.modeli}</p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={14} /></button>
+                    <button onClick={() => remove(c)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400"><Trash2 size={14} /></button>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{c.targa} · {c.company?.emri}</p>
+                <div className="flex items-center justify-between text-xs text-slate-400 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">{c.cmimiDites}€{t("common.perDaySuffix")}</span>
+                  <span>{c.statusi}</span>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+      <Pager page={page} totalPages={totalPages} setPage={setPage} />
+    </>
   );
 }
 
 function AdminBookingsPanel({ token, showError, showOk }) {
   const { t } = useLang();
   const [bookings, setBookings] = useState(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   function load() {
     apiFetch("/Bookings/admin/all", token).then(setBookings).catch((e) => showError && showError(e));
   }
 
   useEffect(() => { load(); }, [token]);
+
+  useEffect(() => { setPage(1); }, [search]);
 
   async function cancel(id) {
     const reason = window.prompt(t("analytics.cancelReasonPrompt"));
@@ -799,44 +1071,92 @@ function AdminBookingsPanel({ token, showError, showOk }) {
   if (!bookings) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
   if (bookings.length === 0) return <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noBookingsYet")}</p>;
 
+  const q = search.trim().toLowerCase().replace(/^er-/, "");
+  const filteredBookings = q
+    ? bookings.filter((b) => {
+        const ref = String(b.bookingId).padStart(6, "0");
+        const haystack = [ref, b.car?.marka, b.car?.modeli, b.biznesi?.emri, b.klienti?.emri, b.klienti?.mbiemri].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(q);
+      })
+    : bookings;
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / ADMIN_PAGE_SIZE));
+  const visibleBookings = filteredBookings.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
-          <tr>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.date")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.car")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.business")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.client")}</th>
-            <th className="text-right px-4 py-2.5">{t("analytics.col.price")}</th>
-            <th className="text-left px-4 py-2.5">{t("analytics.col.status")}</th>
-            <th className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody>
-          {bookings.map((b) => (
-            <tr key={b.bookingId} className="border-t border-slate-100 dark:border-slate-800">
-              <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.dataFillimit} → {b.dataPerfundimit}</td>
-              <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{b.car?.marka} {b.car?.modeli}</td>
-              <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.biznesi?.emri}</td>
-              <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.klienti?.emri} {b.klienti?.mbiemri}</td>
-              <td className="px-4 py-2.5 text-right text-slate-900 dark:text-slate-100 font-semibold whitespace-nowrap">{b.cmimiTotal}€</td>
-              <td className="px-4 py-2.5">
-                <StatusPill status={b.statusi} />
-                {b.statusi === "cancelled" && b.arsyejaRefuzimit && (
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 max-w-[220px]" title={b.arsyejaRefuzimit}>{b.arsyejaRefuzimit}</p>
-                )}
-              </td>
-              <td className="px-4 py-2.5 text-right">
-                {(b.statusi === "pending" || b.statusi === "confirmed") && (
-                  <button onClick={() => cancel(b.bookingId)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400"><X size={14} /></button>
-                )}
-              </td>
+    <>
+      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchBookings")} /></div>
+      {filteredBookings.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
+      ) : (
+      <>
+      <div className="hidden sm:block border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
+            <tr>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.bookingRef")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.date")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.car")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.business")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.client")}</th>
+              <th className="text-right px-4 py-2.5">{t("analytics.col.price")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.status")}</th>
+              <th className="px-4 py-2.5" />
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {visibleBookings.map((b) => (
+              <tr key={b.bookingId} className="border-t border-slate-100 dark:border-slate-800">
+                <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 font-mono text-xs whitespace-nowrap">{bookingRef(b.bookingId)}</td>
+                <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.dataFillimit} → {b.dataPerfundimit}</td>
+                <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{b.car?.marka} {b.car?.modeli}</td>
+                <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.biznesi?.emri}</td>
+                <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.klienti?.emri} {b.klienti?.mbiemri}</td>
+                <td className="px-4 py-2.5 text-right text-slate-900 dark:text-slate-100 font-semibold whitespace-nowrap">{b.cmimiTotal}€</td>
+                <td className="px-4 py-2.5">
+                  <StatusPill status={b.statusi} />
+                  {b.statusi === "cancelled" && b.arsyejaRefuzimit && (
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 max-w-[220px]" title={b.arsyejaRefuzimit}>{b.arsyejaRefuzimit}</p>
+                  )}
+                </td>
+                <td className="px-4 py-2.5 text-right">
+                  {(b.statusi === "pending" || b.statusi === "confirmed") && (
+                    <button onClick={() => cancel(b.bookingId)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400"><X size={14} /></button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="sm:hidden flex flex-col gap-3">
+        {visibleBookings.map((b) => (
+          <div key={b.bookingId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5">
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <div className="min-w-0">
+                <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{b.car?.marka} {b.car?.modeli}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{b.klienti?.emri} {b.klienti?.mbiemri} · {b.biznesi?.emri}</p>
+              </div>
+              <StatusPill status={b.statusi} />
+            </div>
+            <p className="text-xs font-mono text-slate-400">{bookingRef(b.bookingId)}</p>
+            {b.statusi === "cancelled" && b.arsyejaRefuzimit && (
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{b.arsyejaRefuzimit}</p>
+            )}
+            <div className="flex items-center justify-between text-xs text-slate-400 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span>{b.dataFillimit} → {b.dataPerfundimit}</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{b.cmimiTotal}€</span>
+            </div>
+            {(b.statusi === "pending" || b.statusi === "confirmed") && (
+              <button onClick={() => cancel(b.bookingId)} className="text-red-500 dark:text-red-400 text-xs font-semibold flex items-center gap-1 mt-2"><X size={13} /> {t("booking.cancel")}</button>
+            )}
+          </div>
+        ))}
+      </div>
+      <Pager page={page} totalPages={totalPages} setPage={setPage} />
+      </>
+      )}
+    </>
   );
 }
 
@@ -866,7 +1186,7 @@ export function AdminLogins({ token, showError, refreshKey }) {
         <p className="text-sm text-amber-800 dark:text-amber-300">{t("analytics.failedLoginsNotice", { count: data.failedLast24h })}</p>
       </div>
 
-      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
+      <div className="hidden sm:block border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
             <tr>
@@ -895,13 +1215,26 @@ export function AdminLogins({ token, showError, refreshKey }) {
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="text-xs font-semibold text-sky-600 dark:text-emerald-400 disabled:text-slate-300 dark:disabled:text-slate-600">{t("analytics.back")}</button>
-          <span className="text-xs text-slate-500 dark:text-slate-400">{page} / {totalPages}</span>
-          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="text-xs font-semibold text-sky-600 dark:text-emerald-400 disabled:text-slate-300 dark:disabled:text-slate-600">{t("analytics.forward")}</button>
-        </div>
-      )}
+      <div className="sm:hidden flex flex-col gap-2">
+        {data.logs.map((l) => (
+          <div key={l.id} className="border border-slate-200 dark:border-slate-700 rounded-xl p-3">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm text-slate-700 dark:text-slate-200 truncate">{l.email}</p>
+              {l.sukses ? (
+                <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full shrink-0">{t("analytics.statusSuccess")}</span>
+              ) : (
+                <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full shrink-0">{t("analytics.loginFailed")}</span>
+              )}
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
+              <span>{new Date(l.dataHyrjes).toLocaleString(lang === "en" ? "en-GB" : "sq-AL")}</span>
+              <span className="font-mono">{l.ipAddress || "-"}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Pager page={page} totalPages={totalPages} setPage={setPage} />
     </div>
   );
 }
