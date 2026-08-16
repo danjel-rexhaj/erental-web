@@ -80,6 +80,7 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
       clientLabel: decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
       company: b.car?.company,
       cardLast4: b.payments?.[0]?.cardLast4,
+      transactionId: b.payments?.[0]?.paypalCaptureId,
       lang,
     });
   }

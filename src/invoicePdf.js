@@ -12,6 +12,7 @@ const INVOICE_TEXT = {
     terms: "Anulimi brenda 12 orëve nga rezervimi rimbursohet plotësisht, automatikisht, në të njëjtën kartë me të cilën u krye pagesa online. Pas 12 orëve, rimbursimi i pjesës së paguar online varet nga marrëveshja mes klientit dhe biznesit — ERental si marketplace nuk ndërhyn më në këtë vendim. Pjesa e paguar cash (nëse ka) paguhet direkt te biznesi dhe nuk kalon nga ERental.",
     paymentInfo: "Informacion pagese", fullPaymentCard: "Kartë — pagesë e plotë", depositCard: "Kartë — depozitë",
     paidOnline: "Paguar online", card: "Karta", remainingCash: "Mbetet cash", contact: "Kontakt", locale: "sq-AL",
+    transactionId: "Nr. transaksioni",
   },
   en: {
     invoice: "Invoice", invoiceNumber: "Invoice number", date: "Date",
@@ -23,6 +24,7 @@ const INVOICE_TEXT = {
     terms: "Cancelling within 12 hours of booking is refunded in full, automatically, to the same card the online payment was made with. After 12 hours, the refund of the portion paid online depends on the agreement between the customer and the business — ERental as a marketplace no longer intervenes in that decision. The portion paid in cash (if any) is paid directly to the business and never goes through ERental.",
     paymentInfo: "Payment information", fullPaymentCard: "Card — full payment", depositCard: "Card — deposit",
     paidOnline: "Paid online", card: "Card", remainingCash: "Remaining cash", contact: "Contact", locale: "en-GB",
+    transactionId: "Transaction number",
   },
 };
 
@@ -49,7 +51,7 @@ function loadImageDataUrl(url) {
 // Shared by PaymentSuccessModal (right after paying) and the per-booking "Fatura" buttons in
 // Bookings.jsx / Business.jsx (CompanyBookings) — an invoice needs to stay retrievable long after
 // the payment moment, not just in a modal that's gone once closed.
-export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit, dataPerfundimit, cmimiPerDite, dite, totalPrice, amountPaid, eshtePagesePlote, clientLabel, company, cardLast4, lang = "sq" }) {
+export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit, dataPerfundimit, cmimiPerDite, dite, totalPrice, amountPaid, eshtePagesePlote, clientLabel, company, cardLast4, transactionId, lang = "sq" }) {
   const { jsPDF } = await import("jspdf");
   const L = INVOICE_TEXT[lang] || INVOICE_TEXT.sq;
 
@@ -75,9 +77,9 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   // ---- header: logo left, invoice title + meta right ----
   let y = 56;
   if (logoDataUrl) {
-    const logoH = 30;
+    const logoH = 42;
     const logoW = logoH * (2034 / 773);
-    doc.addImage(logoDataUrl, "PNG", mx, y - 22, logoW, logoH);
+    doc.addImage(logoDataUrl, "PNG", mx, y - 32, logoW, logoH);
   } else {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
@@ -223,6 +225,11 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   if (cardLast4) {
     doc.setTextColor(...GREY);
     doc.text(`${L.card}: •••• •••• •••• ${cardLast4}`, mx, leftY);
+    leftY += 14;
+  }
+  if (transactionId) {
+    doc.setTextColor(...GREY);
+    doc.text(`${L.transactionId}: ${transactionId}`, mx, leftY);
     leftY += 14;
   }
   doc.setTextColor(...PAID);

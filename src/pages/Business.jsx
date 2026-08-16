@@ -182,6 +182,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
       clientLabel: `${b.klienti.emri} ${b.klienti.mbiemri}`,
       company,
       cardLast4: b.payment?.cardLast4,
+      transactionId: b.payment?.paypalCaptureId,
       lang,
     });
   }
