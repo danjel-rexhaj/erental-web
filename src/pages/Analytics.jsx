@@ -204,22 +204,24 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
         </div>
       )}
 
-      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
-        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-4">{t("analytics.viewsPerCar")}</h3>
-        {viewsChart.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noViewsYet")}</p>
-        ) : (
-          <CarPieChart data={viewsChart} dataKey="shikime" />
-        )}
-      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-4">{t("analytics.viewsPerCar")}</h3>
+          {viewsChart.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noViewsYet")}</p>
+          ) : (
+            <CarPieChart data={viewsChart} dataKey="shikime" />
+          )}
+        </div>
 
-      <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
-        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-4">{t("analytics.bookingsPerCar")}</h3>
-        {bookingsChart.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noBookingsYet")}</p>
-        ) : (
-          <CarPieChart data={bookingsChart} dataKey="rezervime" />
-        )}
+        <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-4">{t("analytics.bookingsPerCar")}</h3>
+          {bookingsChart.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noBookingsYet")}</p>
+          ) : (
+            <CarPieChart data={bookingsChart} dataKey="rezervime" />
+          )}
+        </div>
       </div>
 
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
