@@ -12,7 +12,8 @@ import { CarDetail, CompanyProfile } from "./pages/CarAndCompany";
 import Bookings from "./pages/Bookings";
 import Favorites from "./pages/Favorites";
 import Business from "./pages/Business";
-import { AuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
+import { AuthGate, BusinessAuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
+import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
 
 export default function App() {
@@ -145,7 +146,7 @@ export default function App() {
   // ---- URL routing (hash-based: no server rewrite needed, refresh/back/forward all just work) ----
   const VIEW_TO_HASH = {
     browse: "/", bookings: "/rezervimet", favorites: "/preferuarat", business: "/biznesi", auth: "/profili",
-    verifyEmail: "/verifiko", about: "/rreth-nesh", contact: "/kontakt", careers: "/karriere",
+    verifyEmail: "/verifiko", businessSignup: "/regjistrohu-biznes", about: "/rreth-nesh", contact: "/kontakt", careers: "/karriere",
     privacy: "/privatesia", terms: "/kushtet",
   };
   const viewToHash = (v) => VIEW_TO_HASH[v] || "/";
@@ -243,6 +244,7 @@ export default function App() {
     }
     if (segs[0] === "profili") { setView("auth"); return; }
     if (segs[0] === "verifiko") { setView("verifyEmail"); return; }
+    if (segs[0] === "regjistrohu-biznes") { setView("businessSignup"); return; }
     if (segs[0] === "rreth-nesh") { setView("about"); return; }
     if (segs[0] === "kontakt") { setView("contact"); return; }
     if (segs[0] === "karriere") { setView("careers"); return; }
@@ -290,7 +292,10 @@ export default function App() {
     }
   }
 
-  function handleAuth(data) {
+  // Sets the session without navigating -- split out of handleAuth so BusinessSignup can log the
+  // freshly-verified account in and continue straight into its own details step, instead of being
+  // redirected away by handleAuth's normal post-login routing.
+  function applyAuthSession(data) {
     const role = data.hasCompany ? "business" : "client";
     const u = { email: data.email, emri: data.emri, mbiemri: data.mbiemri, telefoni: data.telefoni, hasWhatsapp: data.hasWhatsapp, emailVerified: data.emailVerified, role };
     setToken(data.token);
@@ -299,6 +304,11 @@ export default function App() {
     setNotice(null);
     setVerifyData(null);
     localStorage.removeItem("erental_verify");
+    return role;
+  }
+
+  function handleAuth(data) {
+    const role = applyAuthSession(data);
     go(role === "business" ? "/biznesi" : "/");
   }
 
@@ -472,7 +482,7 @@ export default function App() {
             highlightBookingId={highlightBookingId}
             refreshKey={bookingsRefreshKey}
           />
-        ) : <AuthGate onGo={() => go("/profili")} text={t("app.needLoginFor", { feature: t("app.featureManageBusiness") })} />)}
+        ) : <BusinessAuthGate onRegister={() => go("/regjistrohu-biznes")} onLogin={() => go("/profili")} />)}
         {view === "auth" && (
           token
             ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} />
@@ -480,6 +490,9 @@ export default function App() {
         )}
         {view === "verifyEmail" && (
           <VerifyView initialData={verifyData} onAuth={handleAuth} showError={showError} showOk={showOk} goTo={(v) => go(viewToHash(v))} />
+        )}
+        {view === "businessSignup" && (
+          <BusinessSignup onAuth={applyAuthSession} onDone={() => go("/biznesi")} showError={showError} showOk={showOk} />
         )}
         {view === "privacy" && <Privacy />}
         {view === "terms" && <Terms />}

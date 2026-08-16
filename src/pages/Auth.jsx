@@ -42,9 +42,25 @@ export function AuthGate({ onGo, text }) {
   );
 }
 
-export function AuthView({ onAuth, showError, showOk, goTo }) {
+// Shown instead of the generic AuthGate when a logged-out visitor clicks "Biznesi" -- offers the
+// direct business-signup entry point instead of only ever pointing at the login screen.
+export function BusinessAuthGate({ onRegister, onLogin }) {
   const { t } = useLang();
-  const [mode, setMode] = useState("login");
+  return (
+    <div className="flex flex-col items-center justify-center text-center px-8 py-20 gap-4">
+      <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-emerald-900/30 flex items-center justify-center"><Building2 size={22} className="text-sky-600 dark:text-emerald-400" /></div>
+      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">{t("app.needLoginFor", { feature: t("app.featureManageBusiness") })}</p>
+      <div className="flex flex-col gap-2 w-full max-w-[220px]">
+        <PrimaryButton onClick={onRegister}>{t("business.registerAsBusinessCta")}</PrimaryButton>
+        <GhostButton onClick={onLogin}>{t("business.alreadyHaveAccountCta")}</GhostButton>
+      </div>
+    </div>
+  );
+}
+
+export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false }) {
+  const { t } = useLang();
+  const [mode, setMode] = useState(businessMode ? "register" : "login");
   const [loading, setLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [hasWhatsapp, setHasWhatsapp] = useState(false);
@@ -127,10 +143,10 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
   return (
     <div className="max-w-md mx-auto py-8">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1">
-        {mode === "login" ? t("auth.welcomeBack") : t("auth.createAccount")}
+        {mode === "login" ? t("auth.welcomeBack") : businessMode ? t("auth.createBusinessAccount") : t("auth.createAccount")}
       </h1>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-        {mode === "login" ? t("auth.loginToContinue") : t("auth.registerToStart")}
+        {mode === "login" ? t("auth.loginToContinue") : businessMode ? t("auth.businessAccountHint") : t("auth.registerToStart")}
       </p>
       <form onSubmit={submit}>
         {mode === "register" && (
@@ -189,10 +205,12 @@ export function AuthView({ onAuth, showError, showOk, goTo }) {
 
         <PrimaryButton type="submit" disabled={loading} className="mt-2">{loading ? t("auth.waiting") : mode === "login" ? t("nav.login") : t("auth.register")}</PrimaryButton>
       </form>
-      <button onClick={() => setMode(mode === "login" ? "register" : "login")} className="w-full text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
-        {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
-        <span className="text-sky-600 dark:text-emerald-400 font-semibold underline">{mode === "login" ? t("auth.register") : t("nav.login")}</span>
-      </button>
+      {!businessMode && (
+        <button onClick={() => setMode(mode === "login" ? "register" : "login")} className="w-full text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
+          {mode === "login" ? t("auth.noAccount") : t("auth.hasAccount")}
+          <span className="text-sky-600 dark:text-emerald-400 font-semibold underline">{mode === "login" ? t("auth.register") : t("nav.login")}</span>
+        </button>
+      )}
     </div>
   );
 }

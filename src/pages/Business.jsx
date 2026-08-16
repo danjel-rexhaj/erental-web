@@ -6,6 +6,7 @@ import { generateInvoicePdf } from "../invoicePdf";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins, TransactionsPage, AdminUsersPage, AdminCompaniesPage, AdminCarsPage, AdminBookingsPage, BusinessBookingsPage } from "./Analytics";
+import { BusinessDetailsForm } from "./BusinessDetailsForm";
 import { useLang } from "../useLang";
 
 export default function Business({ token, showError, showOk, isAdmin, tab, setTab, carId, setCarId, highlightBookingId, refreshKey }) {
@@ -550,26 +551,6 @@ function LicenseModal({ bookingId, token, showError, verifying, onVerify, onReje
 
 function RegisterCompanyForm({ token, onDone, showError, showOk }) {
   const { t } = useLang();
-  const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState(null);
-  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "", iban: "", ofronDergimMakine: false });
-  const [coords, setCoords] = useState(null);
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  async function submit(e) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      if (coords) { fd.append("latitude", coords.latitude); fd.append("longitude", coords.longitude); }
-      if (file) fd.append("certifikataFile", file);
-
-      await apiFetch("/Companies/register", token, { method: "POST", body: fd });
-      showOk(t("business.registered"));
-      onDone();
-    } catch (e) { showError(e); } finally { setLoading(false); }
-  }
 
   return (
     <div className="max-w-2xl mx-auto py-6">
@@ -595,39 +576,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
         </div>
       </div>
 
-      <div className="max-w-md mx-auto">
-        <div className="flex items-center gap-2 mb-1"><Building2 size={20} className="text-emerald-700 dark:text-emerald-400" /><h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("business.registerBusiness")}</h2></div>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("business.willUseAccountEmail")}</p>
-        <form onSubmit={submit}>
-          <Field label={t("business.businessName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="AutoRent Tirana" /></Field>
-          <Field label={t("auth.phone")}><input className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder="0691234567" /></Field>
-          <Field label={t("business.address")}><input className={inputClass} value={form.adresa} onChange={set("adresa")} placeholder="Rruga..." /></Field>
-          <Field label={t("business.cityZone")}>
-            <select required className={inputClass} value={form.qyteti} onChange={set("qyteti")}>
-              <option value="">{t("business.choose")}</option>
-              {ALBANIAN_LOCATIONS.map((z) => <option key={z} value={z}>{z}</option>)}
-            </select>
-          </Field>
-          <Field label={t("business.exactLocation")}>
-            <LocationPicker adresa={form.adresa} qyteti={form.qyteti} coords={coords} onChange={setCoords} showError={showError} />
-          </Field>
-          <Field label={t("business.nipt")}><input required className={inputClass} value={form.nipt} onChange={set("nipt")} placeholder="L12345678A" /></Field>
-          <Field label={t("business.ibanForPayments")}><input required className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
-          <label className="flex items-start gap-2 mb-4 text-xs text-slate-600 dark:text-slate-300">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={form.ofronDergimMakine}
-              onChange={(e) => setForm((f) => ({ ...f, ofronDergimMakine: e.target.checked }))}
-            />
-            <span>{t("business.offersDeliveryRegister")}</span>
-          </label>
-          <Field label={t("business.niptCertificate")}>
-            <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className={inputClass} />
-          </Field>
-          <PrimaryButton type="submit" disabled={loading}>{loading ? t("common.sending") : t("business.registerBusiness")}</PrimaryButton>
-        </form>
-      </div>
+      <BusinessDetailsForm token={token} onDone={onDone} showError={showError} showOk={showOk} submitLabel={t("business.registerBusiness")} />
     </div>
   );
 }
@@ -1414,6 +1363,9 @@ function AdminPending({ token, showError, showOk }) {
   const { t } = useLang();
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [reason, setReason] = useState("");
+  const [acting, setActing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1428,8 +1380,15 @@ function AdminPending({ token, showError, showOk }) {
   }
 
   async function reject(id) {
-    try { await apiFetch(`/Companies/${id}/reject`, token, { method: "DELETE" }); showOk(t("business.applicationRejected")); load(); }
-    catch (e) { showError(e); }
+    if (!reason.trim()) { showError(new Error(t("business.needRejectReasonError"))); return; }
+    setActing(true);
+    try {
+      await apiFetch(`/Companies/${id}/reject`, token, { method: "DELETE", body: JSON.stringify({ reason }) });
+      showOk(t("business.applicationRejected"));
+      setRejectingId(null);
+      setReason("");
+      load();
+    } catch (e) { showError(e); } finally { setActing(false); }
   }
 
   if (loading) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
@@ -1449,8 +1408,29 @@ function AdminPending({ token, showError, showOk }) {
           ) : (
             <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">{t("business.noCertUploaded")}</p>
           )}
-          <PrimaryButton onClick={() => verify(c.companyId)} className="mt-2 text-xs py-2">{t("business.verifyBusiness")}</PrimaryButton>
-          <GhostButton onClick={() => reject(c.companyId)} className="mt-2 text-xs py-2">{t("business.rejectAndDelete")}</GhostButton>
+          {rejectingId === c.companyId ? (
+            <div className="flex flex-col gap-2 mt-2">
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={t("business.rejectCompanyReasonPlaceholder")}
+                rows={2}
+                autoFocus
+                className={inputClass + " text-xs"}
+              />
+              <div className="flex gap-2">
+                <button type="button" onClick={() => reject(c.companyId)} disabled={acting} className="flex-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
+                  {acting ? t("business.rejecting") : t("business.rejectAndDelete")}
+                </button>
+                <GhostButton type="button" onClick={() => { setRejectingId(null); setReason(""); }} className="flex-1 text-xs py-2">{t("booking.cancel")}</GhostButton>
+              </div>
+            </div>
+          ) : (
+            <>
+              <PrimaryButton onClick={() => verify(c.companyId)} className="mt-2 text-xs py-2">{t("business.verifyBusiness")}</PrimaryButton>
+              <GhostButton onClick={() => { setRejectingId(c.companyId); setReason(""); }} className="mt-2 text-xs py-2">{t("business.rejectAndDelete")}</GhostButton>
+            </>
+          )}
         </div>
       ))}
     </div>
