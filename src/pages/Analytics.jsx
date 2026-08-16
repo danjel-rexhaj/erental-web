@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronLeft, ChevronRight, Trash2, Search } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiFetch } from "../api";
@@ -121,12 +121,13 @@ function StatCard({ icon: Icon, label, value, onClick, active }) {
   );
 }
 
-export function BusinessAnalytics({ token, showError, refreshKey, companyId, onGoBookings, onGoTransactions }) {
+export function BusinessAnalytics({ token, showError, showOk, refreshKey, companyId, onGoTransactions }) {
   const { t, lang } = useLang();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [showViews, setShowViews] = useState(false);
+  const [showBookings, setShowBookings] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -151,9 +152,16 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={Eye} label={t("analytics.totalViews")} value={data.totals.totalViews} active={showViews} onClick={() => setShowViews((s) => !s)} />
-        <StatCard icon={CalendarIcon} label={t("analytics.totalBookings")} value={data.totals.totalBookings} onClick={onGoBookings} />
+        <StatCard icon={CalendarIcon} label={t("analytics.totalBookings")} value={data.totals.totalBookings} active={showBookings} onClick={() => setShowBookings((s) => !s)} />
         <StatCard icon={TrendingUp} label={t("analytics.totalRevenueAfterCommission")} value={`${data.totals.totalRevenue.toFixed(2)}€`} onClick={onGoTransactions} />
       </div>
+
+      {showBookings && (
+        <div className="border border-sky-200 dark:border-emerald-800 rounded-2xl p-4">
+          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-1.5"><CalendarIcon size={16} /> {t("analytics.totalBookings")}</h3>
+          <BusinessBookingsPanel token={token} showError={showError} showOk={showOk} companyId={companyId} />
+        </div>
+      )}
 
       {showViews && (
         <div className="border border-sky-200 dark:border-emerald-800 rounded-2xl p-4">
@@ -208,6 +216,125 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
         )}
       </div>
     </div>
+  );
+}
+
+// Same read-only record layout as the admin bookings panel (reference number, search,
+// numbered pagination) but scoped to one business — shown inline in the stats page instead of
+// navigating to the full booking-management workflow, which stays reachable from its own tab.
+function BusinessBookingsPanel({ token, showError, showOk, companyId }) {
+  const { t } = useLang();
+  const [bookings, setBookings] = useState(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const load = useCallback(() => {
+    const url = companyId ? "/Bookings/admin/all" : "/Bookings/for-my-company";
+    apiFetch(url, token)
+      .then((data) => setBookings(companyId ? data.filter((b) => b.biznesi?.companyId === Number(companyId)) : data))
+      .catch((e) => showError && showError(e));
+  }, [token, companyId]);
+
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { setPage(1); }, [search]);
+
+  async function cancel(id) {
+    const reason = window.prompt(t("analytics.cancelReasonPrompt"));
+    if (!reason) return;
+    try {
+      await apiFetch(`/Bookings/${id}/cancel`, token, { method: "PUT", body: JSON.stringify({ reason }) });
+      showOk && showOk(t("booking.cancelled"));
+      load();
+    } catch (e) { showError && showError(e); }
+  }
+
+  if (!bookings) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
+  if (bookings.length === 0) return <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noBookingsYet")}</p>;
+
+  const q = search.trim().toLowerCase().replace(/^er-/, "");
+  const filteredBookings = q
+    ? bookings.filter((b) => {
+        const ref = String(b.bookingId).padStart(6, "0");
+        const haystack = [ref, b.car?.marka, b.car?.modeli, b.klienti?.emri, b.klienti?.mbiemri].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(q);
+      })
+    : bookings;
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / ADMIN_PAGE_SIZE));
+  const visibleBookings = filteredBookings.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+
+  return (
+    <>
+      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchBookings")} /></div>
+      {filteredBookings.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
+      ) : (
+      <>
+      <div className="hidden sm:block border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
+            <tr>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.bookingRef")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.date")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.car")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.client")}</th>
+              <th className="text-right px-4 py-2.5">{t("analytics.col.price")}</th>
+              <th className="text-left px-4 py-2.5">{t("analytics.col.status")}</th>
+              <th className="px-4 py-2.5" />
+            </tr>
+          </thead>
+          <tbody>
+            {visibleBookings.map((b) => (
+              <tr key={b.bookingId} className="border-t border-slate-100 dark:border-slate-800">
+                <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 font-mono text-xs whitespace-nowrap">{bookingRef(b.bookingId)}</td>
+                <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.dataFillimit} → {b.dataPerfundimit}</td>
+                <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap">{b.car?.marka} {b.car?.modeli}</td>
+                <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{b.klienti?.emri} {b.klienti?.mbiemri}</td>
+                <td className="px-4 py-2.5 text-right text-slate-900 dark:text-slate-100 font-semibold whitespace-nowrap">{b.cmimiTotal}€</td>
+                <td className="px-4 py-2.5">
+                  <StatusPill status={b.statusi} />
+                  {b.statusi === "cancelled" && b.arsyejaRefuzimit && (
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 max-w-[220px]" title={b.arsyejaRefuzimit}>{b.arsyejaRefuzimit}</p>
+                  )}
+                </td>
+                <td className="px-4 py-2.5 text-right">
+                  {(b.statusi === "pending" || b.statusi === "confirmed") && (
+                    <button onClick={() => cancel(b.bookingId)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400"><X size={14} /></button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="sm:hidden flex flex-col gap-3">
+        {visibleBookings.map((b) => (
+          <div key={b.bookingId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5">
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <div className="min-w-0">
+                <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{b.car?.marka} {b.car?.modeli}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{b.klienti?.emri} {b.klienti?.mbiemri}</p>
+              </div>
+              <StatusPill status={b.statusi} />
+            </div>
+            <p className="text-xs font-mono text-slate-400">{bookingRef(b.bookingId)}</p>
+            {b.statusi === "cancelled" && b.arsyejaRefuzimit && (
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{b.arsyejaRefuzimit}</p>
+            )}
+            <div className="flex items-center justify-between text-xs text-slate-400 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span>{b.dataFillimit} → {b.dataPerfundimit}</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{b.cmimiTotal}€</span>
+            </div>
+            {(b.statusi === "pending" || b.statusi === "confirmed") && (
+              <button onClick={() => cancel(b.bookingId)} className="text-red-500 dark:text-red-400 text-xs font-semibold flex items-center gap-1 mt-2"><X size={13} /> {t("booking.cancel")}</button>
+            )}
+          </div>
+        ))}
+      </div>
+      <Pager page={page} totalPages={totalPages} setPage={setPage} />
+      </>
+      )}
+    </>
   );
 }
 
@@ -634,7 +761,7 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
           {companies.map((c) => <option key={c.companyId} value={c.companyId}>{c.emri}</option>)}
         </select>
         {selectedCompanyId && (
-          <BusinessAnalytics token={token} showError={showError} companyId={selectedCompanyId} refreshKey={refreshKey} onGoTransactions={onGoTransactions} />
+          <BusinessAnalytics token={token} showError={showError} showOk={showOk} companyId={selectedCompanyId} refreshKey={refreshKey} onGoTransactions={onGoTransactions} />
         )}
       </div>
     </div>
