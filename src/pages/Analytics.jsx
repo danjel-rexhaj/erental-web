@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronDown, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronDown, ChevronLeft, Trash2 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiFetch } from "../api";
 import { inputClass, StatusPill } from "../components";
@@ -57,13 +57,12 @@ function StatCard({ icon: Icon, label, value, onClick, active }) {
   );
 }
 
-export function BusinessAnalytics({ token, showError, refreshKey, companyId, onGoBookings }) {
+export function BusinessAnalytics({ token, showError, refreshKey, companyId, onGoBookings, onGoTransactions }) {
   const { t, lang } = useLang();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [showViews, setShowViews] = useState(false);
-  const transactionsRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
@@ -89,7 +88,7 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={Eye} label={t("analytics.totalViews")} value={data.totals.totalViews} active={showViews} onClick={() => setShowViews((s) => !s)} />
         <StatCard icon={CalendarIcon} label={t("analytics.totalBookings")} value={data.totals.totalBookings} onClick={onGoBookings} />
-        <StatCard icon={TrendingUp} label={t("analytics.totalRevenueAfterCommission")} value={`${data.totals.totalRevenue.toFixed(2)}€`} onClick={() => transactionsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+        <StatCard icon={TrendingUp} label={t("analytics.totalRevenueAfterCommission")} value={`${data.totals.totalRevenue.toFixed(2)}€`} onClick={onGoTransactions} />
       </div>
 
       {showViews && (
@@ -144,22 +143,33 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
           </ResponsiveContainer>
         )}
       </div>
+    </div>
+  );
+}
 
-      <div ref={transactionsRef}>
-        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-1.5"><Receipt size={15} /> {t("analytics.transactions")}</h3>
-        <TransactionsTable token={token} showError={showError} />
-      </div>
+// Full-page view reached only by clicking the revenue StatCard — pulled out of the dashboard
+// (used to be an inline section at the bottom, requiring a scroll past everything else) so
+// reviewing transactions reads as its own task instead of digging through the whole dashboard.
+export function TransactionsPage({ token, showError, admin, onBack }) {
+  const { t } = useLang();
+  return (
+    <div>
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6"><ChevronLeft size={16} /> {t("common.back")}</button>
+      <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-1.5">
+        <Receipt size={18} /> {admin ? t("analytics.platformTransactionsAllBusinesses") : t("analytics.transactions")}
+      </h2>
+      <TransactionsTable token={token} showError={showError} admin={admin} defaultExpanded />
     </div>
   );
 }
 
 const PAGE_SIZE = 15;
 
-function TransactionsTable({ token, showError, admin = false }) {
+function TransactionsTable({ token, showError, admin = false, defaultExpanded = false }) {
   const { t, lang } = useLang();
   const [payments, setPayments] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
@@ -262,7 +272,7 @@ const METRICS = [
   { key: "verifications", labelKey: "analytics.metric.verifications", color: "#be185d" },
 ];
 
-export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPending }) {
+export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPending, onGoTransactions }) {
   const { t, lang } = useLang();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -310,7 +320,7 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <StatCard icon={TrendingUp} label={t("analytics.totalPlatformRevenue")} value={`${data.totals.totalPlatformRevenue.toFixed(2)}€`} />
+        <StatCard icon={TrendingUp} label={t("analytics.totalPlatformRevenue")} value={`${data.totals.totalPlatformRevenue.toFixed(2)}€`} onClick={onGoTransactions} />
         <StatCard icon={Wallet} label={t("analytics.ourProfit")} value={`${data.totals.totalPlatformProfit.toFixed(2)}€`} />
       </div>
 
@@ -390,11 +400,6 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
         )}
       </div>
 
-      <div>
-        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-1.5"><Receipt size={15} /> {t("analytics.platformTransactionsAllBusinesses")}</h3>
-        <TransactionsTable token={token} showError={showError} admin />
-      </div>
-
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
         <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-4">{t("analytics.specificBusinessStats")}</h3>
         <select
@@ -406,7 +411,7 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
           {companies.map((c) => <option key={c.companyId} value={c.companyId}>{c.emri}</option>)}
         </select>
         {selectedCompanyId && (
-          <BusinessAnalytics token={token} showError={showError} companyId={selectedCompanyId} refreshKey={refreshKey} />
+          <BusinessAnalytics token={token} showError={showError} companyId={selectedCompanyId} refreshKey={refreshKey} onGoTransactions={onGoTransactions} />
         )}
       </div>
     </div>
