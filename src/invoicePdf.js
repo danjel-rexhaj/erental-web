@@ -66,18 +66,30 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   const PAID = [21, 128, 61];
   const CASH = [180, 83, 9];
 
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
-  const pageW = doc.internal.pageSize.getWidth();
+  // A single-line-item invoice never fills a full A4 sheet — rather than pin the terms to the
+  // bottom of a mostly-empty page (a huge dead gap in the middle), the page height is sized to
+  // the content itself, with a modest, even margin at the end instead of a void.
+  const pageW = 595.28;
   const mx = 50;
   const rightX = pageW - mx;
+  const bizLineCount = 1 + (company?.telefoni ? 1 : 0) + 1; // address line, optional phone, email
+  const paymentLineCount = 1 + (cardLast4 ? 1 : 0) + (transactionId ? 1 : 0) + (mbetetCash > 0 ? 1 : 0);
+  const measureDoc = new jsPDF({ unit: "pt", format: [pageW, 1000] });
+  measureDoc.setFont("helvetica", "normal");
+  measureDoc.setFontSize(8);
+  const termsLines = measureDoc.splitTextToSize(L.terms, rightX - mx);
+  const paymentBlockEndY = 486 + 16 + 14 * (Math.max(paymentLineCount, bizLineCount) - 1);
+  const pageH = paymentBlockEndY + 40 + 20 + 16 + termsLines.length * 12 + 40;
+
+  const doc = new jsPDF({ unit: "pt", format: [pageW, pageH] });
 
   let logoDataUrl = null;
   try { logoDataUrl = await loadImageDataUrl("/logo-light.png"); } catch { /* falls back to text below */ }
 
   // ---- header: logo left, invoice title + meta right ----
-  let y = 56;
+  let y = 64;
   if (logoDataUrl) {
-    const logoH = 42;
+    const logoH = 44;
     const logoW = logoH * (2034 / 773);
     doc.addImage(logoDataUrl, "PNG", mx, y - 32, logoW, logoH);
   } else {
@@ -93,7 +105,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.text(L.invoice, rightX, y - 4, { align: "right" });
 
   const metaRows = [[L.invoiceNumber, confirmim], [L.date, sot]];
-  let metaY = y + 20;
+  let metaY = y + 22;
   metaRows.forEach(([label, value]) => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
@@ -107,16 +119,14 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   });
 
   // ---- billed to / total due ----
-  y = 150;
+  y = 172;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(...LABEL_GREY);
   doc.text(L.billedTo.toUpperCase(), mx, y);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
   doc.text(L.total.toUpperCase(), rightX, y, { align: "right" });
 
-  y += 17;
+  y += 20;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12.5);
   doc.setTextColor(...INK);
@@ -125,8 +135,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.text(`${totalPrice}€`, rightX, y, { align: "right" });
 
   // ---- item table ----
-  y += 36;
-  const tableTop = y;
+  y += 44;
   const descX = mx;
   const priceX = mx + (rightX - mx) * 0.55;
   const qtyX = mx + (rightX - mx) * 0.74;
@@ -145,7 +154,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.setLineWidth(1.1);
   doc.line(mx, y, rightX, y);
 
-  y += 22;
+  y += 24;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10.5);
   doc.setTextColor(...INK);
@@ -163,13 +172,13 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.setFont("helvetica", "bold");
   doc.text(`${totalPrice}€`, amtX, y, { align: "right" });
 
-  y += 16;
+  y += 18;
   doc.setDrawColor(...LINE);
   doc.setLineWidth(0.7);
   doc.line(mx, y, rightX, y);
 
   // ---- totals ----
-  y += 26;
+  y += 30;
   const totalsLabelX = rightX - 130;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
@@ -178,7 +187,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.setTextColor(...INK);
   doc.text(`${amountPaid}€`, rightX, y, { align: "right" });
 
-  y += 20;
+  y += 22;
   doc.setDrawColor(...INK);
   doc.setLineWidth(1.1);
   doc.line(totalsLabelX, y - 13, rightX, y - 13);
@@ -189,7 +198,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.text(`${totalPrice}€`, rightX, y, { align: "right" });
 
   // ---- thank you ----
-  y += 40;
+  y += 44;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.setTextColor(...INK);
@@ -197,10 +206,10 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...GREY);
-  doc.text(`${L.invoiceQuestions} info@erental.store`, mx, y + 15);
+  doc.text(`${L.invoiceQuestions} info@erental.store`, mx, y + 16);
 
   // ---- payment info / contact ----
-  y += 42;
+  y += 46;
   doc.setDrawColor(...LINE);
   doc.setLineWidth(0.7);
   doc.line(mx, y, rightX, y);
@@ -212,14 +221,14 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.text(L.paymentInfo.toUpperCase(), mx, y);
   doc.text(L.contact.toUpperCase(), rightX, y, { align: "right" });
 
-  y += 17;
+  y += 18;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10.5);
   doc.setTextColor(...INK);
   doc.text(eshtePagesePlote ? L.fullPaymentCard : L.depositCard, mx, y);
   doc.text(company?.emri || "ERental", rightX, y, { align: "right" });
 
-  let leftY = y + 15;
+  let leftY = y + 16;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   if (cardLast4) {
@@ -241,7 +250,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
     doc.text(`${L.remainingCash}: ${mbetetCash}€`, mx, leftY);
   }
 
-  let rightY = y + 15;
+  let rightY = y + 16;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   doc.setTextColor(...GREY);
@@ -251,22 +260,21 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   bizLines.push("info@erental.store");
   bizLines.forEach((line) => { doc.text(line, rightX, rightY, { align: "right" }); rightY += 14; });
 
-  // ---- cancellation terms, pinned near the bottom of the page ----
-  const pageH = doc.internal.pageSize.getHeight();
-  const termsY = pageH - 110;
+  // ---- cancellation terms ----
+  const termsLineY = Math.max(leftY, rightY) + 40;
   doc.setDrawColor(...LINE);
   doc.setLineWidth(0.7);
-  doc.line(mx, termsY, rightX, termsY);
+  doc.line(mx, termsLineY, rightX, termsLineY);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8.5);
   doc.setTextColor(...INK);
-  doc.text(L.cancellationTerms.toUpperCase(), mx, termsY + 20);
+  doc.text(L.cancellationTerms.toUpperCase(), mx, termsLineY + 20);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...GREY);
-  doc.text(doc.splitTextToSize(L.terms, rightX - mx), mx, termsY + 34, { lineHeightFactor: 1.5 });
+  doc.text(termsLines, mx, termsLineY + 36, { lineHeightFactor: 1.5 });
 
   doc.save(`fatura-${confirmim}.pdf`);
 }
