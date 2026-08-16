@@ -14,8 +14,10 @@ function memberSince(raw, lang) {
 }
 
 function looksAlbanian(phone) {
+  // Albanian mobiles are always 067/068/069 followed by exactly 7 more digits (10 digits total
+  // with the leading 0, e.g. 068 123 4567) -- not a loose 8-9 digit range.
   const digits = (phone || "").replace(/[\s-]/g, "");
-  return /^(\+355|00355|0)6\d{7,8}$/.test(digits);
+  return /^(\+355|00355|0)6[789]\d{7}$/.test(digits);
 }
 
 const PHONE_PREFIXES = [
