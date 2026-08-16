@@ -914,11 +914,14 @@ function AdminCarsPanel({ token, showError, showOk }) {
   const [cars, setCars] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({});
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     apiFetch("/Cars", null).then(setCars).catch((e) => showError && showError(e));
   }, []);
+
+  useEffect(() => { setPage(1); }, [search]);
 
   function startEdit(c) {
     setEditingId(c.carId);
@@ -948,11 +951,18 @@ function AdminCarsPanel({ token, showError, showOk }) {
 
   if (!cars) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
 
-  const totalPages = Math.max(1, Math.ceil(cars.length / ADMIN_PAGE_SIZE));
-  const visibleCars = cars.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+  const q = search.trim().toLowerCase();
+  const filteredCars = q ? cars.filter((c) => (c.targa || "").toLowerCase().includes(q)) : cars;
+  const totalPages = Math.max(1, Math.ceil(filteredCars.length / ADMIN_PAGE_SIZE));
+  const visibleCars = filteredCars.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
 
   return (
     <>
+      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchCars")} /></div>
+      {filteredCars.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
+      ) : (
+      <>
       <div className="hidden sm:block border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">
@@ -1040,6 +1050,8 @@ function AdminCarsPanel({ token, showError, showOk }) {
         ))}
       </div>
       <Pager page={page} totalPages={totalPages} setPage={setPage} />
+      </>
+      )}
     </>
   );
 }
