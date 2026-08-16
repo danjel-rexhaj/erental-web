@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { LogOut, Menu, X, Bell, Sun, Moon } from "lucide-react";
+import { LogOut, Menu, X, Bell, Sun, Moon, Car } from "lucide-react";
 import { apiFetch, decodeJwt } from "./api";
 import { useNotifications } from "./notifications";
 import { Logo } from "./Logo";
@@ -53,6 +53,27 @@ function updatePageMeta(title, description) {
   document.title = title || DEFAULT_TITLE;
   const metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.setAttribute("content", description || DEFAULT_DESCRIPTION);
+}
+
+// Shown in place of the homepage while search() fetches results and preloads their photos --
+// replaces the old in-place "Duke kërkuar..." button label with a dedicated full-page transition,
+// so the results appear all at once on a fresh screen instead of popping in over the search form.
+function SearchLoading() {
+  const { t } = useLang();
+  return (
+    <div className="flex flex-col items-center justify-center text-center px-8 py-24 gap-6">
+      <div className="relative w-40 h-14">
+        <div className="absolute bottom-0 left-0 right-0 h-1 rounded-full bg-slate-200 dark:bg-slate-700" />
+        <div className="absolute bottom-0.5 animate-drive">
+          <Car size={40} className="text-sky-600 dark:text-emerald-400" />
+        </div>
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("home.searchingTitle")}</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{t("home.searchingHint")}</p>
+      </div>
+    </div>
+  );
 }
 
 export default function App() {
@@ -496,6 +517,7 @@ export default function App() {
         />
       );
     }
+    if (searching) return <SearchLoading />;
     return (
       <Home
         dataFillimit={dataFillimit}
