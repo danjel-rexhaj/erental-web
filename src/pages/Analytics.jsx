@@ -121,13 +121,12 @@ function StatCard({ icon: Icon, label, value, onClick, active }) {
   );
 }
 
-export function BusinessAnalytics({ token, showError, showOk, refreshKey, companyId, onGoTransactions }) {
+export function BusinessAnalytics({ token, showError, refreshKey, companyId, onGoBookings, onGoTransactions }) {
   const { t, lang } = useLang();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [showViews, setShowViews] = useState(false);
-  const [showBookings, setShowBookings] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -152,16 +151,9 @@ export function BusinessAnalytics({ token, showError, showOk, refreshKey, compan
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard icon={Eye} label={t("analytics.totalViews")} value={data.totals.totalViews} active={showViews} onClick={() => setShowViews((s) => !s)} />
-        <StatCard icon={CalendarIcon} label={t("analytics.totalBookings")} value={data.totals.totalBookings} active={showBookings} onClick={() => setShowBookings((s) => !s)} />
+        <StatCard icon={CalendarIcon} label={t("analytics.totalBookings")} value={data.totals.totalBookings} onClick={() => onGoBookings && onGoBookings(companyId)} />
         <StatCard icon={TrendingUp} label={t("analytics.totalRevenueAfterCommission")} value={`${data.totals.totalRevenue.toFixed(2)}€`} onClick={onGoTransactions} />
       </div>
-
-      {showBookings && (
-        <div className="border border-sky-200 dark:border-emerald-800 rounded-2xl p-4">
-          <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-1.5"><CalendarIcon size={16} /> {t("analytics.totalBookings")}</h3>
-          <BusinessBookingsPanel token={token} showError={showError} showOk={showOk} companyId={companyId} />
-        </div>
-      )}
 
       {showViews && (
         <div className="border border-sky-200 dark:border-emerald-800 rounded-2xl p-4">
@@ -220,8 +212,21 @@ export function BusinessAnalytics({ token, showError, showOk, refreshKey, compan
 }
 
 // Same read-only record layout as the admin bookings panel (reference number, search,
-// numbered pagination) but scoped to one business — shown inline in the stats page instead of
-// navigating to the full booking-management workflow, which stays reachable from its own tab.
+// numbered pagination) but scoped to one business — reached as its own page (mirroring
+// TransactionsPage) instead of the full booking-management workflow, which stays on its own tab.
+export function BusinessBookingsPage({ token, showError, showOk, companyId, onBack }) {
+  const { t } = useLang();
+  return (
+    <div>
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6"><ChevronLeft size={16} /> {t("common.back")}</button>
+      <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-1.5 mb-4">
+        <CalendarIcon size={18} /> {t("analytics.totalBookings")}
+      </h2>
+      <BusinessBookingsPanel token={token} showError={showError} showOk={showOk} companyId={companyId} />
+    </div>
+  );
+}
+
 function BusinessBookingsPanel({ token, showError, showOk, companyId }) {
   const { t } = useLang();
   const [bookings, setBookings] = useState(null);
@@ -632,7 +637,7 @@ const METRICS = [
   { key: "verifications", labelKey: "analytics.metric.verifications", color: "#be185d" },
 ];
 
-export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPending, onGoTransactions, onGoPanel }) {
+export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPending, onGoTransactions, onGoBookings, onGoPanel }) {
   const { t, lang } = useLang();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -761,7 +766,7 @@ export function AdminAnalytics({ token, showError, showOk, refreshKey, onGoPendi
           {companies.map((c) => <option key={c.companyId} value={c.companyId}>{c.emri}</option>)}
         </select>
         {selectedCompanyId && (
-          <BusinessAnalytics token={token} showError={showError} showOk={showOk} companyId={selectedCompanyId} refreshKey={refreshKey} onGoTransactions={onGoTransactions} />
+          <BusinessAnalytics token={token} showError={showError} companyId={selectedCompanyId} refreshKey={refreshKey} onGoBookings={onGoBookings} onGoTransactions={onGoTransactions} />
         )}
       </div>
     </div>
