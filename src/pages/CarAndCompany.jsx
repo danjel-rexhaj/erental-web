@@ -690,7 +690,7 @@ function companyFreeInLabel(lirohetMe, lang) {
   return formatShortDate(lirohetMe, lang);
 }
 
-export function CompanyProfile({ company, cars, dataFillimit, dataPerfundimit, onDatesChange, onBack, onSelectCar, favoriteIds, onToggleFavorite }) {
+export function CompanyProfile({ company, cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, favoriteIds, onToggleFavorite }) {
   const { t, lang } = useLang();
   const [filters, setFilters] = useState(COMPANY_FILTERS_DEFAULT);
   const [showFilters, setShowFilters] = useState(false);
@@ -814,37 +814,6 @@ export function CompanyProfile({ company, cars, dataFillimit, dataPerfundimit, o
             </a>
           )}
         </div>
-      </div>
-
-      <div className="flex items-center gap-2 mb-4 flex-wrap text-xs">
-        <Calendar size={14} className="text-slate-400 shrink-0" />
-        {dataFillimit && dataPerfundimit ? (
-          <>
-            <input
-              type="date"
-              value={dataFillimit}
-              min={todayIso()}
-              onChange={(e) => onDatesChange?.(e.target.value, dataPerfundimit && e.target.value >= dataPerfundimit ? addDaysIso(e.target.value, 1) : dataPerfundimit)}
-              className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:border-sky-600 dark:focus:border-emerald-500"
-            />
-            <ArrowRight size={12} className="text-slate-300 shrink-0" />
-            <input
-              type="date"
-              value={dataPerfundimit}
-              min={addDaysIso(dataFillimit, 1)}
-              onChange={(e) => onDatesChange?.(dataFillimit, e.target.value)}
-              className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 outline-none focus:border-sky-600 dark:focus:border-emerald-500"
-            />
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onDatesChange?.(todayIso(), addDaysIso(todayIso(), 1))}
-            className="text-sky-600 dark:text-emerald-400 font-semibold underline"
-          >
-            {t("company.pickDates")}
-          </button>
-        )}
       </div>
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
