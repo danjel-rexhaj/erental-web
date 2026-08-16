@@ -143,16 +143,16 @@ export default function App() {
 
   const { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications, connection: hubConnection } = useNotifications(token, handleAvailabilityChanged, handleLiveNotification);
 
-  // ---- URL routing (hash-based: no server rewrite needed, refresh/back/forward all just work) ----
-  const VIEW_TO_HASH = {
+  // ---- URL routing (real paths, server-side SPA-fallback rewrite required -- see vercel.json) ----
+  const VIEW_TO_PATH = {
     browse: "/", bookings: "/rezervimet", favorites: "/preferuarat", business: "/biznesi", auth: "/profili",
     verifyEmail: "/verifiko", businessSignup: "/regjistrohu-biznes", about: "/rreth-nesh", contact: "/kontakt", careers: "/karriere",
     privacy: "/privatesia", terms: "/kushtet",
   };
-  const viewToHash = (v) => VIEW_TO_HASH[v] || "/";
+  const viewToHash = (v) => VIEW_TO_PATH[v] || "/";
 
   const applyRoute = useCallback(async (hashStr, hint) => {
-    const [path = "/", queryStr] = (hashStr || "#/").replace(/^#/, "").split("?");
+    const [path = "/", queryStr] = (hashStr || "/").replace(/^#/, "").split("?");
     const params = new URLSearchParams(queryStr || "");
     const segs = path.split("/").filter(Boolean);
 
@@ -259,7 +259,7 @@ export default function App() {
   }, [dataFillimit, dataPerfundimit, token]);
 
   function go(hashStr, hint) {
-    window.history.pushState(null, "", "#" + hashStr.replace(/^#/, ""));
+    window.history.pushState(null, "", hashStr.replace(/^#/, ""));
     applyRoute(hashStr, hint);
     window.scrollTo(0, 0);
   }
@@ -268,8 +268,14 @@ export default function App() {
   useEffect(() => { applyRouteRef.current = applyRoute; }, [applyRoute]);
 
   useEffect(() => {
-    const t = setTimeout(() => applyRoute(window.location.hash || "#/"), 0);
-    function onPopState() { applyRouteRef.current(window.location.hash || "#/"); }
+    // Backward-compat: a link shared/bookmarked before this migration (erental.store/#/makina/42)
+    // still loads index.html fine (the server only ever sees the part before '#'), so on first
+    // paint convert it to the new real-path URL before doing anything else.
+    if (window.location.hash.startsWith("#/")) {
+      window.history.replaceState(null, "", window.location.hash.slice(1));
+    }
+    const t = setTimeout(() => applyRoute(window.location.pathname + window.location.search), 0);
+    function onPopState() { applyRouteRef.current(window.location.pathname + window.location.search); }
     window.addEventListener("popstate", onPopState);
     return () => { clearTimeout(t); window.removeEventListener("popstate", onPopState); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -473,11 +479,11 @@ export default function App() {
             showOk={showOk}
             isAdmin={isAdmin}
             tab={businessTab}
-            setTab={(t) => { setBusinessTab(t); window.history.replaceState(null, "", "#/biznesi?tab=" + t); }}
+            setTab={(t) => { setBusinessTab(t); window.history.replaceState(null, "", "/biznesi?tab=" + t); }}
             carId={businessCarId}
             setCarId={(id) => {
               setBusinessCarIdState(id);
-              window.history.replaceState(null, "", `#/biznesi?tab=${businessTab}${id ? `&carId=${id}` : ""}`);
+              window.history.replaceState(null, "", `/biznesi?tab=${businessTab}${id ? `&carId=${id}` : ""}`);
             }}
             highlightBookingId={highlightBookingId}
             refreshKey={bookingsRefreshKey}
