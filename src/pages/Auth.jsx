@@ -162,7 +162,7 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
               <select className={`${inputClass} w-24 shrink-0`} value={form.telefoniPrefix} onChange={set("telefoniPrefix")}>
                 {PHONE_PREFIXES.map((p) => <option key={p.code} value={p.code}>{p.flag} {p.code}</option>)}
               </select>
-              <input required className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder={form.telefoniPrefix === "+355" ? "0691234567" : "691234567"} />
+              <input required className={`${inputClass} flex-1 min-w-0`} value={form.telefoni} onChange={set("telefoni")} placeholder={form.telefoniPrefix === "+355" ? "0691234567" : "691234567"} />
             </div>
           </Field>
         )}
