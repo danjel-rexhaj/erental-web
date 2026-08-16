@@ -30,6 +30,31 @@ function updateCanonical(pathname) {
   link.setAttribute("href", `https://www.erental.store${clean}`);
 }
 
+// index.html's <title>/<meta name="description"> are homepage-only and were showing up
+// identically for every route in Google's results (site:erental.store), making the pages look
+// indistinguishable from each other. This keeps them in sync with whatever's actually on screen.
+const DEFAULT_TITLE = "ERental — Makina me qera në Shqipëri";
+const DEFAULT_DESCRIPTION = "ERental — platforma e parë shqiptare ku krahason dhe rezervon makina me qera nga biznese të verifikuara në të gjithë Shqipërinë, brenda sekondave dhe pa kosto të fshehura.";
+
+const PAGE_META = {
+  bookings: { title: `Rezervimet e mia — ERental`, description: "Shiko dhe menaxho rezervimet e tua të makinave me qera në ERental." },
+  favorites: { title: `Makinat e preferuara — ERental`, description: "Makinat me qera që ke ruajtur si të preferuara në ERental." },
+  business: { title: `Regjistro biznesin tënd — ERental`, description: "Listo makinat e biznesit tënd të qerasë në ERental dhe merr klientë të rinj çdo ditë, pa kosto fillestare." },
+  auth: { title: `Hyr ose regjistrohu — ERental`, description: DEFAULT_DESCRIPTION },
+  businessSignup: { title: `Regjistro biznesin — ERental`, description: "Regjistro biznesin tënd të qerasë së makinave në ERental dhe fillo të marrësh rezervime online." },
+  about: { title: `Rreth nesh — ERental`, description: "Mëso më shumë rreth ERental, platforma e parë shqiptare e qerasë së makinave online." },
+  contact: { title: `Na kontakto — ERental`, description: "Na kontakto për pyetje rreth rezervimeve ose regjistrimit të biznesit tënd në ERental." },
+  careers: { title: `Karriera — ERental`, description: "Shiko pozicionet e hapura dhe bashkohu me ekipin e ERental." },
+  privacy: { title: `Politika e privatësisë — ERental`, description: DEFAULT_DESCRIPTION },
+  terms: { title: `Kushtet e përdorimit — ERental`, description: DEFAULT_DESCRIPTION },
+};
+
+function updatePageMeta(title, description) {
+  document.title = title || DEFAULT_TITLE;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute("content", description || DEFAULT_DESCRIPTION);
+}
+
 export default function App() {
   const { t } = useLang();
   const [token, setToken] = useState(() => {
@@ -282,6 +307,32 @@ export default function App() {
 
   const applyRouteRef = useRef(applyRoute);
   useEffect(() => { applyRouteRef.current = applyRoute; }, [applyRoute]);
+
+  useEffect(() => {
+    if (view === "browse") {
+      if (stage === "carDetail" && selectedCar) {
+        const carName = `${selectedCar.marka} ${selectedCar.modeli}`;
+        const bizName = selectedCar.company?.emri;
+        updatePageMeta(
+          `${carName}${bizName ? ` — ${bizName}` : ""} me qera | ERental`,
+          `Merr me qera ${carName} në Shqipëri${bizName ? ` nga ${bizName}` : ""}. Rezervo online, pa kosto të fshehura.`
+        );
+      } else if (stage === "companyProfile" && selectedCompanyId) {
+        const bizName = cars.find((c) => c.companyId === selectedCompanyId)?.company?.emri;
+        updatePageMeta(
+          bizName ? `${bizName} — Makina me qera | ERental` : undefined,
+          bizName ? `Shiko makinat me qera nga ${bizName} në ERental.` : undefined
+        );
+      } else if (stage === "results") {
+        updatePageMeta("Rezultatet e kërkimit — Makina me qera | ERental", DEFAULT_DESCRIPTION);
+      } else {
+        updatePageMeta();
+      }
+    } else {
+      const meta = PAGE_META[view];
+      updatePageMeta(meta?.title, meta?.description);
+    }
+  }, [view, stage, selectedCar, selectedCompanyId, cars]);
 
   useEffect(() => {
     // Backward-compat: a link shared/bookmarked before this migration (erental.store/#/makina/42)
