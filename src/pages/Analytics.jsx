@@ -4,7 +4,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContai
 import { apiFetch } from "../api";
 import { inputClass, StatusPill, PrimaryButton, GhostButton } from "../components";
 import { useLang } from "../useLang";
-import { monthShort, formatLocaleDate } from "../dateFormat";
+import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
 import { generateStatementPdf } from "../statementPdf";
 
 const entryLabel = (m, lang) => (m.day ? `${m.day} ${monthShort(m.month - 1, lang)}` : `${monthShort(m.month - 1, lang)} ${m.year}`);
@@ -151,13 +151,17 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
 // Full-page view reached only by clicking the revenue StatCard — pulled out of the dashboard
 // (used to be an inline section at the bottom, requiring a scroll past everything else) so
 // reviewing transactions reads as its own task instead of digging through the whole dashboard.
-// Same billing-window sizes as the dashboard's own PeriodSelect (days:7/14, months:3/6/12) —
-// reused here so "pick a period" always means the same thing across the whole analytics area.
-function periodCutoffDate(period) {
-  const d = new Date();
-  if (period.unit === "days") d.setDate(d.getDate() - period.value);
-  else d.setMonth(d.getMonth() - period.value);
-  return d;
+// A calendar month/year range (not a rolling "last N days" window) — a business asking for
+// "August's statement" or "last quarter" means specific calendar months, not a sliding cutoff.
+function monthRange(fromMonth, toMonth) {
+  const [fy, fm] = fromMonth.split("-").map(Number);
+  const [ty, tm] = toMonth.split("-").map(Number);
+  return { from: new Date(fy, fm - 1, 1), toExclusive: new Date(ty, tm, 1) };
+}
+
+function monthLabel(monthStr, lang) {
+  const [y, m] = monthStr.split("-").map(Number);
+  return `${monthName(m - 1, lang)} ${y}`;
 }
 
 function toCsvValue(v) {
@@ -169,7 +173,9 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
   const { t, lang } = useLang();
   const [payments, setPayments] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState(DEFAULT_PERIOD);
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  const [fromMonth, setFromMonth] = useState(thisMonth);
+  const [toMonth, setToMonth] = useState(thisMonth);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
@@ -180,8 +186,14 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
       .finally(() => setLoading(false));
   }, [token, admin]);
 
-  const cutoff = periodCutoffDate(period);
-  const filtered = (payments || []).filter((p) => p.dataPageses && new Date(p.dataPageses) >= cutoff);
+  function changeFromMonth(v) {
+    setFromMonth(v);
+    if (toMonth < v) setToMonth(v);
+  }
+
+  const { from, toExclusive } = monthRange(fromMonth, toMonth);
+  const filtered = (payments || []).filter((p) => p.dataPageses && new Date(p.dataPageses) >= from && new Date(p.dataPageses) < toExclusive);
+  const periodLabel = fromMonth === toMonth ? monthLabel(fromMonth, lang) : `${monthLabel(fromMonth, lang)} – ${monthLabel(toMonth, lang)}`;
 
   function exportCsv() {
     const headers = [t("analytics.col.date"), t("analytics.col.reference"), t("analytics.col.client"), t("analytics.col.car"), ...(admin ? [t("analytics.col.business")] : []), t("analytics.col.method"), t("analytics.col.paid"), t("analytics.col.commission"), t("analytics.col.netBusiness"), t("analytics.col.status")];
@@ -210,7 +222,7 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
   async function downloadStatement() {
     setDownloading(true);
     try {
-      await generateStatementPdf({ payments: filtered, admin, periodLabel: t(period.labelKey), businessName, lang });
+      await generateStatementPdf({ payments: filtered, admin, periodLabel, businessName, lang });
     } catch (e) { showError && showError(e); } finally { setDownloading(false); }
   }
 
@@ -221,7 +233,22 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
         <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
           <Receipt size={18} /> {admin ? t("analytics.platformTransactionsAllBusinesses") : t("analytics.transactions")}
         </h2>
-        <PeriodSelect period={period} setPeriod={setPeriod} />
+        <div className="flex items-center gap-1.5">
+          <input
+            type="month"
+            value={fromMonth}
+            onChange={(e) => changeFromMonth(e.target.value)}
+            className="text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800"
+          />
+          <span className="text-slate-400 text-xs">–</span>
+          <input
+            type="month"
+            value={toMonth}
+            min={fromMonth}
+            onChange={(e) => setToMonth(e.target.value)}
+            className="text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800"
+          />
+        </div>
       </div>
 
       {loading && !payments ? (

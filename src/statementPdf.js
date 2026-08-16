@@ -139,16 +139,28 @@ export async function generateStatementPdf({ payments, admin = false, periodLabe
     return { ...c, x: cx };
   });
 
+  // Cell text is always forced to one line (truncated with an ellipsis rather than wrapped) —
+  // jsPDF's maxWidth wraps overflowing text onto a second line without adding row height for it,
+  // which made long car names ("Mercedes-Benz S-Class") bleed into the next row's separator line.
+  function fitText(text, maxWidth) {
+    if (doc.getTextWidth(text) <= maxWidth) return text;
+    let truncated = text;
+    while (truncated.length > 1 && doc.getTextWidth(truncated + "…") > maxWidth) {
+      truncated = truncated.slice(0, -1);
+    }
+    return truncated + "…";
+  }
+
   function drawTableHeader() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
     doc.setTextColor(...LABEL_GREY);
     colsWithX.forEach((c) => doc.text(c.label.toUpperCase(), c.x + (c.num ? tableW * c.w - 4 : 0), y, c.num ? { align: "right" } : undefined));
-    y += 6;
+    y += 10;
     doc.setDrawColor(...INK);
     doc.setLineWidth(1);
     doc.line(mx, y, rightX, y);
-    y += 16;
+    y += 20;
   }
 
   drawTableHeader();
@@ -163,7 +175,6 @@ export async function generateStatementPdf({ payments, admin = false, periodLabe
       y = drawHeader();
       drawTableHeader();
     }
-    const statusKey = L.status[p.statusi] ? p.statusi : null;
     const row = {
       date: p.dataPageses ? formatLongDate(p.dataPageses, lang) : "-",
       ref: p.paypalCaptureId ? `${p.paypalCaptureId.slice(0, 12)}…` : "-",
@@ -177,10 +188,11 @@ export async function generateStatementPdf({ payments, admin = false, periodLabe
     };
     doc.setTextColor(...INK);
     colsWithX.forEach((c) => {
-      const text = String(row[c.key] ?? "-");
-      doc.text(text, c.x + (c.num ? tableW * c.w - 4 : 0), y, c.num ? { align: "right" } : { maxWidth: tableW * c.w - 6 });
+      const colWidth = tableW * c.w;
+      const text = fitText(String(row[c.key] ?? "-"), colWidth - 6);
+      doc.text(text, c.x + (c.num ? colWidth - 4 : 0), y, c.num ? { align: "right" } : undefined);
     });
-    y += 16;
+    y += 18;
     doc.setDrawColor(...LINE);
     doc.setLineWidth(0.5);
     doc.line(mx, y - 6, rightX, y - 6);
