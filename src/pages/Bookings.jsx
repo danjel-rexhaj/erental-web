@@ -43,16 +43,18 @@ export default function Bookings({ token, showError, showOk, highlightBookingId,
     } catch (e) { showError(e); } finally { setActingId(null); }
   }
 
-  // Mirrors BookingsController.CancelBooking's rule: refund window counts from business
-  // confirmation, not booking creation — a pending booking is always fully refundable.
-  // Computed once when the cancel form opens (not inline in render) since it reads the clock.
+  // Mirrors BookingsController.CancelBooking's rule: the 10% deposit is a non-refundable holding
+  // fee no matter when/why it's cancelled -- only a full online payment has a refund window at
+  // all (refund window counts from business confirmation, not booking creation; a pending
+  // full-payment booking is always fully refundable). Computed once when the cancel form opens
+  // (not inline in render) since it reads the clock.
   function computeRefundInfo(b) {
     if (!b.paymentMethod || b.paymentMethod === "cash") return null;
+    if (b.paymentMethod === "paypal_deposit") return { ok: false, text: t("booking.refundNoneDeposit") };
     if (b.statusi === "pending") return { ok: true, text: t("booking.refundFullPending") };
     if (b.statusi === "confirmed" && b.dataKonfirmimit) {
       const oreQeKaluan = (Date.now() - new Date(b.dataKonfirmimit).getTime()) / 3600000;
       if (oreQeKaluan <= 12) return { ok: true, text: t("booking.refundFullWindow") };
-      if (b.paymentMethod === "paypal_deposit") return { ok: false, text: t("booking.refundNoneDeposit") };
       return { ok: false, text: t("booking.refundNoneGeneric") };
     }
     return null;
