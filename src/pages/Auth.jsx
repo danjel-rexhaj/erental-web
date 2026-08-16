@@ -158,11 +158,11 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
         <Field label="Email"><input required type="email" className={inputClass} value={form.email} onChange={set("email")} placeholder="ti@email.com" /></Field>
         {mode === "register" && (
           <Field label={t("auth.phone")}>
-            <div className="flex gap-1.5">
-              <select className={`${inputClass} w-24 shrink-0`} value={form.telefoniPrefix} onChange={set("telefoniPrefix")}>
+            <div className="grid gap-1.5" style={{ gridTemplateColumns: "6rem 1fr" }}>
+              <select className={inputClass} value={form.telefoniPrefix} onChange={set("telefoniPrefix")}>
                 {PHONE_PREFIXES.map((p) => <option key={p.code} value={p.code}>{p.flag} {p.code}</option>)}
               </select>
-              <input required className={`${inputClass} flex-1 min-w-0`} value={form.telefoni} onChange={set("telefoni")} placeholder={form.telefoniPrefix === "+355" ? "0691234567" : "691234567"} />
+              <input required className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder={form.telefoniPrefix === "+355" ? "0691234567" : "691234567"} />
             </div>
           </Field>
         )}
