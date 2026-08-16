@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ShieldCheck, BadgeCheck, RotateCcw, Calendar, ArrowRight, MapPin, Clock, Lock, Zap, ChevronDown, HelpCircle, Star, Sparkles } from "lucide-react";
+import { ShieldCheck, BadgeCheck, RotateCcw, Calendar, ArrowRight, MapPin, Clock, Lock, Zap, ChevronDown, HelpCircle, Sparkles } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton, CarCard } from "../components";
 import { useLang } from "../useLang";
@@ -31,7 +31,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
   // always returned an empty result, which just read as broken. New zones show up here
   // automatically as soon as a business registers there, no code change needed.
   const zones = [...new Set(companies.map((c) => c.qyteti).filter(Boolean))].sort();
-  const topCompanies = companies.slice(0, 4);
+  const loop = companies.length > 0 ? [...companies, ...companies] : [];
 
   function changeFrom(value) {
     // The native <input type="date" min=...> attribute isn't reliably enforced on every
@@ -150,6 +150,36 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         </div>
       </div>
 
+      {(loadingFeatured || featuredCars.length > 0) && (
+        <div className="mt-10">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles size={18} className="text-sky-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("home.featuredTitle")}</h2>
+          </div>
+          {loadingFeatured ? (
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="w-64 shrink-0 h-56 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+              {featuredCars.map((car) => (
+                <div key={car.carId} className="w-64 shrink-0">
+                  <CarCard
+                    car={car}
+                    onSelectCar={onSelectCar}
+                    onSelectCompany={onSelectCompany}
+                    isFavorited={favoriteIds?.has(car.carId)}
+                    onToggleFavorite={onToggleFavorite}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mt-10">
         <button
           type="button"
@@ -190,77 +220,32 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         )}
       </div>
 
-      {(loadingFeatured || featuredCars.length > 0) && (
-        <div className="mt-10">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles size={18} className="text-sky-600 dark:text-emerald-400" />
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("home.featuredTitle")}</h2>
-          </div>
-          {loadingFeatured ? (
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="w-64 shrink-0 h-56 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
-              {featuredCars.map((car) => (
-                <div key={car.carId} className="w-64 shrink-0">
-                  <CarCard
-                    car={car}
-                    onSelectCar={onSelectCar}
-                    onSelectCompany={onSelectCompany}
-                    isFavorited={favoriteIds?.has(car.carId)}
-                    onToggleFavorite={onToggleFavorite}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {(loadingCompanies || loop.length > 0) && (
+        <div className="relative mt-10 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700">
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-white to-cyan-50 dark:from-teal-950/40 dark:via-slate-800 dark:to-emerald-950/30" />
 
-      {(loadingCompanies || topCompanies.length > 0) && (
-        <div className="mt-10">
-          <div className="flex items-center gap-2 mb-4">
-            <ShieldCheck size={18} className="text-sky-600 dark:text-emerald-400" />
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("home.verifiedBusinesses")}</h2>
+          <div className="relative p-6 sm:p-8">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">{t("home.verifiedBusinesses")}</p>
+            {loadingCompanies ? (
+              <div className="flex gap-3">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="h-11 w-36 rounded-xl bg-white/70 dark:bg-slate-900/50 animate-pulse flex-shrink-0" />
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-hidden">
+                <div className="flex gap-3 animate-marquee w-max">
+                  {loop.map((c, i) => (
+                    <div key={i} className="flex items-center gap-2 border border-sky-100 dark:border-teal-800/50 rounded-xl px-4 py-3 bg-white/90 dark:bg-slate-900/70 backdrop-blur-sm flex-shrink-0 shadow-sm">
+                      <ShieldCheck size={14} className="text-sky-600 dark:text-teal-400 flex-shrink-0" />
+                      <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">{c.emri}</span>
+                      <span className="text-xs text-slate-400 whitespace-nowrap">· {c.qyteti}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          {loadingCompanies ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-32 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {topCompanies.map((c) => (
-                <button
-                  key={c.companyId}
-                  type="button"
-                  onClick={() => onSelectCompany?.(c.companyId)}
-                  className="text-left border border-slate-200 dark:border-slate-700 rounded-2xl p-5 bg-white dark:bg-slate-800 hover:border-sky-300 dark:hover:border-emerald-600 hover:shadow-md transition"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 overflow-hidden">
-                      {c.logoUrl ? <img src={c.logoUrl} alt={c.emri} className="w-full h-full object-cover" /> : <ShieldCheck size={20} className="text-sky-600 dark:text-emerald-400" />}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">{c.emri}</p>
-                      <p className="text-xs text-slate-400 flex items-center gap-1"><MapPin size={11} /> {c.qyteti}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
-                    <span className="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400"><ShieldCheck size={12} /> {t("common.verified")}</span>
-                    {c.carCount != null && <span>{t("company.carsCount", { count: c.carCount })}</span>}
-                    {c.avgRating != null && (
-                      <span className="flex items-center gap-1"><Star size={12} className="text-amber-400 fill-amber-400" /> {c.avgRating}</span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       )}
     </div>
