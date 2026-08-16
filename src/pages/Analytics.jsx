@@ -35,7 +35,8 @@ function periodQuery(period) {
   return period.unit === "days" ? { days: period.value } : { months: period.value };
 }
 
-const ADMIN_PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [10, 40, 70];
+const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0];
 
 // Matches the ER-000123 confirmation number shown on the client's contract/receipt
 // (see components.jsx PaymentSuccess and invoicePdf.js) so admin search can look it up the same way.
@@ -81,6 +82,19 @@ function Pager({ page, totalPages, setPage }) {
         <ChevronRight size={14} />
       </button>
     </div>
+  );
+}
+
+function PageSizeSelect({ value, onChange }) {
+  const { t } = useLang();
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 shrink-0"
+    >
+      {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{t("analytics.perPage", { count: n })}</option>)}
+    </select>
   );
 }
 
@@ -250,6 +264,7 @@ function BusinessBookingsPanel({ token, showError, showOk, companyId }) {
   const [bookings, setBookings] = useState(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const load = useCallback(() => {
     const url = companyId ? "/Bookings/admin/all" : "/Bookings/for-my-company";
@@ -259,7 +274,7 @@ function BusinessBookingsPanel({ token, showError, showOk, companyId }) {
   }, [token, companyId]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => { setPage(1); }, [search, pageSize]);
 
   async function cancel(id) {
     const reason = window.prompt(t("analytics.cancelReasonPrompt"));
@@ -282,12 +297,15 @@ function BusinessBookingsPanel({ token, showError, showOk, companyId }) {
         return haystack.includes(q);
       })
     : bookings;
-  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / ADMIN_PAGE_SIZE));
-  const visibleBookings = filteredBookings.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
+  const visibleBookings = filteredBookings.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <>
-      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchBookings")} /></div>
+      <div className="flex items-center gap-2 mb-3">
+        <SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchBookings")} />
+        <PageSizeSelect value={pageSize} onChange={setPageSize} />
+      </div>
       {filteredBookings.length === 0 ? (
         <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
       ) : (
@@ -391,6 +409,7 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
   const [toMonth, setToMonth] = useState(thisMonth);
   const [downloading, setDownloading] = useState(false);
   const [search, setSearch] = useState("");
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     setLoading(true);
@@ -495,12 +514,15 @@ export function TransactionsPage({ token, showError, admin, businessName, onBack
                 {downloading ? t("common.loading") : t("analytics.downloadStatement")}
               </PrimaryButton>
             </div>
-            <SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchTransactions")} />
+            <div className="flex items-center gap-2">
+              <SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchTransactions")} />
+              <PageSizeSelect value={pageSize} onChange={setPageSize} />
+            </div>
           </div>
           {searched.length === 0 ? (
             <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
           ) : (
-            <TransactionsTable payments={searched} admin={admin} />
+            <TransactionsTable payments={searched} admin={admin} pageSize={pageSize} />
           )}
         </>
       )}
@@ -553,17 +575,17 @@ export function AdminBookingsPage({ token, showError, showOk, onBack }) {
   );
 }
 
-function TransactionsTable({ payments, admin = false }) {
+function TransactionsTable({ payments, admin = false, pageSize }) {
   const { t, lang } = useLang();
   const [page, setPage] = useState(1);
-  const totalPages = Math.max(1, Math.ceil(payments.length / ADMIN_PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(payments.length / pageSize));
   // Depend on a content fingerprint, not the array reference, so paging isn't reset by
   // unrelated parent re-renders (e.g. toggling the PDF-download spinner) recomputing the same list.
   const depKey = payments.length ? `${payments.length}-${payments[0]?.paymentId}-${payments[payments.length - 1]?.paymentId}` : "0";
 
-  useEffect(() => { setPage(1); }, [depKey]);
+  useEffect(() => { setPage(1); }, [depKey, pageSize]);
 
-  const visible = payments.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+  const visible = payments.slice((page - 1) * pageSize, page * pageSize);
 
   function statusPill(statusi) {
     if (statusi === "completed") return <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">{t("analytics.statusSuccess")}</span>;
@@ -798,12 +820,13 @@ function AdminUsersPanel({ token, showError, showOk }) {
   const [form, setForm] = useState({});
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     apiFetch("/Users", token).then(setUsers).catch((e) => showError && showError(e));
   }, [token]);
 
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => { setPage(1); }, [search, pageSize]);
 
   function startEdit(u) {
     setEditingId(u.userId);
@@ -825,12 +848,15 @@ function AdminUsersPanel({ token, showError, showOk }) {
   const filteredUsers = q
     ? users.filter((u) => [u.emri, u.mbiemri, u.email, u.telefoni].filter(Boolean).join(" ").toLowerCase().includes(q))
     : users;
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ADMIN_PAGE_SIZE));
-  const visibleUsers = filteredUsers.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const visibleUsers = filteredUsers.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <>
-      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchUsers")} /></div>
+      <div className="flex items-center gap-2 mb-3">
+        <SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchUsers")} />
+        <PageSizeSelect value={pageSize} onChange={setPageSize} />
+      </div>
       {filteredUsers.length === 0 ? (
         <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
       ) : (
@@ -930,12 +956,13 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
   const [form, setForm] = useState({});
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     apiFetch("/Companies", null).then(setCompanies).catch((e) => showError && showError(e));
   }, []);
 
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => { setPage(1); }, [search, pageSize]);
 
   function startEdit(c) {
     setEditingId(c.companyId);
@@ -957,12 +984,15 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
   const filteredCompanies = q
     ? companies.filter((c) => [c.emri, c.qyteti, c.telefoni].filter(Boolean).join(" ").toLowerCase().includes(q))
     : companies;
-  const totalPages = Math.max(1, Math.ceil(filteredCompanies.length / ADMIN_PAGE_SIZE));
-  const visibleCompanies = filteredCompanies.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredCompanies.length / pageSize));
+  const visibleCompanies = filteredCompanies.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <>
-      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchCompanies")} /></div>
+      <div className="flex items-center gap-2 mb-3">
+        <SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchCompanies")} />
+        <PageSizeSelect value={pageSize} onChange={setPageSize} />
+      </div>
       {filteredCompanies.length === 0 ? (
         <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
       ) : (
@@ -1066,12 +1096,13 @@ function AdminCarsPanel({ token, showError, showOk }) {
   const [form, setForm] = useState({});
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   useEffect(() => {
     apiFetch("/Cars", null).then(setCars).catch((e) => showError && showError(e));
   }, []);
 
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => { setPage(1); }, [search, pageSize]);
 
   function startEdit(c) {
     setEditingId(c.carId);
@@ -1103,12 +1134,15 @@ function AdminCarsPanel({ token, showError, showOk }) {
 
   const q = search.trim().toLowerCase();
   const filteredCars = q ? cars.filter((c) => (c.targa || "").toLowerCase().includes(q)) : cars;
-  const totalPages = Math.max(1, Math.ceil(filteredCars.length / ADMIN_PAGE_SIZE));
-  const visibleCars = filteredCars.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredCars.length / pageSize));
+  const visibleCars = filteredCars.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <>
-      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchCars")} /></div>
+      <div className="flex items-center gap-2 mb-3">
+        <SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchCars")} />
+        <PageSizeSelect value={pageSize} onChange={setPageSize} />
+      </div>
       {filteredCars.length === 0 ? (
         <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
       ) : (
@@ -1211,6 +1245,7 @@ function AdminBookingsPanel({ token, showError, showOk }) {
   const [bookings, setBookings] = useState(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   function load() {
     apiFetch("/Bookings/admin/all", token).then(setBookings).catch((e) => showError && showError(e));
@@ -1218,7 +1253,7 @@ function AdminBookingsPanel({ token, showError, showOk }) {
 
   useEffect(() => { load(); }, [token]);
 
-  useEffect(() => { setPage(1); }, [search]);
+  useEffect(() => { setPage(1); }, [search, pageSize]);
 
   async function cancel(id) {
     const reason = window.prompt(t("analytics.cancelReasonPrompt"));
@@ -1241,12 +1276,15 @@ function AdminBookingsPanel({ token, showError, showOk }) {
         return haystack.includes(q);
       })
     : bookings;
-  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / ADMIN_PAGE_SIZE));
-  const visibleBookings = filteredBookings.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
+  const visibleBookings = filteredBookings.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <>
-      <div className="mb-3"><SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchBookings")} /></div>
+      <div className="flex items-center gap-2 mb-3">
+        <SearchBox value={search} onChange={setSearch} placeholder={t("analytics.searchBookings")} />
+        <PageSizeSelect value={pageSize} onChange={setPageSize} />
+      </div>
       {filteredBookings.length === 0 ? (
         <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noSearchResults")}</p>
       ) : (
@@ -1327,14 +1365,17 @@ export function AdminLogins({ token, showError, refreshKey }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [pageSize]);
 
   useEffect(() => {
     setLoading(true);
-    apiFetch(`/Analytics/admin/logins?page=${page}&pageSize=50`, token)
+    apiFetch(`/Analytics/admin/logins?page=${page}&pageSize=${pageSize}`, token)
       .then(setData)
       .catch((e) => showError && showError(e))
       .finally(() => setLoading(false));
-  }, [token, page, refreshKey]);
+  }, [token, page, pageSize, refreshKey]);
 
   if (loading && !data) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
   if (!data) return null;
@@ -1347,6 +1388,8 @@ export function AdminLogins({ token, showError, refreshKey }) {
         <ShieldAlert size={20} className="text-amber-700 dark:text-amber-400 shrink-0" />
         <p className="text-sm text-amber-800 dark:text-amber-300">{t("analytics.failedLoginsNotice", { count: data.failedLast24h })}</p>
       </div>
+
+      <div className="flex justify-end"><PageSizeSelect value={pageSize} onChange={setPageSize} /></div>
 
       <div className="hidden sm:block border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
         <table className="w-full text-sm">
