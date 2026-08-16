@@ -419,6 +419,18 @@ export default function App() {
     setSearching(true);
     try {
       const data = await apiFetch(`/Cars/available?dataFillimit=${dataFillimit}&dataPerfundimit=${dataPerfundimit}`, null);
+      // Preload every result's main photo before navigating so the results grid appears with all
+      // cars and photos ready at once, instead of each card's image popping in on its own as the
+      // browser happens to finish that one request.
+      const photoUrls = data
+        .map((c) => (c.carPhotos || []).find((p) => p.eshteKryesore)?.urlFotos || c.carPhotos?.[0]?.urlFotos)
+        .filter(Boolean);
+      await Promise.all(photoUrls.map((url) => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = resolve;
+        img.src = url;
+      })));
       go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`, { cars: data });
     } catch (e) { showError(e); } finally { setSearching(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps

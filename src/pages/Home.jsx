@@ -15,7 +15,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
   const { t } = useLang();
   const [companies, setCompanies] = useState([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
-  const [openFaq, setOpenFaq] = useState(null);
+  const [openFaqs, setOpenFaqs] = useState(new Set());
 
   useEffect(() => {
     apiFetch("/Companies", null).then((data) => {
@@ -132,14 +132,14 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             { Icon: Zap, title: t("home.trustClickTitle"), sub: t("home.trustClickSub") },
             { Icon: Clock, title: t("home.trustFastTitle"), sub: t("home.trustFastSub") },
           ].map(({ Icon, title, sub }, i) => (
-            <div key={i} className="shrink-0 w-[160px] sm:w-auto flex flex-col gap-2.5 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-5 bg-white dark:bg-slate-800">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-500 dark:from-emerald-600 dark:to-teal-600 flex items-center justify-center shrink-0">
-                <Icon size={18} className="text-white sm:hidden" />
-                <Icon size={22} className="text-white hidden sm:block" />
+            <div key={i} className="shrink-0 w-[180px] sm:w-auto flex flex-col gap-2.5 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-6 bg-white dark:bg-slate-800">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-500 dark:from-emerald-600 dark:to-teal-600 flex items-center justify-center shrink-0">
+                <Icon size={22} className="text-white sm:hidden" />
+                <Icon size={26} className="text-white hidden sm:block" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">{title}</p>
-                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-tight mt-0.5">{sub}</p>
+                <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">{title}</p>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-tight mt-0.5">{sub}</p>
               </div>
             </div>
           ))}
@@ -176,18 +176,31 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
       )}
 
       <div className="mt-10">
-        <div className="flex items-center gap-2 mb-4">
-          <HelpCircle size={18} className="text-sky-600 dark:text-emerald-400" />
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("home.faqTitle")}</h2>
+        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <HelpCircle size={18} className="text-sky-600 dark:text-emerald-400" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("home.faqTitle")}</h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpenFaqs((prev) => (prev.size === 6 ? new Set() : new Set([1, 2, 3, 4, 5, 6])))}
+            className="text-xs font-semibold text-sky-600 dark:text-emerald-400 underline"
+          >
+            {openFaqs.size === 6 ? t("home.faqCollapseAll") : t("home.faqExpandAll")}
+          </button>
         </div>
         <div className="flex flex-col gap-2">
           {[1, 2, 3, 4, 5, 6].map((i) => {
-            const open = openFaq === i;
+            const open = openFaqs.has(i);
             return (
               <div key={i} className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden bg-white dark:bg-slate-800">
                 <button
                   type="button"
-                  onClick={() => setOpenFaq(open ? null : i)}
+                  onClick={() => setOpenFaqs((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(i)) next.delete(i); else next.add(i);
+                    return next;
+                  })}
                   className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left"
                 >
                   <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t(`home.faq${i}Q`)}</span>
