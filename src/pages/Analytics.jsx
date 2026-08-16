@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronDown, ChevronLeft, Trash2 } from "lucide-react";
+import { Eye, Calendar as CalendarIcon, TrendingUp, Users as UsersIcon, Building2, Car as CarIcon, Clock, ShieldAlert, Receipt, Pencil, X, Check, Wallet, ChevronLeft, Trash2 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { apiFetch } from "../api";
-import { inputClass, StatusPill } from "../components";
+import { inputClass, StatusPill, PrimaryButton, GhostButton } from "../components";
 import { useLang } from "../useLang";
 import { monthShort, formatLocaleDate } from "../dateFormat";
+import { generateStatementPdf } from "../statementPdf";
 
 const entryLabel = (m, lang) => (m.day ? `${m.day} ${monthShort(m.month - 1, lang)}` : `${monthShort(m.month - 1, lang)} ${m.year}`);
 
@@ -150,27 +151,26 @@ export function BusinessAnalytics({ token, showError, refreshKey, companyId, onG
 // Full-page view reached only by clicking the revenue StatCard — pulled out of the dashboard
 // (used to be an inline section at the bottom, requiring a scroll past everything else) so
 // reviewing transactions reads as its own task instead of digging through the whole dashboard.
-export function TransactionsPage({ token, showError, admin, onBack }) {
-  const { t } = useLang();
-  return (
-    <div>
-      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6"><ChevronLeft size={16} /> {t("common.back")}</button>
-      <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-1.5">
-        <Receipt size={18} /> {admin ? t("analytics.platformTransactionsAllBusinesses") : t("analytics.transactions")}
-      </h2>
-      <TransactionsTable token={token} showError={showError} admin={admin} defaultExpanded />
-    </div>
-  );
+// Same billing-window sizes as the dashboard's own PeriodSelect (days:7/14, months:3/6/12) —
+// reused here so "pick a period" always means the same thing across the whole analytics area.
+function periodCutoffDate(period) {
+  const d = new Date();
+  if (period.unit === "days") d.setDate(d.getDate() - period.value);
+  else d.setMonth(d.getMonth() - period.value);
+  return d;
 }
 
-const PAGE_SIZE = 15;
+function toCsvValue(v) {
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
 
-function TransactionsTable({ token, showError, admin = false, defaultExpanded = false }) {
+export function TransactionsPage({ token, showError, admin, businessName, onBack }) {
   const { t, lang } = useLang();
   const [payments, setPayments] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(defaultExpanded);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -180,32 +180,79 @@ function TransactionsTable({ token, showError, admin = false, defaultExpanded = 
       .finally(() => setLoading(false));
   }, [token, admin]);
 
-  if (loading && !payments) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
-  if (!payments || payments.length === 0) return <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noTransactionsYet")}</p>;
+  const cutoff = periodCutoffDate(period);
+  const filtered = (payments || []).filter((p) => p.dataPageses && new Date(p.dataPageses) >= cutoff);
 
-  if (!expanded) {
-    return (
-      <button
-        onClick={() => setExpanded(true)}
-        className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-      >
-        <ChevronDown size={16} />
-        {t("analytics.showTransactions", { count: payments.length })}
-      </button>
-    );
+  function exportCsv() {
+    const headers = [t("analytics.col.date"), t("analytics.col.reference"), t("analytics.col.client"), t("analytics.col.car"), ...(admin ? [t("analytics.col.business")] : []), t("analytics.col.method"), t("analytics.col.paid"), t("analytics.col.commission"), t("analytics.col.netBusiness"), t("analytics.col.status")];
+    const rows = filtered.map((p) => [
+      p.dataPageses ? formatLocaleDate(p.dataPageses, lang) : "",
+      p.paypalCaptureId || "",
+      `${p.klienti?.emri || ""} ${p.klienti?.mbiemri || ""}`.trim(),
+      `${p.car?.marka || ""} ${p.car?.modeli || ""}`.trim(),
+      ...(admin ? [p.biznesi?.emri || ""] : []),
+      p.metodaPageses === "paypal_full" ? t("analytics.methodFull") : t("analytics.methodDeposit"),
+      p.shumaPaguarOnline ?? "",
+      p.komisioni != null ? p.komisioni.toFixed(2) : "",
+      p.shumaBiznesit != null ? p.shumaBiznesit.toFixed(2) : "",
+      p.statusi || "",
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map(toCsvValue).join(",")).join("\n");
+    const blob = new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `transaksione-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
+
+  async function downloadStatement() {
+    setDownloading(true);
+    try {
+      await generateStatementPdf({ payments: filtered, admin, periodLabel: t(period.labelKey), businessName, lang });
+    } catch (e) { showError && showError(e); } finally { setDownloading(false); }
+  }
+
+  return (
+    <div>
+      <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6"><ChevronLeft size={16} /> {t("common.back")}</button>
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
+        <h2 className="font-semibold text-lg text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+          <Receipt size={18} /> {admin ? t("analytics.platformTransactionsAllBusinesses") : t("analytics.transactions")}
+        </h2>
+        <PeriodSelect period={period} setPeriod={setPeriod} />
+      </div>
+
+      {loading && !payments ? (
+        <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-8">{t("analytics.noTransactionsYet")}</p>
+      ) : (
+        <>
+          <div className="flex gap-2 mb-4">
+            <GhostButton type="button" onClick={exportCsv} className="w-fit text-xs py-2 px-3.5">{t("analytics.exportCsv")}</GhostButton>
+            <PrimaryButton type="button" onClick={downloadStatement} disabled={downloading} className="w-fit text-xs py-2 px-3.5">
+              {downloading ? t("common.loading") : t("analytics.downloadStatement")}
+            </PrimaryButton>
+          </div>
+          <TransactionsTable payments={filtered} admin={admin} />
+        </>
+      )}
+    </div>
+  );
+}
+
+const PAGE_SIZE = 15;
+
+function TransactionsTable({ payments, admin = false }) {
+  const { t, lang } = useLang();
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const visible = payments.slice(0, visibleCount);
 
   return (
     <div>
-      <button
-        onClick={() => { setExpanded(false); setVisibleCount(PAGE_SIZE); }}
-        className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 mb-3"
-      >
-        <ChevronDown size={16} className="rotate-180" />
-        {t("analytics.hideTransactions", { count: payments.length })}
-      </button>
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase">

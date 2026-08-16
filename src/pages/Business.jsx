@@ -63,7 +63,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       {tab === "admin-transactions" && <TransactionsPage token={token} showError={showError} admin onBack={() => setTab("admin-analytics")} />}
       {tab === "admin-logins" && <AdminLogins token={token} showError={showError} refreshKey={analyticsRefreshKey} />}
       {tab === "analytics" && <BusinessAnalytics token={token} showError={showError} refreshKey={analyticsRefreshKey} onGoBookings={() => setTab("bookings")} onGoTransactions={() => setTab("transactions")} />}
-      {tab === "transactions" && <TransactionsPage token={token} showError={showError} onBack={() => setTab("analytics")} />}
+      {tab === "transactions" && <TransactionsPage token={token} showError={showError} businessName={company?.emri} onBack={() => setTab("analytics")} />}
       {tab === "bookings" && (
         <CompanyBookings
           token={token}

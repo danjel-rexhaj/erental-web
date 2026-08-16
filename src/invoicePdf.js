@@ -28,7 +28,7 @@ const INVOICE_TEXT = {
   },
 };
 
-function formatLongDate(raw, lang) {
+export function formatLongDate(raw, lang) {
   const d = new Date(raw);
   if (isNaN(d)) return String(raw);
   return `${d.getDate()} ${monthName(d.getMonth(), lang)} ${d.getFullYear()}`;
@@ -37,7 +37,7 @@ function formatLongDate(raw, lang) {
 // jsPDF needs actual image data, not a URL — fetched once per invoice rather than bundled as a
 // base64 string in the JS source, which would otherwise bloat every page load with an asset only
 // needed at the moment someone downloads a PDF.
-function loadImageDataUrl(url) {
+export function loadImageDataUrl(url) {
   return fetch(url)
     .then((res) => res.blob())
     .then((blob) => new Promise((resolve, reject) => {
