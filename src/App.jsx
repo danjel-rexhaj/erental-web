@@ -16,6 +16,20 @@ import { AuthGate, BusinessAuthGate, AuthView, ProfileView, VerifyView } from ".
 import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
 
+// index.html ships a single hardcoded canonical tag pointing at the homepage -- every other
+// route needs its own, and specifically WITHOUT query params (?nga=&deri=&...), or Google treats
+// every date-range combination on a car/results page as separate duplicate-content URLs.
+function updateCanonical(pathname) {
+  const clean = (pathname || "/").split("?")[0] || "/";
+  let link = document.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    document.head.appendChild(link);
+  }
+  link.setAttribute("href", `https://www.erental.store${clean}`);
+}
+
 export default function App() {
   const { t } = useLang();
   const [token, setToken] = useState(() => {
@@ -259,7 +273,9 @@ export default function App() {
   }, [dataFillimit, dataPerfundimit, token]);
 
   function go(hashStr, hint) {
-    window.history.pushState(null, "", hashStr.replace(/^#/, ""));
+    const path = hashStr.replace(/^#/, "");
+    window.history.pushState(null, "", path);
+    updateCanonical(path);
     applyRoute(hashStr, hint);
     window.scrollTo(0, 0);
   }
@@ -274,8 +290,9 @@ export default function App() {
     if (window.location.hash.startsWith("#/")) {
       window.history.replaceState(null, "", window.location.hash.slice(1));
     }
+    updateCanonical(window.location.pathname);
     const t = setTimeout(() => applyRoute(window.location.pathname + window.location.search), 0);
-    function onPopState() { applyRouteRef.current(window.location.pathname + window.location.search); }
+    function onPopState() { updateCanonical(window.location.pathname); applyRouteRef.current(window.location.pathname + window.location.search); }
     window.addEventListener("popstate", onPopState);
     return () => { clearTimeout(t); window.removeEventListener("popstate", onPopState); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
