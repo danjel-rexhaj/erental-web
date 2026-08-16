@@ -1383,7 +1383,7 @@ function AdminPending({ token, showError, showOk }) {
     if (!reason.trim()) { showError(new Error(t("business.needRejectReasonError"))); return; }
     setActing(true);
     try {
-      await apiFetch(`/Companies/${id}/reject`, token, { method: "DELETE", body: JSON.stringify({ reason }) });
+      await apiFetch(`/Companies/${id}/reject?reason=${encodeURIComponent(reason)}`, token, { method: "DELETE" });
       showOk(t("business.applicationRejected"));
       setRejectingId(null);
       setReason("");
