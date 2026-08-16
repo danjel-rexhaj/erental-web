@@ -528,6 +528,10 @@ export default function App() {
         setZona={(zona) => setResultFilters((f) => ({ ...f, zona }))}
         onSearch={search}
         loading={searching}
+        onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}`, { car })}
+        onSelectCompany={(id) => go(`/kompania/${id}`)}
+        favoriteIds={favoriteIds}
+        onToggleFavorite={toggleFavorite}
       />
     );
   }
