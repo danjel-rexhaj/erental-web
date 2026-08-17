@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload } from "lucide-react";
+import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2 } from "lucide-react";
 import { apiFetch, apiFetchBlob } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass } from "../components";
 import { NATIONALITIES } from "../carData";
@@ -288,7 +288,7 @@ export function VerifyView({ initialData, onAuth, showError, showOk, goTo }) {
   );
 }
 
-export function ProfileView({ user, token, onLogout, showError, showOk, onVerified, onUpdated, goToBusiness }) {
+export function ProfileView({ user, token, onLogout, showError, showOk, onVerified, onUpdated, goToBusiness, goTo }) {
   const { t, lang } = useLang();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -296,6 +296,8 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
   const [bookingCount, setBookingCount] = useState(null);
   const [editing, setEditing] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [waRequest, setWaRequest] = useState(null);
   const [waLoading, setWaLoading] = useState(false);
   const [company, setCompany] = useState(null);
@@ -345,6 +347,14 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
       const res = await apiFetch("/WhatsappVerifications", token, { method: "POST" });
       setWaRequest(res);
     } catch (e) { showError(e); } finally { setWaLoading(false); }
+  }
+
+  async function deleteAccount() {
+    setDeleting(true);
+    try {
+      await apiFetch("/Users/me", token, { method: "DELETE" });
+      onLogout();
+    } catch (e) { showError(e); setConfirmingDelete(false); } finally { setDeleting(false); }
   }
 
   async function uploadPhoto(e) {
@@ -613,6 +623,37 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
         )}
 
         <SettingsRow icon={LogOut} label={t("nav.logout")} onClick={onLogout} danger />
+      </div>
+
+      {goTo && (
+        <div className="border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden">
+          <SettingsRow icon={HelpCircle} label={t("home.faqTitle")} onClick={() => goTo("/?scrollTo=faq")} />
+          <SettingsRow icon={Lock} label={t("footer.privacy")} onClick={() => goTo("/privatesia")} />
+          <SettingsRow icon={FileText} label={t("footer.terms")} onClick={() => goTo("/kushtet")} />
+          <SettingsRow icon={Car} label={t("footer.about")} onClick={() => goTo("/rreth-nesh")} />
+        </div>
+      )}
+
+      <div className="border border-red-200 dark:border-red-800/60 rounded-2xl p-4">
+        <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">{t("auth.dangerZone")}</p>
+        {confirmingDelete ? (
+          <>
+            <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">{t("auth.deleteAccountWarning")}</p>
+            <div className="flex gap-2">
+              <button onClick={deleteAccount} disabled={deleting} className="text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
+                {deleting ? t("auth.deletingAccount") : t("auth.confirmDeleteAccount")}
+              </button>
+              <GhostButton type="button" onClick={() => setConfirmingDelete(false)} className="text-xs py-2">{t("booking.cancel")}</GhostButton>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{t("auth.deleteAccountHint")}</p>
+            <button onClick={() => setConfirmingDelete(true)} className="text-xs font-semibold text-red-600 dark:text-red-400 underline flex items-center gap-1">
+              <Trash2 size={12} /> {t("auth.deleteAccountCta")}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

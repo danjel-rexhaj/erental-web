@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ShieldCheck, BadgeCheck, RotateCcw, Calendar, ArrowRight, MapPin, Clock, Lock, Zap, ChevronDown, HelpCircle, Sparkles } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton, CarCard } from "../components";
@@ -19,12 +19,22 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
   const [loadingFeatured, setLoadingFeatured] = useState(true);
   const [faqSectionOpen, setFaqSectionOpen] = useState(false);
   const [openFaqs, setOpenFaqs] = useState(new Set());
+  const faqRef = useRef(null);
 
   useEffect(() => {
     apiFetch("/Companies", null).then((data) => {
       setCompanies(data.filter((c) => c.eshteVerifikuar));
     }).catch(() => {}).finally(() => setLoadingCompanies(false));
     apiFetch("/Cars/featured?take=10", null).then(setFeaturedCars).catch(() => {}).finally(() => setLoadingFeatured(false));
+  }, []);
+
+  // Lets "FAQ" links elsewhere in the app (e.g. the profile page) land here already expanded and
+  // scrolled into view, instead of dumping the visitor at the top of a long homepage.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("scrollTo") === "faq") {
+      setFaqSectionOpen(true);
+      setTimeout(() => faqRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    }
   }, []);
 
   // Only zones with at least one verified business — picking a zone nobody serves yet
@@ -180,7 +190,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         </div>
       )}
 
-      <div className="mt-10">
+      <div className="mt-10" ref={faqRef}>
         <button
           type="button"
           onClick={() => setFaqSectionOpen((s) => !s)}

@@ -596,7 +596,7 @@ export default function App() {
         ) : <BusinessAuthGate onRegister={() => go("/regjistrohu-biznes")} onLogin={() => go("/profili")} />)}
         {view === "auth" && (
           token
-            ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} />
+            ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} goTo={go} />
             : <AuthView onAuth={handleAuth} showError={showError} showOk={showOk} goTo={handleGoTo} />
         )}
         {view === "verifyEmail" && (
