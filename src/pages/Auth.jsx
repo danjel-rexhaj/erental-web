@@ -14,10 +14,11 @@ function memberSince(raw, lang) {
 }
 
 function looksAlbanian(phone) {
-  // Albanian mobiles are always 067/068/069 followed by exactly 7 more digits (10 digits total
-  // with the leading 0, e.g. 068 123 4567) -- not a loose 8-9 digit range.
+  // Albanian mobiles are always 067/068/069 followed by exactly 7 more digits -- 10 digits total
+  // with the leading 0 (068 123 4567), or 9 digits with no prefix at all, since next to a "+355"
+  // dropdown it's natural to type just "68 123 4567" without re-typing the leading 0.
   const digits = (phone || "").replace(/[\s-]/g, "");
-  return /^(\+355|00355|0)6[789]\d{7}$/.test(digits);
+  return /^(\+355|00355|0)?6[789]\d{7}$/.test(digits);
 }
 
 const PHONE_PREFIXES = [
@@ -579,9 +580,12 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
             )}
           </div>
 
-          {user?.hasWhatsapp && !user?.whatsappVerified && !waPending && (
+          {user?.hasWhatsapp && !user?.whatsappVerified && (
+            // Stays available even while a request is already pending -- the first "send" can
+            // fail to actually go out (tab closed before WhatsApp opened, message never sent,
+            // etc.), and there was previously no way back in once status flipped to pending.
             <button onClick={requestWhatsapp} disabled={waLoading} className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 underline text-left w-fit">
-              {waLoading ? t("auth.preparing") : t("auth.verifyWhatsapp")}
+              {waLoading ? t("auth.preparing") : waPending ? t("auth.resendWhatsappCode") : t("auth.verifyWhatsapp")}
             </button>
           )}
 
