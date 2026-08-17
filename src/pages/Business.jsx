@@ -572,7 +572,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
         </div>
         <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-center flex flex-col items-center justify-center">
           <MessageCircle size={20} className="text-emerald-700 dark:text-emerald-400 mb-1" />
-          <p className="text-xs text-slate-500 dark:text-slate-400">{t("business.support")} <a href="https://wa.me/355688208868" target="_blank" rel="noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">WhatsApp</a></p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t("business.support")} <a href="https://wa.me/16066474048" target="_blank" rel="noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">WhatsApp</a></p>
         </div>
       </div>
 
