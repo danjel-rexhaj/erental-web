@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Briefcase, Shield, FileText, Send, CheckCircle2, Info, Mail, MessageCircle, Car as CarIcon, Users, ShieldCheck } from "lucide-react";
+import { Briefcase, Shield, FileText, Send, CheckCircle2, Info, Mail, MessageCircle, Car as CarIcon, Users, ShieldCheck, ChevronLeft } from "lucide-react";
 import { PrimaryButton, Field, inputClass } from "../components";
 import { apiFetch } from "../api";
 import { useLang } from "../useLang";
@@ -7,10 +7,23 @@ import { useLang } from "../useLang";
 const SUPPORT_WHATSAPP = "16066474048";
 const SUPPORT_EMAIL = "info@erental.store";
 
+// These pages are reached from several places (footer while browsing, Profile's Support links,
+// a shared link, etc.), so a real browser-history back returns to wherever the visitor actually
+// came from -- e.g. straight back to Profile when that's where they opened it from.
+function BackButton() {
+  const { t } = useLang();
+  return (
+    <button onClick={() => window.history.back()} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-6">
+      <ChevronLeft size={16} /> {t("common.back")}
+    </button>
+  );
+}
+
 export function About() {
   const { t } = useLang();
   return (
     <div className="max-w-2xl mx-auto py-8">
+      <BackButton />
       <div className="flex items-center gap-2 mb-1"><Info size={20} className="text-sky-600 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.about.title")}</h1></div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">{t("legal.about.subtitle")}</p>
 
@@ -46,6 +59,7 @@ export function Contact() {
   const { t } = useLang();
   return (
     <div className="max-w-sm mx-auto py-12 text-center">
+      <div className="text-left"><BackButton /></div>
       <div className="flex items-center justify-center gap-2 mb-1"><Mail size={20} className="text-sky-600 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.contact.title")}</h1></div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-8">{t("legal.contact.subtitle")}</p>
 
@@ -77,6 +91,7 @@ export function Privacy() {
   const { t } = useLang();
   return (
     <div className="max-w-2xl mx-auto py-8">
+      <BackButton />
       <div className="flex items-center gap-2 mb-1"><Shield size={20} className="text-sky-600 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.privacy.title")}</h1></div>
       <p className="text-xs text-slate-400 mb-6">{t("legal.lastUpdated")}</p>
 
@@ -110,6 +125,7 @@ export function Terms() {
   const { t } = useLang();
   return (
     <div className="max-w-2xl mx-auto py-8">
+      <BackButton />
       <div className="flex items-center gap-2 mb-1"><FileText size={20} className="text-sky-600 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.terms.title")}</h1></div>
       <p className="text-xs text-slate-400 mb-6">{t("legal.lastUpdated")}</p>
 
@@ -171,6 +187,7 @@ export function Careers({ showError }) {
   if (sent) {
     return (
       <div className="max-w-md mx-auto py-16 text-center">
+        <div className="text-left"><BackButton /></div>
         <CheckCircle2 size={32} className="mx-auto text-sky-600 dark:text-emerald-400 mb-3" />
         <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("legal.careers.thanksTitle")}</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{t("legal.careers.thanksBody")}</p>
@@ -180,6 +197,7 @@ export function Careers({ showError }) {
 
   return (
     <div className="max-w-md mx-auto py-8">
+      <BackButton />
       <div className="flex items-center gap-2 mb-1"><Briefcase size={20} className="text-sky-600 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.careers.title")}</h1></div>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">{t("legal.careers.subtitle")}</p>
       <a href={`mailto:${SUPPORT_EMAIL}`} className="text-xs text-sky-600 dark:text-emerald-400 underline">{SUPPORT_EMAIL}</a>
