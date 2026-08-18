@@ -245,9 +245,6 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   className={`relative rounded-xl overflow-hidden border h-16 ${shown?.photoId === p.photoId ? "border-sky-600 dark:border-emerald-500 ring-2 ring-sky-200 dark:ring-emerald-900/40" : "border-slate-200 dark:border-slate-700"}`}
                 >
                   <CroppedPhoto url={p.urlFotos} alt={slotLabel(p.kategoria) || ""} positionY={p.objectPositionY} className="w-full h-full object-cover" />
-                  {slotLabel(p.kategoria) && (
-                    <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] px-1 py-0.5 truncate">{slotLabel(p.kategoria)}</span>
-                  )}
                 </button>
               ))}
             </div>
