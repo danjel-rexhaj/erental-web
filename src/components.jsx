@@ -276,11 +276,18 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
   );
 }
 
+// Every place a car photo renders with object-cover reads objectPositionY (0-100, null/undefined
+// = dead-center) so a business can drag a photo into place once (CarPhotoManager) and have it
+// stay correctly framed everywhere the photo shows up, instead of always center-cropping.
+export function CroppedPhoto({ url, alt, positionY, className, ...rest }) {
+  return <img src={url} alt={alt} className={className} style={{ objectPosition: `center ${positionY ?? 50}%` }} {...rest} />;
+}
+
 export function CarPhoto({ car }) {
   const photos = (car.carPhotos || []).filter(Boolean);
   const main = photos.find((p) => p.eshteKryesore) || photos[0];
   if (main?.urlFotos) {
-    return <img src={main.urlFotos} alt={`${car.marka} ${car.modeli}`} className="w-full h-36 object-cover rounded-t-2xl bg-slate-100 dark:bg-slate-800" />;
+    return <CroppedPhoto url={main.urlFotos} alt={`${car.marka} ${car.modeli}`} positionY={main.objectPositionY} className="w-full h-36 object-cover rounded-t-2xl bg-slate-100 dark:bg-slate-800" />;
   }
   return <div className="w-full h-36 rounded-t-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><CarIcon size={32} className="text-slate-300 dark:text-slate-600" /></div>;
 }

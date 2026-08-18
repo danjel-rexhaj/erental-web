@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
-import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker } from "../components";
+import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
 import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS } from "../carData";
 import { useLang } from "../useLang";
 import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
@@ -141,6 +141,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const mainPhoto = photos.find((p) => p.eshteKryesore) || photos[0];
   const [activePhoto, setActivePhoto] = useState(mainPhoto);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [amenitiesOpen, setAmenitiesOpen] = useState(false);
   const shown = activePhoto || mainPhoto;
   const slotLabel = (kategoria) => (PHOTO_SLOTS.some((s) => s.key === kategoria) ? t(`photoSlot.${kategoria}`) : undefined);
 
@@ -197,9 +198,10 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3 lg:row-start-1 order-1">
           <div className="relative rounded-2xl overflow-hidden">
-            <img
-              src={shown?.urlFotos}
+            <CroppedPhoto
+              url={shown?.urlFotos}
               alt={`${car.marka} ${car.modeli}`}
+              positionY={shown?.objectPositionY}
               className="w-full h-72 object-cover bg-slate-100 dark:bg-slate-800 cursor-zoom-in"
               onError={(e) => (e.currentTarget.style.display = "none")}
               onClick={() => setLightboxOpen(true)}
@@ -242,7 +244,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   onClick={() => setActivePhoto(p)}
                   className={`relative rounded-xl overflow-hidden border h-16 ${shown?.photoId === p.photoId ? "border-sky-600 dark:border-emerald-500 ring-2 ring-sky-200 dark:ring-emerald-900/40" : "border-slate-200 dark:border-slate-700"}`}
                 >
-                  <img src={p.urlFotos} alt={slotLabel(p.kategoria) || ""} className="w-full h-full object-cover" />
+                  <CroppedPhoto url={p.urlFotos} alt={slotLabel(p.kategoria) || ""} positionY={p.objectPositionY} className="w-full h-full object-cover" />
                   {slotLabel(p.kategoria) && (
                     <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] px-1 py-0.5 truncate">{slotLabel(p.kategoria)}</span>
                   )}
@@ -275,15 +277,26 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           </div>
 
           {car.amenities && car.amenities.length > 0 && (
-            <div className="mt-5">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{t("common.amenities")}</p>
-              <div className="flex flex-wrap gap-2">
-                {car.amenities.map((key) => (
-                  <span key={key} className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
-                    <Check size={12} className="text-emerald-600 dark:text-emerald-400" /> {AMENITIES.some((a) => a.key === key) ? t(`amenity.${key}`) : key}
-                  </span>
-                ))}
-              </div>
+            <div className="mt-5 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setAmenitiesOpen((s) => !s)}
+                className="w-full flex items-center justify-between gap-2 px-3.5 py-3"
+              >
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                  {t("common.amenities")} ({car.amenities.length})
+                </span>
+                <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform ${amenitiesOpen ? "rotate-180" : ""}`} />
+              </button>
+              {amenitiesOpen && (
+                <div className="flex flex-wrap gap-2 px-3.5 pb-3.5">
+                  {car.amenities.map((key) => (
+                    <span key={key} className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" /> {AMENITIES.some((a) => a.key === key) ? t(`amenity.${key}`) : key}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
