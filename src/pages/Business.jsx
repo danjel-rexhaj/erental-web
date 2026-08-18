@@ -216,6 +216,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
       amountPaid: b.payment?.shumaPaguarOnline ?? 0,
       eshtePagesePlote: b.paymentMethod === "paypal_full",
       serviceFee: b.paymentMethod?.startsWith("paypal_") ? (b.payment?.komisioni ?? 0) : 0,
+      insuranceFee: b.cmimiSigurimit ?? 0,
       clientLabel: `${b.klienti.emri} ${b.klienti.mbiemri}`,
       company,
       cardLast4: b.payment?.cardLast4,
@@ -785,6 +786,8 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
     qyteti: company.qyteti || "",
     iban: company.iban || "",
     ofronDergimMakine: company.ofronDergimMakine ?? false,
+    minimumDitesh: company.minimumDitesh != null ? String(company.minimumDitesh) : "",
+    cmimiSigurimit: company.cmimiSigurimit != null ? String(company.cmimiSigurimit) : "",
   });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -792,7 +795,12 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
     e.preventDefault();
     setLoading(true);
     try {
-      await apiFetch("/Companies/my-company", token, { method: "PUT", body: JSON.stringify(form) });
+      const payload = {
+        ...form,
+        minimumDitesh: form.minimumDitesh ? Number(form.minimumDitesh) : null,
+        cmimiSigurimit: form.cmimiSigurimit ? Number(form.cmimiSigurimit) : null,
+      };
+      await apiFetch("/Companies/my-company", token, { method: "PUT", body: JSON.stringify(payload) });
       onDone();
     } catch (e) { showError(e); } finally { setLoading(false); }
   }
@@ -809,6 +817,14 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
         </select>
       </Field>
       <Field label={t("business.ibanForPayments")}><input className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
+      <Field label={t("business.minimumDaysDefault")}>
+        <input type="number" min="1" className={inputClass} value={form.minimumDitesh} onChange={set("minimumDitesh")} placeholder="1" />
+        <span className="block text-[11px] text-slate-400 mt-1">{t("business.minimumDaysDefaultHint")}</span>
+      </Field>
+      <Field label={t("business.fullInsurancePrice")}>
+        <input type="number" min="0" step="0.01" className={inputClass} value={form.cmimiSigurimit} onChange={set("cmimiSigurimit")} placeholder="10" />
+        <span className="block text-[11px] text-slate-400 mt-1">{t("business.fullInsurancePriceHint")}</span>
+      </Field>
       <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
         <input
           type="checkbox"
@@ -833,7 +849,7 @@ function buildCarForm(car) {
       viti: "2020", km: "0", karburanti: "diesel", transmisioni: "manual",
       ngjyra: "", targa: "", kategoria: "economy", numriVendeve: "5",
       klimatizimi: true, cmimiDites: "20", pershkrimi: "", kubatura: "", cilindra: "", amenities: [],
-      priceOffers: [],
+      minimumDitesh: "", priceOffers: [],
     };
   }
   const markaKnown = Object.prototype.hasOwnProperty.call(CAR_BRANDS, car.marka);
@@ -857,6 +873,7 @@ function buildCarForm(car) {
     kubatura: car.kubatura != null ? String(car.kubatura) : "",
     cilindra: car.cilindra != null ? String(car.cilindra) : "",
     amenities: car.amenities || [],
+    minimumDitesh: car.minimumDitesh != null ? String(car.minimumDitesh) : "",
     priceOffers: (car.priceOffers || []).map((o) => ({ dite: String(o.dite), cmimiTotal: String(o.cmimiTotal) })),
   };
 }
@@ -919,6 +936,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         kubatura: form.kubatura ? Number(form.kubatura) : null,
         cilindra: form.cilindra ? Number(form.cilindra) : null,
         amenities: form.amenities,
+        minimumDitesh: form.minimumDitesh ? Number(form.minimumDitesh) : null,
         priceOffers: form.priceOffers
           .filter((o) => o.dite && o.cmimiTotal)
           .map((o) => ({ dite: Number(o.dite), cmimiTotal: Number(o.cmimiTotal) })),
@@ -981,6 +999,10 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         <Field label={t("business.carField.km")}><input type="number" className={inputClass} value={form.km} onChange={set("km")} /></Field>
         <Field label={t("business.carField.engineSizeCc")}><input type="number" className={inputClass} value={form.kubatura} onChange={set("kubatura")} placeholder="1600" /></Field>
         <Field label={t("car.spec.cylinders")}><input type="number" className={inputClass} value={form.cilindra} onChange={set("cilindra")} placeholder="4" /></Field>
+        <Field label={t("business.minimumDaysCar")}>
+          <input type="number" min="1" className={inputClass} value={form.minimumDitesh} onChange={set("minimumDitesh")} placeholder="1" />
+          <span className="block text-[11px] text-slate-400 mt-1">{t("business.minimumDaysCarHint")}</span>
+        </Field>
         <Field label={t("car.spec.fuel")}>
           <select className={inputClass} value={form.karburanti} onChange={set("karburanti")}>
             <option value="diesel">Diesel</option><option value="benzine">Benzine</option><option value="hybrid">Hybrid</option><option value="elektrik">Elektrik</option>

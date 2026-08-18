@@ -129,6 +129,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const days = activeFrom && activeTo ? Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000)) : 0;
   const matchedOffer = car.priceOffers?.find((o) => o.dite === days);
   const total = (matchedOffer ? matchedOffer.cmimiTotal : days * car.cmimiDites).toFixed(2);
+  const minDays = car.minimumDitesh ?? car.company?.minimumDitesh ?? 1;
+  const belowMinDays = days > 0 && days < minDays;
   // Results shows near-miss cars (free in X days) using the searched dates, which for this car
   // may already be taken — don't let the payment flow start until those dates are changed.
   const hasDateConflict = activeFrom && activeTo && bookedRanges.some((r) => {
@@ -331,6 +333,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               selFrom={selFrom}
               selTo={selTo}
               onSelect={(from, to) => { setSelFrom(from); setSelTo(to); }}
+              minDays={minDays}
             />
           </div>
 
@@ -341,6 +344,10 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           ) : hasDateConflict ? (
             <div className="mt-4 flex items-center gap-2 text-xs font-medium text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl py-2.5 px-3">
               <AlertTriangle size={14} className="shrink-0" /> {t("car.datesConflict")}
+            </div>
+          ) : belowMinDays ? (
+            <div className="mt-4 flex items-center gap-2 text-xs font-medium text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl py-2.5 px-3">
+              <AlertTriangle size={14} className="shrink-0" /> {t("car.minDaysNotMet", { min: minDays })}
             </div>
           ) : (
             <div className="mt-4">
@@ -481,6 +488,8 @@ function memberSince(raw, lang) {
 function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth, goToProfile, hasLicense, showError, showOk, onBooked }) {
   const { t } = useLang();
   const [method, setMethod] = useState("paypal_deposit");
+  const [doSigurim, setDoSigurim] = useState(false);
+  const insurancePrice = car.company?.cmimiSigurimit;
   const [loading, setLoading] = useState(false);
   const [sdkError, setSdkError] = useState(null);
   const [successInfo, setSuccessInfo] = useState(null);
@@ -507,7 +516,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       const { carId, dataFillimit, dataPerfundimit } = latestRef.current;
       const res = await apiFetch("/Payments/paypal/create-order", token, {
         method: "POST",
-        body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod }),
+        body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod, doSigurim }),
       });
       return res.orderId;
     }
@@ -519,13 +528,13 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
         const { carId, dataFillimit, dataPerfundimit } = latestRef.current;
         const cap = await apiFetch("/Payments/paypal/capture", token, {
           method: "POST",
-          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod, paypalOrderId: data.orderID }),
+          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod, paypalOrderId: data.orderID, doSigurim }),
         });
         const booking = await apiFetch("/Bookings", token, {
           method: "POST",
-          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId }),
+          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId, doSigurim }),
         });
-        setSuccessInfo({ bookingId: booking.bookingId, amountPaid: cap.amountPaid, method, cardLast4: cap.cardLast4, captureId: cap.captureId });
+        setSuccessInfo({ bookingId: booking.bookingId, amountPaid: cap.amountPaid, method, cardLast4: cap.cardLast4, captureId: cap.captureId, insuranceFee: doSigurim ? insurancePrice : 0 });
       } catch (e) { showError(e); } finally { setLoading(false); }
     }
 
@@ -590,7 +599,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       script.removeEventListener("load", renderButtons);
       script.removeEventListener("error", onScriptError);
     };
-  }, [method, token, hasLicense]);
+  }, [method, token, hasLicense, doSigurim]);
 
   return (
     <div>
@@ -608,12 +617,21 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
 
       {token && hasLicense === true && (
         <div className="flex flex-col gap-1.5 mb-3">
+          {insurancePrice != null && (
+            <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200 mb-1">
+              <input type="checkbox" checked={doSigurim} onChange={(e) => setDoSigurim(e.target.checked)} />
+              {t("booking.fullInsuranceOption", { amount: insurancePrice })}
+            </label>
+          )}
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
             <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: car.cmimiDites, fee: ONLINE_SERVICE_FEE })}
           </label>
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: total, fee: ONLINE_SERVICE_FEE })}
+            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: doSigurim && insurancePrice != null ? (Number(total) + Number(insurancePrice)).toFixed(2) : total, fee: ONLINE_SERVICE_FEE })}
           </label>
+          {doSigurim && method === "paypal_deposit" && insurancePrice != null && (
+            <p className="text-[11px] text-slate-400">{t("booking.insuranceCashNote", { amount: insurancePrice })}</p>
+          )}
           <button
             type="button"
             onClick={() => setShowRefundPolicy(true)}

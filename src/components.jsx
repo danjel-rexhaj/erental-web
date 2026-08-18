@@ -66,7 +66,7 @@ function isoDate(year, month, day) {
 // Interactive booking calendar: red = booked, green = the currently selected range.
 // Click a day to start a range, click a later free day to complete it; clicking a booked
 // day is ignored, and picking past a booked gap simply restarts the selection at that day.
-export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
+export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect, minDays = 1 }) {
   const { t, lang } = useLang();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -96,6 +96,17 @@ export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
     return new Date(year, month, day) < today;
   }
 
+  // While a start date is picked but not yet an end date, a day less than minDays away can't
+  // become a valid end (and isn't a "restart the selection" click either, since it's after start).
+  function isTooCloseAsEnd(day) {
+    if (!selFrom || selTo || minDays <= 1) return false;
+    const start = new Date(selFrom);
+    const clicked = new Date(year, month, day);
+    if (clicked <= start) return false;
+    const diffDays = Math.round((clicked - start) / 86400000);
+    return diffDays < minDays;
+  }
+
   function isSelected(day) {
     if (!selFrom) return false;
     const d = isoDate(year, month, day);
@@ -117,7 +128,7 @@ export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
   }
 
   function clickDay(day) {
-    if (isPast(day) || isBooked(day)) return;
+    if (isPast(day) || isBooked(day) || isTooCloseAsEnd(day)) return;
     const clicked = new Date(year, month, day);
     const clickedIso = isoDate(year, month, day);
 
@@ -148,19 +159,20 @@ export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
           if (day == null) return <span key={i} />;
           const booked = isBooked(day);
           const past = isPast(day);
+          const tooClose = isTooCloseAsEnd(day);
           const selected = isSelected(day);
           return (
             <button
               type="button"
               key={i}
               onClick={() => clickDay(day)}
-              disabled={booked || past}
+              disabled={booked || past || tooClose}
               className={`text-[11px] h-7 flex items-center justify-center rounded-lg transition ${
                 selected
                   ? "bg-sky-500 dark:bg-emerald-500 text-white font-semibold"
                   : booked
                     ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 font-semibold cursor-not-allowed"
-                    : past
+                    : (past || tooClose)
                       ? "text-slate-300 dark:text-slate-700 cursor-not-allowed"
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
@@ -170,6 +182,9 @@ export function DateRangeCalendar({ ranges = [], selFrom, selTo, onSelect }) {
           );
         })}
       </div>
+      {minDays > 1 && (
+        <p className="text-[10px] text-slate-400 mt-2">{t("booking.minDaysHint", { min: minDays })}</p>
+      )}
       <div className="flex items-center gap-3 mt-2">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800" />
@@ -242,6 +257,7 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
       amountPaid: successInfo.amountPaid,
       eshtePagesePlote: successInfo.method === "paypal_full",
       serviceFee: ONLINE_SERVICE_FEE,
+      insuranceFee: successInfo.insuranceFee || 0,
       clientLabel: decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
       company: car.company,
       cardLast4: successInfo.cardLast4,

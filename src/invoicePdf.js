@@ -51,15 +51,18 @@ export function loadImageDataUrl(url) {
 // Shared by PaymentSuccessModal (right after paying) and the per-booking "Fatura" buttons in
 // Bookings.jsx / Business.jsx (CompanyBookings) — an invoice needs to stay retrievable long after
 // the payment moment, not just in a modal that's gone once closed.
-export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit, dataPerfundimit, cmimiPerDite, dite, totalPrice, amountPaid, eshtePagesePlote, clientLabel, company, cardLast4, transactionId, lang = "sq", serviceFee = 0 }) {
+export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit, dataPerfundimit, cmimiPerDite, dite, totalPrice, amountPaid, eshtePagesePlote, clientLabel, company, cardLast4, transactionId, lang = "sq", serviceFee = 0, insuranceFee = 0 }) {
   const { jsPDF } = await import("jspdf");
   const L = INVOICE_TEXT[lang] || INVOICE_TEXT.sq;
 
   const confirmim = `ER-${String(bookingId).padStart(6, "0")}`;
-  // amountPaid includes the flat service fee on top of the rental portion paid by card — strip
-  // it back out so the cash-still-owed figure reflects only the rental price.
+  // Insurance rides along with a full online payment but not a deposit (paid cash at pickup
+  // instead) — see the matching note in EmailService.SendPaymentReceiptAsync.
+  const grandTotal = totalPrice + insuranceFee;
+  // amountPaid includes the flat service fee on top of the rental/insurance portion paid by
+  // card — strip it back out so the cash-still-owed figure reflects only what's actually owed.
   const rentalPaidByCard = amountPaid - serviceFee;
-  const mbetetCash = eshtePagesePlote ? 0 : Math.max(0, totalPrice - rentalPaidByCard);
+  const mbetetCash = eshtePagesePlote ? 0 : Math.max(0, grandTotal - rentalPaidByCard);
   const sot = formatLongDate(new Date(), lang);
 
   const INK = [24, 24, 27];
@@ -135,7 +138,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.setTextColor(...INK);
   doc.text(clientLabel || L.defaultClient, mx, y);
   doc.setFontSize(18);
-  doc.text(`${totalPrice}€`, rightX, y, { align: "right" });
+  doc.text(`${grandTotal}€`, rightX, y, { align: "right" });
 
   // ---- item table ----
   y += 44;
@@ -198,7 +201,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   doc.setFontSize(13);
   doc.setTextColor(...INK);
   doc.text(L.total, totalsLabelX, y);
-  doc.text(`${totalPrice}€`, rightX, y, { align: "right" });
+  doc.text(`${grandTotal}€`, rightX, y, { align: "right" });
 
   // ---- thank you ----
   y += 44;
