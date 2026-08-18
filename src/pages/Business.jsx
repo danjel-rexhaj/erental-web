@@ -677,8 +677,7 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
               ) : (
                 <>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{company.qyteti} · NIPT {company.nipt}</p>
-                  <p className="text-[11px] text-slate-400 mt-1">{t("business.billingModelLabel")} {company.billingModel === "commission" ? t("business.commission", { pct: company.commissionRate }) : t("business.monthlySubscription")}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">IBAN: {company.iban || t("business.ibanNotSet")}</p>
+                  <p className="text-[11px] text-slate-400 mt-1">IBAN: {company.iban || t("business.ibanNotSet")}</p>
                 </>
               )}
 
