@@ -4,7 +4,7 @@ import { decodeJwt } from "./api";
 import { generateInvoicePdf } from "./invoicePdf";
 import { useLang } from "./useLang";
 import { monthName, weekdayInitials } from "./dateFormat";
-import { AMENITY_CATEGORIES } from "./carData";
+import { AMENITY_CATEGORIES, ONLINE_SERVICE_FEE } from "./carData";
 
 export function AvailabilityCalendar({ ranges = [] }) {
   const { t, lang } = useLang();
@@ -241,6 +241,7 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
       totalPrice: dite * car.cmimiDites,
       amountPaid: successInfo.amountPaid,
       eshtePagesePlote: successInfo.method === "paypal_full",
+      serviceFee: ONLINE_SERVICE_FEE,
       clientLabel: decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
       company: car.company,
       cardLast4: successInfo.cardLast4,

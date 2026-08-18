@@ -12,7 +12,7 @@ const INVOICE_TEXT = {
     terms: "Anulimi brenda 12 orëve nga rezervimi rimbursohet plotësisht, automatikisht, në të njëjtën kartë me të cilën u krye pagesa online. Pas 12 orëve, rimbursimi i pjesës së paguar online varet nga marrëveshja mes klientit dhe biznesit — ERental si marketplace nuk ndërhyn më në këtë vendim. Pjesa e paguar cash (nëse ka) paguhet direkt te biznesi dhe nuk kalon nga ERental.",
     paymentInfo: "Informacion pagese", fullPaymentCard: "Kartë — pagesë e plotë", depositCard: "Kartë — depozitë",
     paidOnline: "Paguar online", card: "Karta", remainingCash: "Mbetet cash", contact: "Kontakt", locale: "sq-AL",
-    transactionId: "Nr. transaksioni",
+    transactionId: "Nr. transaksioni", serviceFee: "Tarifë shërbimi",
   },
   en: {
     invoice: "Invoice", invoiceNumber: "Invoice number", date: "Date",
@@ -24,7 +24,7 @@ const INVOICE_TEXT = {
     terms: "Cancelling within 12 hours of booking is refunded in full, automatically, to the same card the online payment was made with. After 12 hours, the refund of the portion paid online depends on the agreement between the customer and the business — ERental as a marketplace no longer intervenes in that decision. The portion paid in cash (if any) is paid directly to the business and never goes through ERental.",
     paymentInfo: "Payment information", fullPaymentCard: "Card — full payment", depositCard: "Card — deposit",
     paidOnline: "Paid online", card: "Card", remainingCash: "Remaining cash", contact: "Contact", locale: "en-GB",
-    transactionId: "Transaction number",
+    transactionId: "Transaction number", serviceFee: "Service fee",
   },
 };
 
@@ -51,12 +51,15 @@ export function loadImageDataUrl(url) {
 // Shared by PaymentSuccessModal (right after paying) and the per-booking "Fatura" buttons in
 // Bookings.jsx / Business.jsx (CompanyBookings) — an invoice needs to stay retrievable long after
 // the payment moment, not just in a modal that's gone once closed.
-export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit, dataPerfundimit, cmimiPerDite, dite, totalPrice, amountPaid, eshtePagesePlote, clientLabel, company, cardLast4, transactionId, lang = "sq" }) {
+export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit, dataPerfundimit, cmimiPerDite, dite, totalPrice, amountPaid, eshtePagesePlote, clientLabel, company, cardLast4, transactionId, lang = "sq", serviceFee = 0 }) {
   const { jsPDF } = await import("jspdf");
   const L = INVOICE_TEXT[lang] || INVOICE_TEXT.sq;
 
   const confirmim = `ER-${String(bookingId).padStart(6, "0")}`;
-  const mbetetCash = eshtePagesePlote ? 0 : Math.max(0, totalPrice - amountPaid);
+  // amountPaid includes the flat service fee on top of the rental portion paid by card — strip
+  // it back out so the cash-still-owed figure reflects only the rental price.
+  const rentalPaidByCard = amountPaid - serviceFee;
+  const mbetetCash = eshtePagesePlote ? 0 : Math.max(0, totalPrice - rentalPaidByCard);
   const sot = formatLongDate(new Date(), lang);
 
   const INK = [24, 24, 27];

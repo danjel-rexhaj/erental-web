@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
-import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS } from "../carData";
+import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, ONLINE_SERVICE_FEE } from "../carData";
 import { useLang } from "../useLang";
 import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
 
@@ -612,10 +612,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       {token && hasLicense === true && (
         <div className="flex flex-col gap-1.5 mb-3">
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: car.cmimiDites })}
+            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: car.cmimiDites, fee: ONLINE_SERVICE_FEE })}
           </label>
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: total })}
+            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: total, fee: ONLINE_SERVICE_FEE })}
           </label>
           <button
             type="button"

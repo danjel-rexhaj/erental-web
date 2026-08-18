@@ -215,6 +215,7 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
       totalPrice: b.cmimiTotal,
       amountPaid: b.payment?.shumaPaguarOnline ?? 0,
       eshtePagesePlote: b.paymentMethod === "paypal_full",
+      serviceFee: b.paymentMethod?.startsWith("paypal_") ? (b.payment?.komisioni ?? 0) : 0,
       clientLabel: `${b.klienti.emri} ${b.klienti.mbiemri}`,
       company,
       cardLast4: b.payment?.cardLast4,
