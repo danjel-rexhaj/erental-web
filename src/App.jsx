@@ -148,6 +148,15 @@ export default function App() {
     apiFetch("/Favorites/ids", token).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
   }, [token]);
 
+  // Refreshes the full profile (photo, license status, etc.) right away on login/app-load instead
+  // of only once the user happens to open the Profile page -- otherwise things like the nav avatar
+  // stay on stale/missing data (from the login response, which doesn't carry the photo) until then.
+  useEffect(() => {
+    if (!token) return;
+    apiFetch("/Users/me", token).then((data) => updateUser(data)).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
   async function toggleFavorite(car) {
     if (!token) { go("/profili"); return; }
     const isFav = favoriteIds.has(car.carId);
