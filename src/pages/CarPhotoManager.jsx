@@ -142,9 +142,17 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
 
           if (photo) {
             return (
-              <div key={slot.key} className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+              <div
+                key={slot.key}
+                onClick={() => setAdjustingPhoto(photo)}
+                className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 cursor-pointer"
+                title={t("photos.adjustPosition")}
+              >
                 <CroppedPhoto url={photo.urlFotos} alt={t(`photoSlot.${slot.key}`)} positionY={photo.objectPositionY} className="w-full h-20 object-cover" />
-                <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-1.5 py-0.5">{t(`photoSlot.${slot.key}`)}</span>
+                <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-1.5 py-0.5 flex items-center justify-between gap-1">
+                  {t(`photoSlot.${slot.key}`)}
+                  <Move size={10} className="shrink-0 opacity-80" />
+                </span>
                 {photo.eshteKryesore ? (
                   <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-5 h-5 flex items-center justify-center" title={t("business.mainPhoto")}>
                     <Star size={11} className="fill-current" />
@@ -152,7 +160,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
                 ) : (
                   <button
                     type="button"
-                    onClick={() => handleSetMain(photo.photoId)}
+                    onClick={(e) => { e.stopPropagation(); handleSetMain(photo.photoId); }}
                     disabled={busyKey === `main-${photo.photoId}`}
                     className="absolute top-1 left-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-amber-500"
                     title={t("photos.makeMain")}
@@ -162,15 +170,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
                 )}
                 <button
                   type="button"
-                  onClick={() => setAdjustingPhoto(photo)}
-                  className="absolute bottom-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-sky-500 dark:hover:bg-emerald-600"
-                  title={t("photos.adjustPosition")}
-                >
-                  <Move size={11} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(photo.photoId)}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(photo.photoId); }}
                   disabled={busyKey === `delete-${photo.photoId}`}
                   className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600"
                 >
@@ -206,8 +206,16 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
           <p className="text-[11px] text-slate-400 mb-1">{t("photos.otherPhotos")}</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {others.map((photo) => (
-              <div key={photo.photoId} className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+              <div
+                key={photo.photoId}
+                onClick={() => setAdjustingPhoto(photo)}
+                className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 cursor-pointer"
+                title={t("photos.adjustPosition")}
+              >
                 <CroppedPhoto url={photo.urlFotos} alt="" positionY={photo.objectPositionY} className="w-full h-20 object-cover" />
+                <span className="absolute bottom-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-80">
+                  <Move size={11} />
+                </span>
                 {photo.eshteKryesore ? (
                   <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-5 h-5 flex items-center justify-center" title={t("business.mainPhoto")}>
                     <Star size={11} className="fill-current" />
@@ -215,7 +223,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
                 ) : (
                   <button
                     type="button"
-                    onClick={() => handleSetMain(photo.photoId)}
+                    onClick={(e) => { e.stopPropagation(); handleSetMain(photo.photoId); }}
                     disabled={busyKey === `main-${photo.photoId}`}
                     className="absolute top-1 left-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-amber-500"
                     title={t("photos.makeMain")}
@@ -225,15 +233,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
                 )}
                 <button
                   type="button"
-                  onClick={() => setAdjustingPhoto(photo)}
-                  className="absolute bottom-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-sky-500 dark:hover:bg-emerald-600"
-                  title={t("photos.adjustPosition")}
-                >
-                  <Move size={11} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(photo.photoId)}
+                  onClick={(e) => { e.stopPropagation(); handleDelete(photo.photoId); }}
                   disabled={busyKey === `delete-${photo.photoId}`}
                   className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600"
                 >
