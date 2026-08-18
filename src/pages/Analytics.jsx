@@ -980,6 +980,15 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
     } catch (e) { showError && showError(e); }
   }
 
+  async function forceDelete(c) {
+    if (!window.confirm(t("analytics.confirmDeleteCompany", { company: c.emri }))) return;
+    try {
+      await apiFetch(`/Companies/${c.companyId}/force`, token, { method: "DELETE" });
+      setCompanies((list) => list.filter((x) => x.companyId !== c.companyId));
+      showOk && showOk(t("analytics.companyDeleted"));
+    } catch (e) { showError && showError(e); }
+  }
+
   if (!companies) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
 
   const q = search.trim().toLowerCase();
@@ -1039,8 +1048,9 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
                     <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{c.telefoni || "-"}</td>
                     <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.statusi}</td>
                     <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{c.eshteVerifikuar ? t("common.yes") : t("common.no")}</td>
-                    <td className="px-4 py-2.5 text-right">
+                    <td className="px-4 py-2.5 text-right whitespace-nowrap">
                       <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={13} /></button>
+                      <button onClick={() => forceDelete(c)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 ml-2"><Trash2 size={13} /></button>
                     </td>
                   </>
                 )}
@@ -1072,7 +1082,10 @@ function AdminCompaniesPanel({ token, showError, showOk }) {
               <>
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{c.emri}</p>
-                  <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 shrink-0"><Pencil size={14} /></button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => startEdit(c)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={14} /></button>
+                    <button onClick={() => forceDelete(c)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400"><Trash2 size={14} /></button>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{c.qyteti || "-"} · {c.telefoni || "-"}</p>
                 <div className="flex items-center justify-between text-xs text-slate-400 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
