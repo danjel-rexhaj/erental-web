@@ -844,6 +844,15 @@ function AdminUsersPanel({ token, showError, showOk }) {
     } catch (e) { showError && showError(e); }
   }
 
+  async function forceDelete(u) {
+    if (!window.confirm(t("analytics.confirmDeleteUser", { user: `${u.emri} ${u.mbiemri}` }))) return;
+    try {
+      await apiFetch(`/Users/${u.userId}/force`, token, { method: "DELETE" });
+      setUsers((list) => list.filter((x) => x.userId !== u.userId));
+      showOk && showOk(t("analytics.userDeleted"));
+    } catch (e) { showError && showError(e); }
+  }
+
   if (!users) return <p className="text-sm text-slate-400 text-center py-8">{t("common.loading")}</p>;
 
   const q = search.trim().toLowerCase();
@@ -900,8 +909,9 @@ function AdminUsersPanel({ token, showError, showOk }) {
                     <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{u.telefoni || "-"}</td>
                     <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{u.dataRegjistrimit ? formatLocaleDate(u.dataRegjistrimit, lang) : "-"}</td>
                     <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{u.hasCompany ? t("common.yes") : t("common.no")}</td>
-                    <td className="px-4 py-2.5 text-right">
+                    <td className="px-4 py-2.5 text-right whitespace-nowrap">
                       <button onClick={() => startEdit(u)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={13} /></button>
+                      <button onClick={() => forceDelete(u)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 ml-2"><Trash2 size={13} /></button>
                     </td>
                   </>
                 )}
@@ -931,7 +941,10 @@ function AdminUsersPanel({ token, showError, showOk }) {
               <>
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{u.emri} {u.mbiemri}</p>
-                  <button onClick={() => startEdit(u)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 shrink-0"><Pencil size={14} /></button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => startEdit(u)} className="text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400"><Pencil size={14} /></button>
+                    <button onClick={() => forceDelete(u)} className="text-slate-400 hover:text-red-600 dark:hover:text-red-400"><Trash2 size={14} /></button>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{u.email}</p>
                 <div className="flex items-center justify-between text-xs text-slate-400 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800">
