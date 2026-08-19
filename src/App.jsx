@@ -571,6 +571,7 @@ export default function App() {
         businessTab={businessTab}
         goHash={go}
         user={user}
+        isAdmin={isAdmin}
         onLogout={logout}
         loggedIn={!!token}
         notifications={notifications}
@@ -641,15 +642,16 @@ export default function App() {
   );
 }
 
-function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, notifications, unreadCount, markAllRead, onNotificationClick, dismissNotification, clearAllNotifications, theme, toggleTheme }) {
+function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, loggedIn, notifications, unreadCount, markAllRead, onNotificationClick, dismissNotification, clearAllNotifications, theme, toggleTheme }) {
   const { lang, setLang, t } = useLang();
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const businessLabel = isAdmin ? t("nav.adminPanel") : t("nav.business");
   const links = user?.role === "business"
     ? [
         { key: "browse", label: t("nav.cars") },
-        { key: "business", tab: "dashboard", label: t("nav.business") },
+        { key: "business", tab: "dashboard", label: businessLabel },
         { key: "business", tab: "bookings", label: t("nav.bookings") },
         { key: "business", tab: "analytics", label: t("nav.stats") },
       ]
@@ -657,7 +659,7 @@ function TopBar({ view, setView, businessTab, goHash, user, onLogout, loggedIn, 
         { key: "browse", label: t("nav.cars") },
         { key: "favorites", label: t("nav.favorites") },
         { key: "bookings", label: t("nav.bookings") },
-        { key: "business", label: t("nav.business") },
+        { key: "business", label: businessLabel },
       ];
   const moreLinks = [
     { key: "about", label: t("nav.about") },
