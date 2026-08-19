@@ -96,6 +96,12 @@ export const CAR_CATEGORIES = [
   { key: "suv" },
   { key: "luxury" },
   { key: "van" },
+  { key: "gold3" },
+  { key: "gold4" },
+  { key: "gold5" },
+  { key: "gold6" },
+  { key: "gold7" },
+  { key: "gold8" },
 ];
 
 export const ALBANIAN_LOCATIONS = [
