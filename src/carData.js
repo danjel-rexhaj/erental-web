@@ -10,7 +10,7 @@ export const ONLINE_SERVICE_FEE = 10;
 // relevant options are at the top of the dropdown instead of alphabetical/random order.
 export const CAR_BRANDS = {
   "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "GLA", "GLC", "GLE", "CLA", "Vito", "Sprinter"],
-  "Volkswagen": ["Golf", "Polo", "Passat", "Tiguan", "Touran", "Jetta", "Arteon", "T-Roc", "T-Cross", "Up!"],
+  "Volkswagen": ["Golf 3", "Golf 4", "Golf 5", "Golf 6", "Golf 7", "Golf 8", "Polo", "Passat", "Tiguan", "Touran", "Jetta", "Arteon", "T-Roc", "T-Cross", "Up!"],
   "BMW": ["Seria 1", "Seria 2", "Seria 3", "Seria 4", "Seria 5", "Seria 7", "X1", "X3", "X5", "X6"],
   "Audi": ["A1", "A3", "A4", "A5", "A6", "A8", "Q2", "Q3", "Q5", "Q7"],
   "Toyota": ["Corolla", "Yaris", "Camry", "RAV4", "C-HR", "Auris", "Aygo", "Land Cruiser", "Hilux", "Prius"],
@@ -96,12 +96,6 @@ export const CAR_CATEGORIES = [
   { key: "suv" },
   { key: "luxury" },
   { key: "van" },
-  { key: "gold3" },
-  { key: "gold4" },
-  { key: "gold5" },
-  { key: "gold6" },
-  { key: "gold7" },
-  { key: "gold8" },
 ];
 
 export const ALBANIAN_LOCATIONS = [
