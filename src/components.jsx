@@ -304,9 +304,9 @@ export function CarPhoto({ car }) {
   const photos = (car.carPhotos || []).filter(Boolean);
   const main = photos.find((p) => p.eshteKryesore) || photos[0];
   if (main?.urlFotos) {
-    return <CroppedPhoto url={main.urlFotos} alt={`${car.marka} ${car.modeli}`} positionY={main.objectPositionY} className="w-full h-36 object-cover rounded-t-2xl bg-slate-100 dark:bg-slate-800" />;
+    return <CroppedPhoto url={main.urlFotos} alt={`${car.marka} ${car.modeli}`} positionY={main.objectPositionY} className="w-full h-44 object-cover rounded-t-2xl bg-slate-100 dark:bg-slate-800" />;
   }
-  return <div className="w-full h-36 rounded-t-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><CarIcon size={32} className="text-slate-300 dark:text-slate-600" /></div>;
+  return <div className="w-full h-44 rounded-t-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><CarIcon size={32} className="text-slate-300 dark:text-slate-600" /></div>;
 }
 
 export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLabel, showCompany = true, isFavorited, onToggleFavorite }) {
