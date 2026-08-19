@@ -42,7 +42,9 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
   const tabs = isAdmin ? [
     { key: "admin", label: t("business.tabsVerifications") },
     { key: "whatsapp", label: "WhatsApp" },
+    { key: "patenta", label: t("business.tabsLicenses") },
     { key: "amenity-suggestions", label: t("business.tabsAmenitySuggestions") },
+    { key: "car-suggestions", label: t("business.tabsCarSuggestions") },
     { key: "admin-analytics", label: t("business.tabsPlatformStats") },
     { key: "admin-logins", label: t("business.tabsLoginLogs") },
   ] : [];
@@ -60,7 +62,9 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       )}
       {tab === "admin" && <AdminPending token={token} showError={showError} showOk={showOk} />}
       {tab === "whatsapp" && <AdminWhatsapp token={token} showError={showError} showOk={showOk} />}
+      {tab === "patenta" && <AdminLicenseVerifications token={token} showError={showError} showOk={showOk} />}
       {tab === "amenity-suggestions" && <AdminAmenitySuggestions token={token} showError={showError} showOk={showOk} />}
+      {tab === "car-suggestions" && <AdminCarSuggestions token={token} showError={showError} showOk={showOk} />}
       {tab === "admin-analytics" && (
         <AdminAnalytics
           token={token}
@@ -928,6 +932,15 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
     try {
       const marka = form.marka === OTHER_BRAND ? form.markaCustom.trim() : form.marka;
       const modeli = form.modeli === OTHER_MODEL ? form.modeliCustom.trim() : form.modeli;
+
+      // FYI-only ping to the admin -- never blocks saving the car itself, which already accepts
+      // the custom text as free-form Marka/Modeli regardless of whether this succeeds.
+      if (form.marka === OTHER_BRAND) {
+        apiFetch("/CarSuggestions", token, { method: "POST", body: JSON.stringify({ companyId, type: "brand", suggestedValue: marka }) }).catch(() => {});
+      } else if (form.modeli === OTHER_MODEL) {
+        apiFetch("/CarSuggestions", token, { method: "POST", body: JSON.stringify({ companyId, type: "model", marka, suggestedValue: modeli }) }).catch(() => {});
+      }
+
       const payload = {
         companyId, marka, modeli, viti: Number(form.viti), km: Number(form.km),
         karburanti: form.karburanti, transmisioni: form.transmisioni, ngjyra: form.ngjyra, targa: form.targa,
@@ -1501,6 +1514,103 @@ function AdminWhatsapp({ token, showError, showOk }) {
   );
 }
 
+function LicensePhotoPair({ userId, token }) {
+  const [imgs, setImgs] = useState({ para: null, mbrapa: null });
+
+  useEffect(() => {
+    let paraUrl = null, mbrapaUrl = null, cancelled = false;
+    (async () => {
+      try { paraUrl = await apiFetchBlob(`/Users/${userId}/license/para`, token); if (!cancelled) setImgs((s) => ({ ...s, para: paraUrl })); }
+      catch (e) { console.error(e); }
+      try { mbrapaUrl = await apiFetchBlob(`/Users/${userId}/license/mbrapa`, token); if (!cancelled) setImgs((s) => ({ ...s, mbrapa: mbrapaUrl })); }
+      catch (e) { console.error(e); }
+    })();
+    return () => {
+      cancelled = true;
+      if (paraUrl) URL.revokeObjectURL(paraUrl);
+      if (mbrapaUrl) URL.revokeObjectURL(mbrapaUrl);
+    };
+  }, [userId, token]);
+
+  return (
+    <div className="grid grid-cols-2 gap-2 mt-2">
+      {imgs.para ? <img src={imgs.para} alt="Patenta - para" className="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-700" /> : <div className="w-full h-24 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" />}
+      {imgs.mbrapa ? <img src={imgs.mbrapa} alt="Patenta - mbrapa" className="w-full h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-700" /> : <div className="w-full h-24 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" />}
+    </div>
+  );
+}
+
+function AdminLicenseVerifications({ token, showError, showOk }) {
+  const { t } = useLang();
+  const [pending, setPending] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [reason, setReason] = useState("");
+  const [acting, setActing] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { setPending(await apiFetch("/Users/license/pending", token)); } catch (e) { showError(e); } finally { setLoading(false); }
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function verify(id) {
+    try { await apiFetch(`/Users/${id}/license/verify`, token, { method: "PUT" }); showOk(t("business.licenseVerified")); load(); }
+    catch (e) { showError(e); }
+  }
+
+  async function reject(id) {
+    setActing(true);
+    try {
+      await apiFetch(`/Users/${id}/license/reject`, token, { method: "PUT", body: JSON.stringify({ reason: reason.trim() || null }) });
+      showOk(t("business.licenseRejected"));
+      setRejectingId(null);
+      setReason("");
+      load();
+    } catch (e) { showError(e); } finally { setActing(false); }
+  }
+
+  if (loading) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
+  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">{t("business.noLicensesPending")}</p></div>;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {pending.map((u) => (
+        <div key={u.userId} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+          <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{u.emri} {u.mbiemri}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{u.email}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{u.telefoni || t("business.noNumber")}</p>
+          <LicensePhotoPair userId={u.userId} token={token} />
+          {rejectingId === u.userId ? (
+            <div className="flex flex-col gap-2 mt-2">
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={t("business.rejectLicenseReasonPlaceholder")}
+                rows={2}
+                autoFocus
+                className={inputClass + " text-xs"}
+              />
+              <div className="flex gap-2">
+                <button type="button" onClick={() => reject(u.userId)} disabled={acting} className="flex-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl px-3 py-2 disabled:opacity-50">
+                  {acting ? t("business.rejecting") : t("business.reject")}
+                </button>
+                <GhostButton type="button" onClick={() => { setRejectingId(null); setReason(""); }} className="flex-1 text-xs py-2">{t("booking.cancel")}</GhostButton>
+              </div>
+            </div>
+          ) : (
+            <>
+              <PrimaryButton onClick={() => verify(u.userId)} className="mt-3 text-xs py-2">{t("auth.verify")}</PrimaryButton>
+              <GhostButton onClick={() => { setRejectingId(u.userId); setReason(""); }} className="mt-2 text-xs py-2">{t("business.reject")}</GhostButton>
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function AdminAmenitySuggestions({ token, showError, showOk }) {
   const { t } = useLang();
   const [pending, setPending] = useState([]);
@@ -1532,6 +1642,50 @@ function AdminAmenitySuggestions({ token, showError, showOk }) {
         <div key={s.id} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
           <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{s.suggestion}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("business.suggestedBy", { company: s.companyEmri })}</p>
+          <div className="flex gap-2 mt-3">
+            <PrimaryButton onClick={() => approve(s.id)} className="text-xs py-2">{t("business.approveSuggestion")}</PrimaryButton>
+            <GhostButton onClick={() => reject(s.id)} className="text-xs py-2">{t("business.reject")}</GhostButton>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AdminCarSuggestions({ token, showError, showOk }) {
+  const { t } = useLang();
+  const [pending, setPending] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { setPending(await apiFetch("/CarSuggestions/pending", token)); } catch (e) { showError(e); } finally { setLoading(false); }
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function approve(id) {
+    try { await apiFetch(`/CarSuggestions/${id}/approve`, token, { method: "PUT" }); showOk(t("business.suggestionApproved")); load(); }
+    catch (e) { showError(e); }
+  }
+
+  async function reject(id) {
+    try { await apiFetch(`/CarSuggestions/${id}/reject`, token, { method: "PUT" }); showOk(t("business.suggestionRejected")); load(); }
+    catch (e) { showError(e); }
+  }
+
+  if (loading) return <p className="text-center text-sm text-slate-400 py-16">{t("common.loading")}</p>;
+  if (pending.length === 0) return <div className="text-center py-16 px-8"><CheckCircle2 size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" /><p className="text-sm text-slate-500 dark:text-slate-400">{t("business.carSuggestionsEmpty")}</p></div>;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {pending.map((s) => (
+        <div key={s.id} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+          <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{s.suggestedValue}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {s.type === "brand" ? t("business.newBrandSuggestion") : t("business.newModelSuggestion", { marka: s.marka })}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">{t("business.suggestedBy", { company: s.companyEmri })}</p>
           <div className="flex gap-2 mt-3">
             <PrimaryButton onClick={() => approve(s.id)} className="text-xs py-2">{t("business.approveSuggestion")}</PrimaryButton>
             <GhostButton onClick={() => reject(s.id)} className="text-xs py-2">{t("business.reject")}</GhostButton>

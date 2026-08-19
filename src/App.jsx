@@ -208,6 +208,12 @@ export default function App() {
     if (n.target === "whatsapp_verified") {
       updateUser({ whatsappVerified: true });
     }
+    if (n.target === "license_verified") {
+      updateUser({ patentaStatus: "verified" });
+    }
+    if (n.target === "license_rejected") {
+      updateUser({ patentaStatus: "rejected" });
+    }
   }, []);
 
   const { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications, connection: hubConnection } = useNotifications(token, handleAvailabilityChanged, handleLiveNotification);
@@ -391,8 +397,12 @@ export default function App() {
       go("/biznesi?tab=admin");
     } else if (n.target === "admin_whatsapp_verification") {
       go("/biznesi?tab=whatsapp");
+    } else if (n.target === "admin_license_verification") {
+      go("/biznesi?tab=patenta");
     } else if (n.target === "admin_amenity_suggestion") {
       go("/biznesi?tab=amenity-suggestions");
+    } else if (n.target === "admin_car_suggestion") {
+      go("/biznesi?tab=car-suggestions");
     }
   }
 
@@ -605,7 +615,7 @@ export default function App() {
         ) : <BusinessAuthGate onRegister={() => go("/regjistrohu-biznes")} onLogin={() => go("/profili")} />)}
         {view === "auth" && (
           token
-            ? <ProfileView user={user} token={token} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} goTo={go} />
+            ? <ProfileView user={user} token={token} isAdmin={isAdmin} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} goTo={go} />
             : <AuthView onAuth={handleAuth} showError={showError} showOk={showOk} goTo={handleGoTo} />
         )}
         {view === "verifyEmail" && (

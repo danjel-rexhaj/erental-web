@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2 } from "lucide-react";
+import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2, Clock } from "lucide-react";
 import { apiFetch, apiFetchBlob } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass } from "../components";
 import { NATIONALITIES } from "../carData";
@@ -289,7 +289,7 @@ export function VerifyView({ initialData, onAuth, showError, showOk, goTo }) {
   );
 }
 
-export function ProfileView({ user, token, onLogout, showError, showOk, onVerified, onUpdated, goToBusiness, goTo }) {
+export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk, onVerified, onUpdated, goToBusiness, goTo }) {
   const { t, lang } = useLang();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -390,7 +390,7 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
       const fd = new FormData();
       fd.append(side, file);
       const res = await apiFetch("/Users/me/license", token, { method: "POST", body: fd });
-      onUpdated && onUpdated({ hasLicensePara: res.hasLicensePara, hasLicenseMbrapa: res.hasLicenseMbrapa });
+      onUpdated && onUpdated({ hasLicensePara: res.hasLicensePara, hasLicenseMbrapa: res.hasLicenseMbrapa, patentaStatus: res.patentaStatus });
       setLicenseVersion((v) => v + 1);
       showOk(t("auth.licenseUploaded"));
     } catch (e) { showError(e); } finally { setUploadingLicense(null); }
@@ -423,6 +423,14 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
     : null;
   const waPending = waRequest || user?.whatsappStatus === "pending";
 
+  const licenseBadge = !hasLicense
+    ? { Icon: AlertTriangle, cls: "text-amber-600 dark:text-amber-400", text: t("auth.licenseMissing") }
+    : user?.patentaStatus === "verified"
+      ? { Icon: ShieldCheck, cls: "text-emerald-600 dark:text-emerald-400", text: t("auth.licenseVerified") }
+      : user?.patentaStatus === "rejected"
+        ? { Icon: AlertTriangle, cls: "text-red-600 dark:text-red-400", text: t("auth.licenseRejected") }
+        : { Icon: Clock, cls: "text-amber-600 dark:text-amber-400", text: t("auth.licensePending") };
+
   return (
     <div className="max-w-lg mx-auto py-6 sm:py-8 flex flex-col gap-5">
       <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-8 flex flex-col items-center text-center">
@@ -445,29 +453,32 @@ export function ProfileView({ user, token, onLogout, showError, showOk, onVerifi
           )}
         </div>
         <p className="font-bold text-xl text-slate-900 dark:text-slate-100 mt-4">{user?.emri} {user?.mbiemri}</p>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{user?.role === "business" ? t("auth.business") : t("auth.client")}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{isAdmin ? t("auth.admin") : user?.role === "business" ? t("auth.business") : t("auth.client")}</p>
         <div className="flex items-center justify-center gap-3 flex-wrap text-xs text-slate-400 dark:text-slate-500 mt-3">
           <span>{user?.email}</span>
           {memberSince(user?.dataRegjistrimit, lang) && <span>{t("car.memberSince", { date: memberSince(user.dataRegjistrimit, lang) })}</span>}
         </div>
       </div>
 
-      {user?.role !== "business" && (
-        <div className={`border rounded-2xl bg-white dark:bg-slate-800 overflow-hidden text-left ${hasLicense ? "border-slate-200 dark:border-slate-700" : "border-amber-200 dark:border-amber-800"}`}>
+      {user?.role !== "business" && !isAdmin && (
+        <div className={`border rounded-2xl bg-white dark:bg-slate-800 overflow-hidden text-left ${user?.patentaStatus === "verified" ? "border-slate-200 dark:border-slate-700" : "border-amber-200 dark:border-amber-800"}`}>
           <button
             type="button"
             onClick={() => setShowLicenseForm((s) => !s)}
             className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-slate-50 dark:hover:bg-slate-900/40 transition"
           >
-            {hasLicense ? <ShieldCheck size={18} className="text-emerald-600 dark:text-emerald-400" /> : <AlertTriangle size={18} className="text-amber-500" />}
+            <licenseBadge.Icon size={18} className={licenseBadge.cls} />
             <span className="flex-1 text-sm font-medium text-slate-700 dark:text-slate-200">{t("auth.drivingLicense")}</span>
-            <span className={`text-xs font-semibold ${hasLicense ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
-              {hasLicense ? t("auth.licenseVerified") : t("auth.licenseMissing")}
-            </span>
+            <span className={`text-xs font-semibold ${licenseBadge.cls}`}>{licenseBadge.text}</span>
             <ChevronRight size={16} className={`text-slate-300 dark:text-slate-600 transition-transform ${showLicenseForm ? "rotate-90" : ""}`} />
           </button>
           {showLicenseForm && (
             <div className="px-4 pb-4">
+              {user?.patentaStatus === "rejected" && (
+                <p className="text-xs text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2.5 mb-3 leading-relaxed">
+                  {t("auth.licenseRejectedHint")}
+                </p>
+              )}
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
                 {hasLicense ? t("auth.licenseEditHint") : t("auth.licenseAddHint")}
               </p>
