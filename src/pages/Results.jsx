@@ -1,7 +1,21 @@
+import { useMemo } from "react";
 import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal } from "lucide-react";
 import { CarCard, AmenityPicker } from "../components";
 import { CAR_CATEGORIES, CAR_BRANDS } from "../carData";
 import { useLang } from "../useLang";
+
+// Cars naturally arrive clustered by business (a business usually adds several cars in one
+// sitting, so their car_ids land close together) -- shuffled here so results don't visually
+// read as "one business's block, then the next's." Fisher-Yates, stable per `cars` reference
+// via useMemo below so it doesn't re-shuffle (and jump around) on every filter/render.
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 const categoryLabel = (key, t) => (CAR_CATEGORIES.some((c) => c.key === key) ? t(`category.${key}`) : key);
 const BRAND_ORDER = Object.keys(CAR_BRANDS);
@@ -26,6 +40,7 @@ function freeInLabel(lirohetMe, dataFillimit, t) {
 
 export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters }) {
   const { t } = useLang();
+  const shuffledCars = useMemo(() => shuffleArray(cars), [cars]);
 
   const brands = sortByBrandPopularity([...new Set(cars.map((c) => c.marka).filter(Boolean))]);
   const models = [...new Set(cars.filter((c) => !filters.marka || c.marka === filters.marka).map((c) => c.modeli).filter(Boolean))].sort();
@@ -42,7 +57,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
   }
 
   const term = filters.search.trim().toLowerCase();
-  let visibleCars = cars.filter((c) =>
+  let visibleCars = shuffledCars.filter((c) =>
     (!filters.marka || c.marka === filters.marka) &&
     (!filters.modeli || c.modeli === filters.modeli) &&
     (!filters.biznesi || String(c.companyId) === filters.biznesi) &&
