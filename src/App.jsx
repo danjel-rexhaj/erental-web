@@ -50,8 +50,67 @@ const PAGE_META = {
   terms: { title: `Kushtet e përdorimit — ERental`, description: DEFAULT_DESCRIPTION },
 };
 
+// Unread-count badge on the browser tab (title prefix + a red dot drawn onto the favicon), like
+// Gmail/Slack -- module-level (not React state) because it has to survive/reapply across route
+// changes, which call updatePageMeta with a fresh base title that would otherwise wipe the prefix.
+let currentBaseTitle = DEFAULT_TITLE;
+let currentUnreadCount = 0;
+let faviconImg = null;
+
+function applyTitleBadge() {
+  document.title = currentUnreadCount > 0 ? `(${currentUnreadCount > 9 ? "9+" : currentUnreadCount}) ${currentBaseTitle}` : currentBaseTitle;
+}
+
+function drawFaviconBadge() {
+  if (!faviconImg) {
+    faviconImg = new Image();
+    faviconImg.src = "/favicon.png";
+    faviconImg.onload = drawFaviconBadge;
+    return;
+  }
+  if (!faviconImg.complete || faviconImg.naturalWidth === 0) return;
+
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(faviconImg, 0, 0, size, size);
+
+  if (currentUnreadCount > 0) {
+    const r = 18, cx = size - r * 0.85, cy = r * 0.85;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = "#dc2626";
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#fff";
+    ctx.stroke();
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 22px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(currentUnreadCount > 9 ? "9+" : String(currentUnreadCount), cx, cy + 1);
+  }
+
+  let link = document.querySelector('link[rel="icon"]');
+  if (!link) {
+    link = document.createElement("link");
+    link.setAttribute("rel", "icon");
+    document.head.appendChild(link);
+  }
+  link.setAttribute("href", canvas.toDataURL("image/png"));
+}
+
+function updateUnreadBadge(count) {
+  currentUnreadCount = count;
+  applyTitleBadge();
+  drawFaviconBadge();
+}
+
 function updatePageMeta(title, description) {
-  document.title = title || DEFAULT_TITLE;
+  currentBaseTitle = title || DEFAULT_TITLE;
+  applyTitleBadge();
   const metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.setAttribute("content", description || DEFAULT_DESCRIPTION);
 }
@@ -240,6 +299,9 @@ export default function App() {
   }, []);
 
   const { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications, connection: hubConnection } = useNotifications(token, handleAvailabilityChanged, handleLiveNotification);
+
+  // Browser-tab badge (title prefix + red dot on the favicon) mirroring the in-app bell count.
+  useEffect(() => { updateUnreadBadge(unreadCount); }, [unreadCount]);
 
   // ---- URL routing (real paths, server-side SPA-fallback rewrite required -- see vercel.json) ----
   const VIEW_TO_PATH = {

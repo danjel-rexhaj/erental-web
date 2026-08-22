@@ -4,6 +4,30 @@ import { API_BASE, apiFetch } from "./api";
 
 const HUB_URL = API_BASE.replace(/\/api$/, "") + "/hubs/notifications";
 
+// Two-tone chime synthesized on the fly (no audio asset to ship/load) for a new notification
+// arriving while the tab is open -- separate from the OS-level push sound, which only fires when
+// the tab/app isn't focused. Silently no-ops if the browser's autoplay policy hasn't yet granted
+// audio (needs at least one prior user gesture on the page, e.g. any click).
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    [880, 1108].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const start = now + i * 0.11;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.15, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.28);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.3);
+    });
+  } catch { /* autoplay blocked or AudioContext unavailable -- fine, sound is a nicety */ }
+}
+
 export function useNotifications(token, onAvailabilityChanged, onNotification) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -40,6 +64,7 @@ export function useNotifications(token, onAvailabilityChanged, onNotification) {
     conn.on("notification", (data) => {
       setNotifications((prev) => [{ ...data, isRead: false }, ...prev].slice(0, 30));
       setUnreadCount((c) => c + 1);
+      playNotificationSound();
       if (notificationCbRef.current) notificationCbRef.current(data);
     });
 
