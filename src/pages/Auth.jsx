@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2, Clock } from "lucide-react";
+import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2, Clock, Bell } from "lucide-react";
 import { apiFetch, apiFetchBlob } from "../api";
+import { subscribeToPush, pushSupported } from "../push";
 import { Field, PrimaryButton, GhostButton, inputClass } from "../components";
 import { NATIONALITIES } from "../carData";
 import { useLang } from "../useLang";
@@ -301,6 +302,8 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
   const [deleting, setDeleting] = useState(false);
   const [waRequest, setWaRequest] = useState(null);
   const [waLoading, setWaLoading] = useState(false);
+  const [pushState, setPushState] = useState(() => (typeof Notification !== "undefined" ? Notification.permission : "unsupported"));
+  const [pushLoading, setPushLoading] = useState(false);
   const [company, setCompany] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -348,6 +351,17 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
       const res = await apiFetch("/WhatsappVerifications", token, { method: "POST" });
       setWaRequest(res);
     } catch (e) { showError(e); } finally { setWaLoading(false); }
+  }
+
+  async function enablePush() {
+    setPushLoading(true);
+    try {
+      const ok = await subscribeToPush(token);
+      const current = typeof Notification !== "undefined" ? Notification.permission : "unsupported";
+      setPushState(current);
+      if (ok) showOk(t("auth.notificationsEnabled"));
+      else if (current === "denied") showError(new Error(t("auth.notificationsDeniedError")));
+    } catch (e) { showError(e); } finally { setPushLoading(false); }
   }
 
   async function deleteAccount() {
@@ -612,6 +626,29 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
           )}
         </div>
       </div>
+
+      {pushSupported() && (
+        <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 bg-white dark:bg-slate-800">
+          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-3">{t("auth.notifications")}</p>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Bell size={14} className="text-slate-400 shrink-0" />
+              {pushState === "granted" ? (
+                <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-medium"><ShieldCheck size={12} /> {t("auth.notificationsEnabledLabel")}</span>
+              ) : pushState === "denied" ? (
+                <span className="text-amber-700 dark:text-amber-400 font-medium">{t("auth.notificationsBlocked")}</span>
+              ) : (
+                <span className="text-slate-500 dark:text-slate-400">{t("auth.notificationsOffLabel")}</span>
+              )}
+            </div>
+            {pushState !== "granted" && pushState !== "denied" && (
+              <button onClick={enablePush} disabled={pushLoading} className="text-xs font-semibold text-sky-600 dark:text-emerald-400 underline shrink-0">
+                {pushLoading ? t("auth.preparing") : t("auth.enableNotifications")}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700 overflow-hidden">
         {editing ? (

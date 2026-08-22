@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { LogOut, Menu, X, Bell, Sun, Moon, Car } from "lucide-react";
 import { apiFetch, decodeJwt } from "./api";
 import { useNotifications } from "./notifications";
+import { subscribeToPush, unsubscribeFromPush } from "./push";
 import { Logo } from "./Logo";
 import { InstallPwaButton } from "./InstallPwaButton";
 import { useLang } from "./useLang";
@@ -156,6 +157,28 @@ export default function App() {
     apiFetch("/Users/me", token).then((data) => updateUser(data)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  // Re-registers the push subscription on every app load, but only silently -- if the browser
+  // permission is already "granted" from a previous session, requesting it again resolves
+  // instantly with no prompt. If it's still "default" (never asked), this deliberately does
+  // nothing; that first prompt only ever fires from the explicit button in ProfileView, since
+  // browsers increasingly ignore/auto-deny permission prompts not triggered by a user gesture.
+  useEffect(() => {
+    if (!token || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    subscribeToPush(token).catch(() => {});
+  }, [token]);
+
+  // The service worker can't reach the SPA router directly, so a notification tap posts a message
+  // back to whichever tab it focused/opened instead.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    function onMessage(event) {
+      if (event.data?.type === "notification-click" && event.data.url) go(event.data.url);
+    }
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function toggleFavorite(car) {
     if (!token) { go("/profili"); return; }
@@ -445,6 +468,7 @@ export default function App() {
   }
 
   function logout() {
+    if (token) unsubscribeFromPush(token);
     setToken(null);
     setUser(null);
     localStorage.removeItem("erental_auth");

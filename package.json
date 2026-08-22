@@ -19,7 +19,9 @@
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "recharts": "^3.9.2"
+    "recharts": "^3.9.2",
+    "workbox-precaching": "^7.4.1",
+    "workbox-routing": "^7.4.1"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.2",
