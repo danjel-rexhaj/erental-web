@@ -11,6 +11,20 @@ export function pushSupported() {
   return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 }
 
+// Whether THIS device currently has an active push subscription -- distinct from
+// Notification.permission, which the browser never lets JS turn back off once granted. Turning
+// notifications "off" in-app means unsubscribing (so we stop sending), not revoking permission.
+export async function isPushSubscribed() {
+  if (!pushSupported()) return false;
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    return !!subscription;
+  } catch {
+    return false;
+  }
+}
+
 // Only call Notification.requestPermission() from a real user click (a button tap) -- browsers
 // increasingly ignore or auto-deny permission prompts triggered without a user gesture. When
 // permission is already granted from a previous session, this is safe to call silently on app
