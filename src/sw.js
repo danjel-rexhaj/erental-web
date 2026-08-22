@@ -1,6 +1,15 @@
+import { clientsClaim } from "workbox-core";
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { NavigationRoute } from "workbox-routing";
+
+// registerType: "autoUpdate" (vite.config.js) means a new deploy should take over immediately,
+// same as the plain web build -- without these, a hand-written injectManifest worker only
+// activates once every open tab of the site is closed, leaving people on stale JS/CSS/HTML
+// indefinitely if they keep a tab open (this codebase's generateSW default handled it
+// automatically; a hand-rolled sw.js has to opt in explicitly).
+self.skipWaiting();
+clientsClaim();
 
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
