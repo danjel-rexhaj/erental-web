@@ -745,7 +745,7 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
         { key: "browse", label: t("nav.cars") },
         { key: "favorites", label: t("nav.favorites") },
         { key: "bookings", label: t("nav.bookings") },
-        { key: "business", label: businessLabel },
+        { key: "business", tab: isAdmin ? "admin" : undefined, label: businessLabel },
       ];
   const moreLinks = [
     { key: "about", label: t("nav.about") },

@@ -52,9 +52,9 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
   return (
     <div>
       {tabs.length > 0 && (
-        <div className="flex mb-6 gap-2">
+        <div className="flex mb-6 gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((t) => (
-            <button key={t.key} onClick={() => setTab(t.key)} className={`text-xs font-semibold px-3 py-1.5 rounded-full ${tab === t.key ? "bg-sky-600 dark:bg-emerald-700 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}>
+            <button key={t.key} onClick={() => setTab(t.key)} className={`text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 ${tab === t.key ? "bg-sky-600 dark:bg-emerald-700 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}>
               {t.label}
             </button>
           ))}
@@ -113,7 +113,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
           onChanged={() => setLocalRefresh((k) => k + 1)}
         />
       )}
-      {tab === "dashboard" && (
+      {tab === "dashboard" && !isAdmin && (
         company === null
           ? <RegisterCompanyForm token={token} onDone={load} showError={showError} showOk={showOk} />
           : <CompanyDashboard token={token} company={company} cars={cars} reload={load} showError={showError} showOk={showOk} managingCarId={carId} setManagingCarId={setCarId} />
