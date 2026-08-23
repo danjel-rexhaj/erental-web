@@ -448,7 +448,7 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
   }, [showLicenseForm, user?.hasLicensePara, user?.hasLicenseMbrapa, token, licenseVersion]);
 
   const waLink = waRequest
-    ? `https://wa.me/355688208868?text=${encodeURIComponent(`Verifikim ERental: ${waRequest.code} - ${user?.email}`)}`
+    ? `https://wa.me/447520681572?text=${encodeURIComponent(`Verifikim ERental: ${waRequest.code} - ${user?.email}`)}`
     : null;
   const waPending = waRequest || user?.whatsappStatus === "pending";
 

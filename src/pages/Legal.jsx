@@ -4,7 +4,7 @@ import { PrimaryButton, Field, inputClass } from "../components";
 import { apiFetch } from "../api";
 import { useLang } from "../useLang";
 
-const SUPPORT_WHATSAPP = "355688208868";
+const SUPPORT_WHATSAPP = "447520681572";
 const SUPPORT_EMAIL = "info@erental.store";
 
 // These pages are reached from several places (footer while browsing, Profile's Support links,
