@@ -38,7 +38,7 @@ function freeInLabel(lirohetMe, dataFillimit, t) {
   return t("results.freeInDays", { days });
 }
 
-export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters }) {
+export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters, pageHeading, pageIntro }) {
   const { t } = useLang();
   const shuffledCars = useMemo(() => shuffleArray(cars), [cars]);
 
@@ -90,6 +90,13 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
         <ChevronLeft size={16} /> {t("results.changeDates")}
       </button>
 
+      {pageHeading && (
+        <div className="mb-5">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-1.5">{pageHeading}</h1>
+          {pageIntro && <p className="text-sm text-slate-500 dark:text-slate-400 max-w-2xl">{pageIntro}</p>}
+        </div>
+      )}
+
       <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[200px]">
@@ -113,7 +120,9 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
           >
             <SlidersHorizontal size={13} /> {t("common.filter")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </button>
-          <span className="text-xs text-slate-400 ml-auto whitespace-nowrap">{dataFillimit} → {dataPerfundimit}</span>
+          {dataFillimit && dataPerfundimit && (
+            <span className="text-xs text-slate-400 ml-auto whitespace-nowrap">{dataFillimit} → {dataPerfundimit}</span>
+          )}
         </div>
 
         <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showFilters ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"}`}>

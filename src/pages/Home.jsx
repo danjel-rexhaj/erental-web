@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ShieldCheck, BadgeCheck, RotateCcw, Calendar, ArrowRight, MapPin, Clock, Lock, Zap, ChevronDown, HelpCircle, Sparkles } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton, CarCard } from "../components";
+import { CITY_SLUGS } from "../carData";
 import { useLang } from "../useLang";
 
 const today = () => new Date().toISOString().split("T")[0];
@@ -11,7 +12,7 @@ const dayAfter = (dateStr) => {
   return d.toISOString().split("T")[0];
 };
 
-export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, setDataPerfundimit, zona, setZona, onSearch, loading, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite }) {
+export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, setDataPerfundimit, zona, setZona, onSearch, loading, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, goHash }) {
   const { t } = useLang();
   const [companies, setCompanies] = useState([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
@@ -258,6 +259,22 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
           </div>
         </div>
       )}
+
+      <div className="mt-10">
+        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-3">{t("home.browseByCity")}</p>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(CITY_SLUGS).map(([city, slug]) => (
+            <a
+              key={slug}
+              href={`/makina-me-qera-${slug}`}
+              onClick={(e) => { e.preventDefault(); goHash?.(`/makina-me-qera-${slug}`); }}
+              className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-emerald-600 rounded-full px-3 py-1.5 transition"
+            >
+              {city}
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

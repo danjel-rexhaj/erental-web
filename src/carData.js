@@ -105,6 +105,37 @@ export const ALBANIAN_LOCATIONS = [
   "Lezhe", "Kukes", "Peshkopi", "Kruje", "Fushe-Kruje", "Patos", "Kucove",
 ];
 
+// URL slugs for the per-city SEO landing pages (/makina-me-qera-{slug}) -- kept as an explicit
+// map rather than auto-slugified so the URLs stay stable even if ALBANIAN_LOCATIONS wording
+// changes later (a slug changing would orphan whatever external links/rankings it had built up).
+export const CITY_SLUGS = {
+  "Porti i Durresit": "porti-durresit",
+  "Porti i Vlores": "porti-vlores",
+  "Aeroporti Rinas (Tirane)": "aeroporti-rinas",
+  "Tirane": "tirane",
+  "Durres": "durres",
+  "Vlore": "vlore",
+  "Shkoder": "shkoder",
+  "Elbasan": "elbasan",
+  "Fier": "fier",
+  "Korce": "korce",
+  "Berat": "berat",
+  "Lushnje": "lushnje",
+  "Kavaje": "kavaje",
+  "Pogradec": "pogradec",
+  "Gjirokaster": "gjirokaster",
+  "Sarande": "sarande",
+  "Lezhe": "lezhe",
+  "Kukes": "kukes",
+  "Peshkopi": "peshkopi",
+  "Kruje": "kruje",
+  "Fushe-Kruje": "fushe-kruje",
+  "Patos": "patos",
+  "Kucove": "kucove",
+};
+
+export const SLUG_TO_CITY = Object.fromEntries(Object.entries(CITY_SLUGS).map(([city, slug]) => [slug, city]));
+
 export const NATIONALITIES = [
   "Shqiperi", "Kosove", "Maqedoni e Veriut", "Mal i Zi", "Greqi", "Itali", "Gjermani",
   "Zvicer", "Austri", "Spanje", "Franc", "Mbreteri e Bashkuar", "Belgjike", "Holande",

@@ -16,6 +16,7 @@ import Business from "./pages/Business";
 import { AuthGate, BusinessAuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
 import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
+import { SLUG_TO_CITY } from "./carData";
 
 // index.html ships a single hardcoded canonical tag pointing at the homepage -- every other
 // route needs its own, and specifically WITHOUT query params (?nga=&deri=&...), or Google treats
@@ -115,6 +116,24 @@ function updatePageMeta(title, description) {
   if (metaDesc) metaDesc.setAttribute("content", description || DEFAULT_DESCRIPTION);
 }
 
+// Used by the per-city landing pages: a city with zero live listings still needs to exist and
+// render (so it "just works" the moment a business in that city signs up), but shouldn't be
+// indexed as a real result page in the meantime -- Google penalizes near-empty pages that ARE
+// indexed, but doesn't mind ones that exist and are explicitly marked noindex.
+function updateRobotsMeta(noindex) {
+  let meta = document.querySelector('meta[name="robots"]');
+  if (!noindex) {
+    if (meta) meta.remove();
+    return;
+  }
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("name", "robots");
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", "noindex, follow");
+}
+
 // Shown in place of the homepage while search() fetches results and preloads their photos --
 // replaces the old in-place "Duke kërkuar..." button label with a dedicated full-page transition,
 // so the results appear all at once on a fresh screen instead of popping in over the search form.
@@ -202,6 +221,9 @@ export default function App() {
   // Also lives here (not in Results.jsx) so it survives leaving for a car's detail page and coming back.
   const [resultFilters, setResultFilters] = useState({ search: "", marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", cmimiMax: "", vitiMin: "", vitiMax: "", amenities: [], sort: "" });
   const [showResultFilters, setShowResultFilters] = useState(false);
+  // Set only when arriving via a /makina-me-qera-{qytet} SEO landing URL, so Results.jsx can show
+  // a city-specific H1/intro instead of looking like the plain generic results page.
+  const [cityLanding, setCityLanding] = useState(null);
 
   useEffect(() => {
     if (!token) { const t = setTimeout(() => setFavoriteIds(new Set()), 0); return () => clearTimeout(t); }
@@ -315,6 +337,8 @@ export default function App() {
     const [path = "/", queryStr] = (hashStr || "/").replace(/^#/, "").split("?");
     const params = new URLSearchParams(queryStr || "");
     const segs = path.split("/").filter(Boolean);
+    setCityLanding(null);
+    updateRobotsMeta(false);
 
     if (segs[0] === "paypal-kthim") {
       const orderId = params.get("token");
@@ -377,6 +401,22 @@ export default function App() {
       } else {
         try { setCars(await apiFetch("/Cars", null)); } catch { /* ignore */ }
       }
+      return;
+    }
+    if (segs[0] && segs[0].startsWith("makina-me-qera-") && SLUG_TO_CITY[segs[0].slice("makina-me-qera-".length)]) {
+      const city = SLUG_TO_CITY[segs[0].slice("makina-me-qera-".length)];
+      setView("browse");
+      setStage("results");
+      setDataFillimit("");
+      setDataPerfundimit("");
+      setResultFilters({ search: "", marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: city, cmimiMax: "", vitiMin: "", vitiMax: "", amenities: [], sort: "" });
+      setCityLanding(city);
+      try {
+        const allCars = hint?.cars || await apiFetch("/Cars", null);
+        const cityCars = allCars.filter((c) => c.statusi === "active" && c.company?.eshteVerifikuar && c.company?.qyteti === city);
+        setCars(cityCars);
+        updateRobotsMeta(cityCars.length === 0);
+      } catch { /* ignore */ }
       return;
     }
     if (segs[0] === "rezultate") {
@@ -444,6 +484,11 @@ export default function App() {
           bizName ? `${bizName} — Makina me qera | ERental` : undefined,
           bizName ? `Shiko makinat me qera nga ${bizName} në ERental.` : undefined
         );
+      } else if (stage === "results" && cityLanding) {
+        updatePageMeta(
+          `Makina me qera në ${cityLanding} — ERental`,
+          `Krahaso dhe rezervo online makina me qera në ${cityLanding} nga biznese të verifikuara në ERental. Çmime transparente, pa kosto të fshehura.`
+        );
       } else if (stage === "results") {
         updatePageMeta("Rezultatet e kërkimit — Makina me qera | ERental", DEFAULT_DESCRIPTION);
       } else {
@@ -453,7 +498,7 @@ export default function App() {
       const meta = PAGE_META[view];
       updatePageMeta(meta?.title, meta?.description);
     }
-  }, [view, stage, selectedCar, selectedCompanyId, cars]);
+  }, [view, stage, selectedCar, selectedCompanyId, cars, cityLanding]);
 
   useEffect(() => {
     // Backward-compat: a link shared/bookmarked before this migration (erental.store/#/makina/42)
@@ -619,6 +664,8 @@ export default function App() {
           setFilters={setResultFilters}
           showFilters={showResultFilters}
           setShowFilters={setShowResultFilters}
+          pageHeading={cityLanding ? `Makina me qera në ${cityLanding}` : undefined}
+          pageIntro={cityLanding ? `Krahaso çmimet dhe rezervo online makina me qera nga biznese të verifikuara në ${cityLanding}.` : undefined}
         />
       );
     }
@@ -637,6 +684,7 @@ export default function App() {
         onSelectCompany={(id) => go(`/kompania/${id}`)}
         favoriteIds={favoriteIds}
         onToggleFavorite={toggleFavorite}
+        goHash={go}
       />
     );
   }

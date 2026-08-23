@@ -10,6 +10,20 @@
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
+  <!-- Per-city landing pages -- only listed here once a city has real listings (thin/empty
+       pages are marked noindex client-side instead of being submitted for crawling). Add more
+       of these as businesses register in additional cities; the pages themselves already exist
+       for every city in carData.js CITY_SLUGS regardless. -->
+  <url>
+    <loc>https://www.erental.store/makina-me-qera-tirane</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.erental.store/makina-me-qera-aeroporti-rinas</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
   <url>
     <loc>https://www.erental.store/rreth-nesh</loc>
     <changefreq>monthly</changefreq>
