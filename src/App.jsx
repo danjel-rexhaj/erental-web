@@ -675,6 +675,8 @@ export default function App() {
           setShowFilters={setShowResultFilters}
           pageHeading={cityLanding ? `Makina me qera në ${cityLanding}` : undefined}
           pageIntro={cityLanding ? `Krahaso çmimet dhe rezervo online makina me qera nga biznese të verifikuara në ${cityLanding}.` : undefined}
+          currentCity={cityLanding}
+          goHash={go}
         />
       );
     }
