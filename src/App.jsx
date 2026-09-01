@@ -358,7 +358,7 @@ export default function App() {
         });
         const booking = await apiFetch("/Bookings", token, {
           method: "POST",
-          body: JSON.stringify({ carId: pending.carId, dataFillimit: pending.dataFillimit, dataPerfundimit: pending.dataPerfundimit, paymentMethod: pending.method, paypalCaptureId: cap.captureId }),
+          body: JSON.stringify({ carId: pending.carId, dataFillimit: pending.dataFillimit, dataPerfundimit: pending.dataPerfundimit, oraMarrjes: pending.oraMarrjes, oraKthimit: pending.oraKthimit, paymentMethod: pending.method, paypalCaptureId: cap.captureId }),
         });
         const car = await apiFetch(`/Cars/${pending.carId}`, null).catch(() => null);
         setPaymentSuccessInfo({

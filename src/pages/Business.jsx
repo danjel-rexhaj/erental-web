@@ -248,6 +248,11 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
       </div>
       <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">{confirmim(b)}</p>
       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {t("car.daysCount", { count: days(b) })}</p>
+      {(b.oraMarrjes || b.oraKthimit) && (
+        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1">
+          <Clock size={10} /> {b.oraMarrjes || "—"} → {b.oraKthimit || "—"}
+        </p>
+      )}
       <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
         <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri}
         {b.klienti.hasWhatsapp && b.klienti.telefoni && (
@@ -326,6 +331,11 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                 <p className="font-semibold text-sm text-slate-900 dark:text-slate-100">{b.car.marka} {b.car.modeli}</p>
                 <p className="text-[10px] font-mono text-slate-400 dark:text-slate-500">{confirmim(b)}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{b.dataFillimit} → {b.dataPerfundimit} · {t("car.daysCount", { count: days(b) })}</p>
+                {(b.oraMarrjes || b.oraKthimit) && (
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1">
+                    <Clock size={10} /> {b.oraMarrjes || "—"} → {b.oraKthimit || "—"}
+                  </p>
+                )}
                 <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 mt-2">
                   <UserIcon size={12} /> {b.klienti.emri} {b.klienti.mbiemri} · {b.klienti.telefoni}
                   {b.klienti.hasWhatsapp && b.klienti.telefoni && (

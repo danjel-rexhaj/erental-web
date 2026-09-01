@@ -43,6 +43,14 @@ function addDaysIso(iso, days) {
 }
 const todayIso = () => new Date().toISOString().split("T")[0];
 
+// Half-hour options for the pickup/return time pickers -- purely informational for the business
+// (never checked against availability, which stays day-granular), so no need for per-car business hours.
+const TIME_OPTIONS = Array.from({ length: 32 }, (_, i) => {
+  const h = String(6 + Math.floor(i / 2)).padStart(2, "0");
+  const m = i % 2 === 0 ? "00" : "30";
+  return `${h}:${m}`;
+});
+
 const companySelectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-emerald-900/40 transition";
 const categoryLabelCompany = (key, t) => (CAR_CATEGORIES.some((c) => c.key === key) ? t(`category.${key}`) : key);
 const BRAND_ORDER_COMPANY = Object.keys(CAR_BRANDS);
@@ -124,6 +132,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const [hasLicense, setHasLicense] = useState(null);
   const [selFrom, setSelFrom] = useState(dataFillimit);
   const [selTo, setSelTo] = useState(dataPerfundimit);
+  const [oraMarrjes, setOraMarrjes] = useState("10:00");
+  const [oraKthimit, setOraKthimit] = useState("10:00");
   const activeFrom = selTo ? selFrom : dataFillimit;
   const activeTo = selTo ? selTo : dataPerfundimit;
   const days = activeFrom && activeTo ? Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000)) : 0;
@@ -304,9 +314,16 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               <div className="flex items-center gap-1.5 text-sm font-bold text-sky-600 dark:text-emerald-400 bg-sky-50 dark:bg-emerald-900/30 rounded-lg px-2.5 py-1.5 w-fit">
                 <Calendar size={14} /> {formatShortDate(activeFrom, lang)} → {formatShortDate(activeTo, lang)}
               </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
-                <Clock size={12} /> Check-in <ArrowRight size={10} className="opacity-50" /> Check-out <span className="opacity-60 font-normal">· 10:00</span>
-              </div>
+            </div>
+            <div className="flex items-center gap-1.5 mt-2">
+              <Clock size={12} className="text-slate-400 shrink-0" />
+              <select value={oraMarrjes} onChange={(e) => setOraMarrjes(e.target.value)} className="text-xs font-semibold border border-slate-200 dark:border-slate-700 rounded-lg px-1.5 py-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 outline-none">
+                {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
+              </select>
+              <ArrowRight size={10} className="opacity-50 shrink-0" />
+              <select value={oraKthimit} onChange={(e) => setOraKthimit(e.target.value)} className="text-xs font-semibold border border-slate-200 dark:border-slate-700 rounded-lg px-1.5 py-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 outline-none">
+                {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
+              </select>
             </div>
             <div className="flex items-center justify-between mt-2">
               {matchedOffer ? (
@@ -355,6 +372,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 car={car}
                 dataFillimit={activeFrom}
                 dataPerfundimit={activeTo}
+                oraMarrjes={oraMarrjes}
+                oraKthimit={oraKthimit}
                 total={total}
                 token={token}
                 needAuth={needAuth}
@@ -485,7 +504,7 @@ function memberSince(raw, lang) {
   return `${monthName(d.getMonth(), lang)} ${d.getFullYear()}`;
 }
 
-function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth, goToProfile, hasLicense, showError, showOk, onBooked }) {
+function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, token, needAuth, goToProfile, hasLicense, showError, showOk, onBooked }) {
   const { t } = useLang();
   const [method, setMethod] = useState("paypal_deposit");
   const [doSigurim, setDoSigurim] = useState(false);
@@ -502,10 +521,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
   // scope when the button was last rendered. The button only re-renders on [method, token], so if
   // dataFillimit/dataPerfundimit/total aren't re-read from a ref, picking new dates in the calendar
   // without changing the payment method would silently submit the stale dates from initial render.
-  const latestRef = useRef({ dataFillimit, dataPerfundimit, total, carId: car.carId });
+  const latestRef = useRef({ dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, carId: car.carId });
   useEffect(() => {
-    latestRef.current = { dataFillimit, dataPerfundimit, total, carId: car.carId };
-  }, [dataFillimit, dataPerfundimit, total, car.carId]);
+    latestRef.current = { dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, carId: car.carId };
+  }, [dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, car.carId]);
 
   useEffect(() => {
     if (!token || hasLicense !== true) return;
@@ -525,14 +544,14 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, total, token, needAuth
       setOpeningCard(false);
       setLoading(true);
       try {
-        const { carId, dataFillimit, dataPerfundimit } = latestRef.current;
+        const { carId, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit } = latestRef.current;
         const cap = await apiFetch("/Payments/paypal/capture", token, {
           method: "POST",
           body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod, paypalOrderId: data.orderID, doSigurim }),
         });
         const booking = await apiFetch("/Bookings", token, {
           method: "POST",
-          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, paymentMethod: method, paypalCaptureId: cap.captureId, doSigurim }),
+          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, paymentMethod: method, paypalCaptureId: cap.captureId, doSigurim }),
         });
         setSuccessInfo({ bookingId: booking.bookingId, amountPaid: cap.amountPaid, method, cardLast4: cap.cardLast4, captureId: cap.captureId, insuranceFee: doSigurim ? insurancePrice : 0 });
       } catch (e) { showError(e); } finally { setLoading(false); }
