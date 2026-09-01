@@ -31,6 +31,29 @@ function sortByBrandPopularity(brands) {
 
 const selectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-emerald-900/40 transition";
 
+// Desktop sidebar renders each single-select filter as a radio list (rather than a <select>
+// dropdown), one option always checked ("all" included) since the underlying filter state is a
+// single value per field, not a multi-select set.
+function FilterSection({ title, allLabel, options, value, onChange, scroll }) {
+  return (
+    <div className="py-3 border-b border-slate-100 dark:border-slate-800 first:pt-0 last:border-b-0">
+      <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{title}</p>
+      <div className={`flex flex-col gap-1.5 ${scroll ? "max-h-44 overflow-y-auto pr-1" : ""}`}>
+        <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200 cursor-pointer">
+          <input type="radio" checked={!value} onChange={() => onChange("")} className="accent-sky-600 dark:accent-emerald-500 shrink-0" />
+          {allLabel}
+        </label>
+        {options.map((opt) => (
+          <label key={opt.value} className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200 cursor-pointer">
+            <input type="radio" checked={value === opt.value} onChange={() => onChange(opt.value)} className="accent-sky-600 dark:accent-emerald-500 shrink-0" />
+            <span className="truncate">{opt.label}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function freeInLabel(lirohetMe, dataFillimit, t) {
   const days = Math.round((new Date(lirohetMe) - new Date(dataFillimit)) / 86400000);
   if (days <= 0) return t("results.freeToday");
@@ -84,8 +107,8 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
   const companyGroups = Object.values(grouped);
   const activeFilterCount = ["marka", "modeli", "biznesi", "karburanti", "kategoria", "zona", "vitiMin", "vitiMax", "cmimiMax", "sort"].filter((k) => filters[k]).length + filters.amenities.length;
 
-  // Shared between the mobile collapsible panel and the always-visible desktop sidebar, so the
-  // actual filter controls exist in exactly one place instead of two copies drifting apart.
+  // Mobile-only dropdown version, rendered inside the collapsible toggle panel below. Desktop uses
+  // `desktopFilterFields` (radio-list sections in the sidebar) instead -- kept unchanged per request.
   const filterFields = (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
@@ -164,6 +187,80 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
     </>
   );
 
+  // Desktop-only: the same filters as `filterFields`, but as always-visible radio-list sections
+  // instead of <select> dropdowns, per explicit request. Mobile keeps the dropdown version above.
+  const desktopFilterFields = (
+    <>
+      <FilterSection title={t("results.filterCategory")} allLabel={t("results.allCategories")} value={filters.kategoria} onChange={(v) => setFilters((f) => ({ ...f, kategoria: v }))} options={categories.map((k) => ({ value: k, label: categoryLabel(k, t) }))} />
+      <FilterSection title={t("results.filterBrand")} allLabel={t("results.allBrands")} value={filters.marka} onChange={(v) => setFilters((f) => ({ ...f, marka: v, modeli: "" }))} options={brands.map((b) => ({ value: b, label: b }))} scroll />
+      <FilterSection title={t("results.filterModel")} allLabel={t("results.allModels")} value={filters.modeli} onChange={(v) => setFilters((f) => ({ ...f, modeli: v }))} options={models.map((m) => ({ value: m, label: m }))} scroll />
+      <FilterSection title={t("results.filterBusiness")} allLabel={t("results.allBusinesses")} value={filters.biznesi} onChange={(v) => setFilters((f) => ({ ...f, biznesi: v }))} options={businesses.map(([id, emri]) => ({ value: String(id), label: emri }))} scroll />
+      <FilterSection title={t("results.filterZone")} allLabel={t("home.allZones")} value={filters.zona} onChange={(v) => setFilters((f) => ({ ...f, zona: v }))} options={zones.map((z) => ({ value: z, label: z }))} scroll />
+      <FilterSection title={t("results.filterFuel")} allLabel={t("results.allFuels")} value={filters.karburanti} onChange={(v) => setFilters((f) => ({ ...f, karburanti: v }))} options={[
+        { value: "diesel", label: "Diesel" },
+        { value: "benzine", label: "Benzine" },
+        { value: "hybrid", label: "Hybrid" },
+        { value: "elektrik", label: "Elektrik" },
+      ]} />
+
+      <div className="py-3 border-b border-slate-100 dark:border-slate-800">
+        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{t("results.filterYear")}</p>
+        <div className="flex items-center gap-2">
+          <select
+            value={filters.vitiMin}
+            onChange={(e) => {
+              const v = e.target.value;
+              setFilters((f) => ({ ...f, vitiMin: v, vitiMax: f.vitiMax && v && Number(f.vitiMax) < Number(v) ? v : f.vitiMax }));
+            }}
+            className={selectClass}
+          >
+            <option value="">{t("results.yearFrom")}</option>
+            {years.filter((y) => !filters.vitiMax || y <= Number(filters.vitiMax)).map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <select
+            value={filters.vitiMax}
+            onChange={(e) => {
+              const v = e.target.value;
+              setFilters((f) => ({ ...f, vitiMax: v, vitiMin: f.vitiMin && v && Number(f.vitiMin) > Number(v) ? v : f.vitiMin }));
+            }}
+            className={selectClass}
+          >
+            <option value="">{t("results.yearTo")}</option>
+            {years.filter((y) => !filters.vitiMin || y >= Number(filters.vitiMin)).map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div className="py-3 border-b border-slate-100 dark:border-slate-800">
+        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{t("results.filterPrice")}</p>
+        <input
+          type="number"
+          min={0}
+          value={filters.cmimiMax}
+          onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
+          placeholder={t("results.maxPricePlaceholder")}
+          className={selectClass}
+        />
+      </div>
+
+      <FilterSection title={t("common.sortBy")} allLabel={t("results.sortDefault")} value={filters.sort} onChange={(v) => setFilters((f) => ({ ...f, sort: v }))} options={[
+        { value: "asc", label: t("common.priceAsc") },
+        { value: "desc", label: t("common.priceDesc") },
+      ]} />
+
+      <div className="pt-3">
+        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{t("common.amenities")}</p>
+        <AmenityPicker selected={filters.amenities} onToggle={toggleAmenity} />
+      </div>
+
+      {activeFilterCount > 0 && (
+        <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
+          {t("common.clearFilters")}
+        </button>
+      )}
+    </>
+  );
+
   return (
     <div>
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
@@ -179,11 +276,11 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
 
       <div className="lg:flex lg:items-start lg:gap-6">
         {/* Desktop: always-visible sidebar. Mobile keeps the toggle+collapsible panel below instead. */}
-        <div className="hidden lg:block lg:w-64 shrink-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sticky top-20">
-          <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+        <div className="hidden lg:block lg:w-64 shrink-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
+          <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-1 flex items-center gap-1.5">
             <SlidersHorizontal size={13} /> {t("common.filter")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </p>
-          {filterFields}
+          {desktopFilterFields}
         </div>
 
         <div className="flex-1 min-w-0">
