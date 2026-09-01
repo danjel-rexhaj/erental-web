@@ -84,6 +84,86 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
   const companyGroups = Object.values(grouped);
   const activeFilterCount = ["marka", "modeli", "biznesi", "karburanti", "kategoria", "zona", "vitiMin", "vitiMax", "cmimiMax", "sort"].filter((k) => filters[k]).length + filters.amenities.length;
 
+  // Shared between the mobile collapsible panel and the always-visible desktop sidebar, so the
+  // actual filter controls exist in exactly one place instead of two copies drifting apart.
+  const filterFields = (
+    <>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
+        <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value, modeli: "" }))} className={selectClass}>
+          <option value="">{t("results.allBrands")}</option>
+          {brands.map((b) => <option key={b} value={b}>{b}</option>)}
+        </select>
+        <select value={filters.modeli} onChange={(e) => setFilters((f) => ({ ...f, modeli: e.target.value }))} className={selectClass}>
+          <option value="">{t("results.allModels")}</option>
+          {models.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <select value={filters.biznesi} onChange={(e) => setFilters((f) => ({ ...f, biznesi: e.target.value }))} className={selectClass}>
+          <option value="">{t("results.allBusinesses")}</option>
+          {businesses.map(([id, emri]) => <option key={id} value={id}>{emri}</option>)}
+        </select>
+        <select value={filters.zona} onChange={(e) => setFilters((f) => ({ ...f, zona: e.target.value }))} className={selectClass}>
+          <option value="">{t("home.allZones")}</option>
+          {zones.map((z) => <option key={z} value={z}>{z}</option>)}
+        </select>
+        <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${selectClass} capitalize`}>
+          <option value="">{t("results.allFuels")}</option>
+          <option value="diesel">Diesel</option>
+          <option value="benzine">Benzine</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="elektrik">Elektrik</option>
+        </select>
+        <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={selectClass}>
+          <option value="">{t("results.allCategories")}</option>
+          {categories.map((k) => <option key={k} value={k}>{categoryLabel(k, t)}</option>)}
+        </select>
+        <select
+          value={filters.vitiMin}
+          onChange={(e) => {
+            const v = e.target.value;
+            setFilters((f) => ({ ...f, vitiMin: v, vitiMax: f.vitiMax && v && Number(f.vitiMax) < Number(v) ? v : f.vitiMax }));
+          }}
+          className={selectClass}
+        >
+          <option value="">{t("results.yearFrom")}</option>
+          {years.filter((y) => !filters.vitiMax || y <= Number(filters.vitiMax)).map((y) => <option key={y} value={y}>{y}</option>)}
+        </select>
+        <select
+          value={filters.vitiMax}
+          onChange={(e) => {
+            const v = e.target.value;
+            setFilters((f) => ({ ...f, vitiMax: v, vitiMin: f.vitiMin && v && Number(f.vitiMin) > Number(v) ? v : f.vitiMin }));
+          }}
+          className={selectClass}
+        >
+          <option value="">{t("results.yearTo")}</option>
+          {years.filter((y) => !filters.vitiMin || y >= Number(filters.vitiMin)).map((y) => <option key={y} value={y}>{y}</option>)}
+        </select>
+        <input
+          type="number"
+          min={0}
+          value={filters.cmimiMax}
+          onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
+          placeholder={t("results.maxPricePlaceholder")}
+          className={selectClass}
+        />
+        <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={selectClass}>
+          <option value="">{t("common.sortBy")}</option>
+          <option value="asc">{t("common.priceAsc")}</option>
+          <option value="desc">{t("common.priceDesc")}</option>
+        </select>
+      </div>
+
+      <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-4 mb-1.5">{t("common.amenities")}</p>
+      <AmenityPicker selected={filters.amenities} onToggle={toggleAmenity} />
+
+      {activeFilterCount > 0 && (
+        <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
+          {t("common.clearFilters")}
+        </button>
+      )}
+    </>
+  );
+
   return (
     <div>
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4 hover:text-slate-700 dark:hover:text-slate-200">
@@ -97,137 +177,77 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
         </div>
       )}
 
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6 shadow-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-              placeholder={t("results.searchPlaceholder")}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowFilters((s) => !s)}
-            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition ${
-              showFilters || activeFilterCount > 0
-                ? "border-sky-300 dark:border-emerald-600 text-sky-600 dark:text-emerald-400 bg-sky-50 dark:bg-emerald-900/20"
-                : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
-            }`}
-          >
+      <div className="lg:flex lg:items-start lg:gap-6">
+        {/* Desktop: always-visible sidebar. Mobile keeps the toggle+collapsible panel below instead. */}
+        <div className="hidden lg:block lg:w-64 shrink-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sticky top-20">
+          <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-3 flex items-center gap-1.5">
             <SlidersHorizontal size={13} /> {t("common.filter")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-          </button>
-          {dataFillimit && dataPerfundimit && (
-            <span className="text-xs text-slate-400 ml-auto whitespace-nowrap">{dataFillimit} → {dataPerfundimit}</span>
-          )}
+          </p>
+          {filterFields}
         </div>
 
-        <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showFilters ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"}`}>
-          <div className="overflow-hidden">
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value, modeli: "" }))} className={selectClass}>
-                  <option value="">{t("results.allBrands")}</option>
-                  {brands.map((b) => <option key={b} value={b}>{b}</option>)}
-                </select>
-                <select value={filters.modeli} onChange={(e) => setFilters((f) => ({ ...f, modeli: e.target.value }))} className={selectClass}>
-                  <option value="">{t("results.allModels")}</option>
-                  {models.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <select value={filters.biznesi} onChange={(e) => setFilters((f) => ({ ...f, biznesi: e.target.value }))} className={selectClass}>
-                  <option value="">{t("results.allBusinesses")}</option>
-                  {businesses.map(([id, emri]) => <option key={id} value={id}>{emri}</option>)}
-                </select>
-                <select value={filters.zona} onChange={(e) => setFilters((f) => ({ ...f, zona: e.target.value }))} className={selectClass}>
-                  <option value="">{t("home.allZones")}</option>
-                  {zones.map((z) => <option key={z} value={z}>{z}</option>)}
-                </select>
-                <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${selectClass} capitalize`}>
-                  <option value="">{t("results.allFuels")}</option>
-                  <option value="diesel">Diesel</option>
-                  <option value="benzine">Benzine</option>
-                  <option value="hybrid">Hybrid</option>
-                  <option value="elektrik">Elektrik</option>
-                </select>
-                <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={selectClass}>
-                  <option value="">{t("results.allCategories")}</option>
-                  {categories.map((k) => <option key={k} value={k}>{categoryLabel(k, t)}</option>)}
-                </select>
-                <select
-                  value={filters.vitiMin}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setFilters((f) => ({ ...f, vitiMin: v, vitiMax: f.vitiMax && v && Number(f.vitiMax) < Number(v) ? v : f.vitiMax }));
-                  }}
-                  className={selectClass}
-                >
-                  <option value="">{t("results.yearFrom")}</option>
-                  {years.filter((y) => !filters.vitiMax || y <= Number(filters.vitiMax)).map((y) => <option key={y} value={y}>{y}</option>)}
-                </select>
-                <select
-                  value={filters.vitiMax}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setFilters((f) => ({ ...f, vitiMax: v, vitiMin: f.vitiMin && v && Number(f.vitiMin) > Number(v) ? v : f.vitiMin }));
-                  }}
-                  className={selectClass}
-                >
-                  <option value="">{t("results.yearTo")}</option>
-                  {years.filter((y) => !filters.vitiMin || y >= Number(filters.vitiMin)).map((y) => <option key={y} value={y}>{y}</option>)}
-                </select>
+        <div className="flex-1 min-w-0">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-6 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
-                  type="number"
-                  min={0}
-                  value={filters.cmimiMax}
-                  onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
-                  placeholder={t("results.maxPricePlaceholder")}
-                  className={selectClass}
+                  type="text"
+                  value={filters.search}
+                  onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+                  placeholder={t("results.searchPlaceholder")}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-slate-400 dark:focus:border-slate-500 transition"
                 />
-                <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={selectClass}>
-                  <option value="">{t("common.sortBy")}</option>
-                  <option value="asc">{t("common.priceAsc")}</option>
-                  <option value="desc">{t("common.priceDesc")}</option>
-                </select>
               </div>
-
-              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-4 mb-1.5">{t("common.amenities")}</p>
-              <AmenityPicker selected={filters.amenities} onToggle={toggleAmenity} />
-
-              {activeFilterCount > 0 && (
-                <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
-                  {t("common.clearFilters")}
-                </button>
+              <button
+                type="button"
+                onClick={() => setShowFilters((s) => !s)}
+                className={`lg:hidden flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg border transition ${
+                  showFilters || activeFilterCount > 0
+                    ? "border-sky-300 dark:border-emerald-600 text-sky-600 dark:text-emerald-400 bg-sky-50 dark:bg-emerald-900/20"
+                    : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                <SlidersHorizontal size={13} /> {t("common.filter")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+              </button>
+              {dataFillimit && dataPerfundimit && (
+                <span className="text-xs text-slate-400 ml-auto whitespace-nowrap">{dataFillimit} → {dataPerfundimit}</span>
               )}
             </div>
+
+            <div className={`lg:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showFilters ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"}`}>
+              <div className="overflow-hidden">
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                  {filterFields}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-400 mt-3">{t("results.availableCars", { count: visibleCars.filter((c) => c.eshteELire !== false).length })} · {t("results.businessCount", { count: companyGroups.length })}</p>
+          </div>
+
+          {visibleCars.length === 0 && (
+            <div className="text-center py-16">
+              <CarIcon size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+              <p className="text-sm text-slate-500 dark:text-slate-400">{t("results.noResults")}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {visibleCars.map((car) => (
+              <CarCard
+                key={car.carId}
+                car={car}
+                onSelectCar={onSelectCar}
+                onSelectCompany={onSelectCompany}
+                nearMiss={car.eshteELire === false}
+                freeInLabel={car.eshteELire === false ? freeInLabel(car.lirohetMe, dataFillimit, t) : null}
+                isFavorited={favoriteIds?.has(car.carId)}
+                onToggleFavorite={onToggleFavorite}
+              />
+            ))}
           </div>
         </div>
-
-        <p className="text-xs text-slate-400 mt-3">{t("results.availableCars", { count: visibleCars.filter((c) => c.eshteELire !== false).length })} · {t("results.businessCount", { count: companyGroups.length })}</p>
-      </div>
-
-      {visibleCars.length === 0 && (
-        <div className="text-center py-16">
-          <CarIcon size={28} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("results.noResults")}</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visibleCars.map((car) => (
-          <CarCard
-            key={car.carId}
-            car={car}
-            onSelectCar={onSelectCar}
-            onSelectCompany={onSelectCompany}
-            nearMiss={car.eshteELire === false}
-            freeInLabel={car.eshteELire === false ? freeInLabel(car.lirohetMe, dataFillimit, t) : null}
-            isFavorited={favoriteIds?.has(car.carId)}
-            onToggleFavorite={onToggleFavorite}
-          />
-        ))}
       </div>
     </div>
   );
