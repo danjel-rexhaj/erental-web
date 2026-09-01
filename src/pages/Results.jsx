@@ -1,6 +1,6 @@
-import { useMemo } from "react";
-import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal, MapPin } from "lucide-react";
-import { CarCard, AmenityPicker } from "../components";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal, MapPin, X } from "lucide-react";
+import { CarCard } from "../components";
 import { CAR_CATEGORIES, CAR_BRANDS, CITY_SLUGS } from "../carData";
 import { useLang } from "../useLang";
 
@@ -30,6 +30,10 @@ function sortByBrandPopularity(brands) {
 }
 
 const selectClass = "w-full text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 outline-none focus:border-slate-400 dark:focus:border-emerald-500 focus:ring-2 focus:ring-sky-100 dark:focus:ring-emerald-900/40 transition";
+
+// How many cards render at once -- the rest load in as the user scrolls near the bottom (see the
+// IntersectionObserver below), instead of every matching car mounting into the DOM immediately.
+const PAGE_SIZE = 24;
 
 // Desktop sidebar renders each single-select filter as a radio list (rather than a <select>
 // dropdown), one option always checked ("all" included) since the underlying filter state is a
@@ -72,13 +76,6 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
   const years = [...new Set(cars.map((c) => c.viti).filter(Boolean))].sort((a, b) => b - a);
   const businesses = [...new Map(cars.filter((c) => c.company).map((c) => [c.companyId, c.company.emri])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
 
-  function toggleAmenity(key) {
-    setFilters((f) => ({
-      ...f,
-      amenities: f.amenities.includes(key) ? f.amenities.filter((k) => k !== key) : [...f.amenities, key],
-    }));
-  }
-
   const term = filters.search.trim().toLowerCase();
   let visibleCars = shuffledCars.filter((c) =>
     (!filters.marka || c.marka === filters.marka) &&
@@ -99,6 +96,26 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
   if (filters.sort === "asc") visibleCars = [...visibleCars].sort((a, b) => a.cmimiDites - b.cmimiDites);
   if (filters.sort === "desc") visibleCars = [...visibleCars].sort((a, b) => b.cmimiDites - a.cmimiDites);
 
+  // Resets back to the first page whenever the result set itself changes (new search, filter
+  // change, or a fresh car list) so a narrower filter never leaves a stale, too-large count behind.
+  const filterKey = JSON.stringify(filters);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [cars, filterKey]);
+
+  const sentinelRef = useRef(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => { if (entries[0].isIntersecting) setVisibleCount((c) => c + PAGE_SIZE); },
+      { rootMargin: "600px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visibleCount, visibleCars.length]);
+
+  const shownCars = visibleCars.slice(0, visibleCount);
+
   const grouped = visibleCars.reduce((acc, c) => {
     if (!acc[c.companyId]) acc[c.companyId] = { company: c.company, cars: [] };
     acc[c.companyId].cars.push(c);
@@ -107,89 +124,9 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
   const companyGroups = Object.values(grouped);
   const activeFilterCount = ["marka", "modeli", "biznesi", "karburanti", "kategoria", "zona", "vitiMin", "vitiMax", "cmimiMax", "sort"].filter((k) => filters[k]).length + filters.amenities.length;
 
-  // Mobile-only dropdown version, rendered inside the collapsible toggle panel below. Desktop uses
-  // `desktopFilterFields` (radio-list sections in the sidebar) instead -- kept unchanged per request.
-  const filterFields = (
-    <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
-        <select value={filters.marka} onChange={(e) => setFilters((f) => ({ ...f, marka: e.target.value, modeli: "" }))} className={selectClass}>
-          <option value="">{t("results.allBrands")}</option>
-          {brands.map((b) => <option key={b} value={b}>{b}</option>)}
-        </select>
-        <select value={filters.modeli} onChange={(e) => setFilters((f) => ({ ...f, modeli: e.target.value }))} className={selectClass}>
-          <option value="">{t("results.allModels")}</option>
-          {models.map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
-        <select value={filters.biznesi} onChange={(e) => setFilters((f) => ({ ...f, biznesi: e.target.value }))} className={selectClass}>
-          <option value="">{t("results.allBusinesses")}</option>
-          {businesses.map(([id, emri]) => <option key={id} value={id}>{emri}</option>)}
-        </select>
-        <select value={filters.zona} onChange={(e) => setFilters((f) => ({ ...f, zona: e.target.value }))} className={selectClass}>
-          <option value="">{t("home.allZones")}</option>
-          {zones.map((z) => <option key={z} value={z}>{z}</option>)}
-        </select>
-        <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${selectClass} capitalize`}>
-          <option value="">{t("results.allFuels")}</option>
-          <option value="diesel">Diesel</option>
-          <option value="benzine">Benzine</option>
-          <option value="hybrid">Hybrid</option>
-          <option value="elektrik">Elektrik</option>
-        </select>
-        <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={selectClass}>
-          <option value="">{t("results.allCategories")}</option>
-          {categories.map((k) => <option key={k} value={k}>{categoryLabel(k, t)}</option>)}
-        </select>
-        <select
-          value={filters.vitiMin}
-          onChange={(e) => {
-            const v = e.target.value;
-            setFilters((f) => ({ ...f, vitiMin: v, vitiMax: f.vitiMax && v && Number(f.vitiMax) < Number(v) ? v : f.vitiMax }));
-          }}
-          className={selectClass}
-        >
-          <option value="">{t("results.yearFrom")}</option>
-          {years.filter((y) => !filters.vitiMax || y <= Number(filters.vitiMax)).map((y) => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <select
-          value={filters.vitiMax}
-          onChange={(e) => {
-            const v = e.target.value;
-            setFilters((f) => ({ ...f, vitiMax: v, vitiMin: f.vitiMin && v && Number(f.vitiMin) > Number(v) ? v : f.vitiMin }));
-          }}
-          className={selectClass}
-        >
-          <option value="">{t("results.yearTo")}</option>
-          {years.filter((y) => !filters.vitiMin || y >= Number(filters.vitiMin)).map((y) => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <input
-          type="number"
-          min={0}
-          value={filters.cmimiMax}
-          onChange={(e) => setFilters((f) => ({ ...f, cmimiMax: e.target.value }))}
-          placeholder={t("results.maxPricePlaceholder")}
-          className={selectClass}
-        />
-        <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))} className={selectClass}>
-          <option value="">{t("common.sortBy")}</option>
-          <option value="asc">{t("common.priceAsc")}</option>
-          <option value="desc">{t("common.priceDesc")}</option>
-        </select>
-      </div>
-
-      <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-4 mb-1.5">{t("common.amenities")}</p>
-      <AmenityPicker selected={filters.amenities} onToggle={toggleAmenity} />
-
-      {activeFilterCount > 0 && (
-        <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
-          {t("common.clearFilters")}
-        </button>
-      )}
-    </>
-  );
-
-  // Desktop-only: the same filters as `filterFields`, but as always-visible radio-list sections
-  // instead of <select> dropdowns, per explicit request. Mobile keeps the dropdown version above.
-  const desktopFilterFields = (
+  // Radio-list filter sections, shared by the always-visible desktop sidebar and the full-screen
+  // mobile filter modal -- no <select> dropdowns and no amenities on either surface, per request.
+  const filterSections = (
     <>
       <FilterSection title={t("results.filterCategory")} allLabel={t("results.allCategories")} value={filters.kategoria} onChange={(v) => setFilters((f) => ({ ...f, kategoria: v }))} options={categories.map((k) => ({ value: k, label: categoryLabel(k, t) }))} />
       <FilterSection title={t("results.filterBrand")} allLabel={t("results.allBrands")} value={filters.marka} onChange={(v) => setFilters((f) => ({ ...f, marka: v, modeli: "" }))} options={brands.map((b) => ({ value: b, label: b }))} scroll />
@@ -270,12 +207,12 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
       )}
 
       <div className="lg:flex lg:items-start lg:gap-6">
-        {/* Desktop: always-visible sidebar. Mobile keeps the toggle+collapsible panel below instead. */}
+        {/* Desktop: always-visible sidebar. Mobile: same sections open in a full-screen modal instead (below). */}
         <div className="hidden lg:block lg:w-64 shrink-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
           <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 uppercase tracking-wide mb-1 flex items-center gap-1.5">
             <SlidersHorizontal size={13} /> {t("common.filter")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </p>
-          {desktopFilterFields}
+          {filterSections}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -307,16 +244,32 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
               )}
             </div>
 
-            <div className={`lg:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-out ${showFilters ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"}`}>
-              <div className="overflow-hidden">
-                <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-                  {filterFields}
-                </div>
-              </div>
-            </div>
-
             <p className="text-xs text-slate-400 mt-3">{t("results.availableCars", { count: visibleCars.filter((c) => c.eshteELire !== false).length })} · {t("results.businessCount", { count: companyGroups.length })}</p>
           </div>
+
+          {showFilters && (
+            <div className="lg:hidden fixed inset-0 z-50 bg-white dark:bg-slate-900 flex flex-col">
+              <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <SlidersHorizontal size={14} /> {t("common.filter")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+                </p>
+                <button onClick={() => setShowFilters(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-4">
+                {filterSections}
+              </div>
+              <div className="shrink-0 p-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="w-full text-sm font-semibold text-white bg-sky-600 dark:bg-emerald-600 hover:bg-sky-700 dark:hover:bg-emerald-700 rounded-xl py-3 transition"
+                >
+                  {t("results.viewResultsButton", { count: visibleCars.length })}
+                </button>
+              </div>
+            </div>
+          )}
 
           {visibleCars.length === 0 && (
             <div className="text-center py-16">
@@ -326,7 +279,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {visibleCars.map((car) => (
+            {shownCars.map((car) => (
               <CarCard
                 key={car.carId}
                 car={car}
@@ -339,6 +292,12 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
               />
             ))}
           </div>
+
+          {visibleCount < visibleCars.length && (
+            <div ref={sentinelRef} className="flex justify-center py-6">
+              <p className="text-xs text-slate-400">{t("common.loading")}</p>
+            </div>
+          )}
 
           <div className="mt-10 pt-8 border-t border-slate-100 dark:border-slate-800">
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
