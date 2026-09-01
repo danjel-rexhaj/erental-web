@@ -248,11 +248,6 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
         { value: "desc", label: t("common.priceDesc") },
       ]} />
 
-      <div className="pt-3">
-        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{t("common.amenities")}</p>
-        <AmenityPicker selected={filters.amenities} onToggle={toggleAmenity} />
-      </div>
-
       {activeFilterCount > 0 && (
         <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
           {t("common.clearFilters")}
