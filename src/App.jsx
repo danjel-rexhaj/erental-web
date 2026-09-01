@@ -16,7 +16,7 @@ import Business from "./pages/Business";
 import { AuthGate, BusinessAuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
 import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
-import { SLUG_TO_CITY } from "./carData";
+import { SLUG_TO_CITY, CITY_SLUGS } from "./carData";
 
 // index.html ships a single hardcoded canonical tag pointing at the homepage -- every other
 // route needs its own, and specifically WITHOUT query params (?nga=&deri=&...), or Google treats
@@ -422,14 +422,23 @@ export default function App() {
     if (segs[0] === "rezultate") {
       const from = params.get("nga") || "";
       const to = params.get("deri") || "";
+      const kategoria = params.get("kategoria") || "";
       setDataFillimit(from);
       setDataPerfundimit(to);
       setView("browse");
       setStage("results");
+      if (kategoria) setResultFilters({ search: "", marka: "", modeli: "", biznesi: "", karburanti: "", kategoria, zona: "", cmimiMax: "", vitiMin: "", vitiMax: "", amenities: [], sort: "" });
       if (hint?.cars) {
         setCars(hint.cars);
       } else if (from && to) {
         try { setCars(await apiFetch(`/Cars/available?dataFillimit=${from}&dataPerfundimit=${to}`, null)); } catch { /* ignore */ }
+      } else {
+        // No dates yet (e.g. a category shortcut from the homepage) -- browse all live listings
+        // instead of leaving the page blank; picking dates still happens per-car same as always.
+        try {
+          const allCars = await apiFetch("/Cars", null);
+          setCars(allCars.filter((c) => c.statusi === "active" && c.company?.eshteVerifikuar));
+        } catch { /* ignore */ }
       }
       return;
     }
@@ -765,7 +774,7 @@ export default function App() {
         {view === "about" && <About />}
         {view === "contact" && <Contact />}
       </div>
-      <Footer setView={(v) => go(viewToHash(v))} />
+      <Footer setView={(v) => go(viewToHash(v))} goHash={go} />
       {paymentSuccessInfo && (
         <PaymentSuccessModal
           {...paymentSuccessInfo}
@@ -980,19 +989,53 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
   );
 }
 
-function Footer({ setView }) {
+const FOOTER_CITIES = ["Tirane", "Aeroporti Rinas (Tirane)", "Durres", "Vlore", "Sarande", "Shkoder"];
+
+function Footer({ setView, goHash }) {
   const { t } = useLang();
   return (
     <div className="bg-slate-900">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <Logo size={38} variant="dark" />
-        <div className="flex items-center gap-4">
-          <button onClick={() => setView("privacy")} className="text-xs text-slate-400 hover:text-white">{t("footer.privacy")}</button>{" "}
-          <button onClick={() => setView("terms")} className="text-xs text-slate-400 hover:text-white">{t("footer.terms")}</button>{" "}
-          <button onClick={() => setView("careers")} className="text-xs text-slate-400 hover:text-white">{t("nav.careers")}</button>{" "}
-          <a href="mailto:info@erental.store" className="text-xs text-slate-400 hover:text-white">info@erental.store</a>
+      <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
+        <div className="col-span-2 sm:col-span-1">
+          <Logo size={38} variant="dark" />
+          <p className="text-xs text-slate-500 mt-3 max-w-[22ch]">{t("footer.tagline")}</p>
         </div>
-        <p className="text-xs text-slate-500">{t("footer.tagline")}</p>
+        <div>
+          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-3">{t("footer.company")}</p>
+          <div className="flex flex-col gap-2">
+            <button onClick={() => setView("about")} className="text-xs text-slate-400 hover:text-white text-left">{t("nav.about")}</button>
+            <button onClick={() => setView("careers")} className="text-xs text-slate-400 hover:text-white text-left">{t("nav.careers")}</button>
+            <button onClick={() => setView("contact")} className="text-xs text-slate-400 hover:text-white text-left">{t("nav.contact")}</button>
+            <a href="mailto:info@erental.store" className="text-xs text-slate-400 hover:text-white">info@erental.store</a>
+          </div>
+        </div>
+        <div>
+          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-3">{t("footer.legal")}</p>
+          <div className="flex flex-col gap-2">
+            <button onClick={() => setView("privacy")} className="text-xs text-slate-400 hover:text-white text-left">{t("footer.privacy")}</button>
+            <button onClick={() => setView("terms")} className="text-xs text-slate-400 hover:text-white text-left">{t("footer.terms")}</button>
+          </div>
+        </div>
+        <div>
+          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-3">{t("footer.popularCities")}</p>
+          <div className="flex flex-col gap-2">
+            {FOOTER_CITIES.map((city) => (
+              <a
+                key={city}
+                href={`/makina-me-qera-${CITY_SLUGS[city]}`}
+                onClick={(e) => { e.preventDefault(); goHash?.(`/makina-me-qera-${CITY_SLUGS[city]}`); }}
+                className="text-xs text-slate-400 hover:text-white"
+              >
+                {city}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 py-3">
+          <p className="text-[11px] text-slate-600">© {new Date().getFullYear()} ERental</p>
+        </div>
       </div>
     </div>
   );
