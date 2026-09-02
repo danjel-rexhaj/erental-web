@@ -216,22 +216,23 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{t("home.featuredTitle")}</h2>
           </div>
           {loadingFeatured ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-1">
               {[0, 1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-56 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+                <div key={i} className="w-64 shrink-0 h-56 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-1">
               {featuredCars.map((car) => (
-                <CarCard
-                  key={car.carId}
-                  car={car}
-                  onSelectCar={onSelectCar}
-                  onSelectCompany={onSelectCompany}
-                  isFavorited={favoriteIds?.has(car.carId)}
-                  onToggleFavorite={onToggleFavorite}
-                />
+                <div key={car.carId} className="w-64 shrink-0">
+                  <CarCard
+                    car={car}
+                    onSelectCar={onSelectCar}
+                    onSelectCompany={onSelectCompany}
+                    isFavorited={favoriteIds?.has(car.carId)}
+                    onToggleFavorite={onToggleFavorite}
+                  />
+                </div>
               ))}
             </div>
           )}
