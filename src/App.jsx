@@ -18,12 +18,15 @@ import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
 import { SLUG_TO_CITY, CITY_SLUGS } from "./carData";
 
+// Real SVG flags via flag-icons (className="fi fi-<country>") -- flag emoji render as plain
+// two-letter text on Windows (no color flag glyphs in the system font), so an emoji here would
+// show "AL"/"GB" instead of an actual flag image.
 const LANGUAGES = [
-  { code: "sq", flag: "🇦🇱", label: "Shqip" },
-  { code: "en", flag: "🇬🇧", label: "English" },
-  { code: "de", flag: "🇩🇪", label: "Deutsch" },
-  { code: "fr", flag: "🇫🇷", label: "Français" },
-  { code: "it", flag: "🇮🇹", label: "Italiano" },
+  { code: "sq", country: "al", label: "Shqip" },
+  { code: "en", country: "gb", label: "English" },
+  { code: "de", country: "de", label: "Deutsch" },
+  { code: "fr", country: "fr", label: "Français" },
+  { code: "it", country: "it", label: "Italiano" },
 ];
 
 // index.html ships a single hardcoded canonical tag pointing at the homepage -- every other
@@ -875,10 +878,10 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
             <button
               onClick={() => setLangOpen((s) => !s)}
               onBlur={() => setTimeout(() => setLangOpen(false), 150)}
-              className="text-base border border-slate-200 dark:border-slate-700 rounded-full w-7 h-7 flex items-center justify-center shrink-0 hover:border-slate-300 dark:hover:border-slate-600"
+              className="border border-slate-200 dark:border-slate-700 rounded-full w-7 h-7 flex items-center justify-center shrink-0 overflow-hidden hover:border-slate-300 dark:hover:border-slate-600"
               title={currentLang.label}
             >
-              {currentLang.flag}
+              <span className={`fi fis fi-${currentLang.country}`} style={{ fontSize: 16 }} />
             </button>
             {langOpen && (
               <div className="absolute top-full right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 w-36 z-30">
@@ -890,7 +893,7 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
                       lang === l.code ? "text-sky-600 dark:text-emerald-400 font-semibold" : "text-slate-600 dark:text-slate-300"
                     }`}
                   >
-                    <span className="text-base">{l.flag}</span> {l.label}
+                    <span className={`fi fi-${l.country}`} style={{ fontSize: 16 }} /> {l.label}
                   </button>
                 ))}
               </div>
