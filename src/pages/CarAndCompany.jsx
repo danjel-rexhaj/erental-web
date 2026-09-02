@@ -213,7 +213,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   return (
     <div>
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 mb-4"><ChevronLeft size={16} /> {t("common.backToSearch")}</button>
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:items-start">
         <div className="lg:col-span-3 lg:row-start-1 order-1">
           <div className="relative rounded-2xl overflow-hidden">
             <CroppedPhoto
