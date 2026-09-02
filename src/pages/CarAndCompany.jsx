@@ -271,65 +271,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <PhotoLightbox photos={photos} startIndex={Math.max(0, photos.findIndex((p) => p.photoId === shown?.photoId))} onClose={() => setLightboxOpen(false)} />
           )}
 
-          <div className="mt-5">
-            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
-              {selTo ? t("car.pickDatesEdit") : t("car.pickDatesStart")}
-            </p>
-            <DateRangeCalendar
-              ranges={bookedRanges}
-              selFrom={selFrom}
-              selTo={selTo}
-              onSelect={(from, to) => { setSelFrom(from); setSelTo(to); }}
-              minDays={minDays}
-            />
-          </div>
-        </div>
-        <div className="lg:col-span-2 lg:row-start-1 lg:row-span-2 order-2">
-          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli} · {car.viti}</p>
-          <button
-            onClick={() => onSelectCompany(car.companyId)}
-            className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-sky-300 dark:hover:border-emerald-600 hover:bg-sky-50 dark:hover:bg-emerald-900/20 transition group"
-          >
-            <Building2 size={14} className="text-sky-600 dark:text-emerald-400 shrink-0" />
-            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-sky-600 dark:group-hover:text-emerald-400">{car.company?.emri}</span>
-            <span className="text-xs text-slate-400 flex items-center gap-0.5"><MapPin size={11} /> {car.company?.qyteti}</span>
-          </button>
-
-          <div className="grid grid-cols-2 gap-2 mt-5">
-            <Spec icon={Fuel} label={t("car.spec.fuel")} value={car.karburanti} />
-            <Spec icon={Gauge} label={t("car.spec.transmission")} value={car.transmisioni} />
-            <Spec icon={UsersIcon} label={t("car.spec.seats")} value={car.numriVendeve} />
-            <Spec icon={Snowflake} label={t("car.spec.aircon")} value={car.klimatizimi ? t("common.yes") : t("common.no")} />
-            {car.kubatura != null && <Spec icon={Cog} label={t("car.spec.engineSize")} value={`${car.kubatura}cc`} />}
-            {car.cilindra != null && <Spec icon={Disc} label={t("car.spec.cylinders")} value={car.cilindra} />}
-          </div>
-
-          {car.amenities && car.amenities.length > 0 && (
-            <div className="mt-5 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setAmenitiesOpen((s) => !s)}
-                className="w-full flex items-center justify-between gap-2 px-3.5 py-3"
-              >
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                  {t("common.amenities")} ({car.amenities.length})
-                </span>
-                <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform ${amenitiesOpen ? "rotate-180" : ""}`} />
-              </button>
-              {amenitiesOpen && (
-                <div className="flex flex-wrap gap-2 px-3.5 pb-3.5">
-                  {car.amenities.map((key) => (
-                    <span key={key} className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
-                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" /> {AMENITIES.some((a) => a.key === key) ? t(`amenity.${key}`) : key}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
           {(car.company?.ofronKmTePakufizuara || car.company?.cmimiShoferiShtese != null || car.company?.cmimiSediljesBebe != null || car.company?.cmimiDergesesJashtOrarit != null || car.company?.cmimiSigurimit != null) && (
-            <div className="mt-4">
+            <div className="mt-5">
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">{t("car.extraServicesTitle")}</p>
               <div className="border border-slate-200 dark:border-slate-700 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
                 {car.company.ofronKmTePakufizuara && (
@@ -422,6 +365,63 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               </div>
             </div>
           )}
+        </div>
+        <div className="lg:col-span-2 lg:row-start-1 lg:row-span-2 order-2">
+          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli} · {car.viti}</p>
+          <button
+            onClick={() => onSelectCompany(car.companyId)}
+            className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-sky-300 dark:hover:border-emerald-600 hover:bg-sky-50 dark:hover:bg-emerald-900/20 transition group"
+          >
+            <Building2 size={14} className="text-sky-600 dark:text-emerald-400 shrink-0" />
+            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-sky-600 dark:group-hover:text-emerald-400">{car.company?.emri}</span>
+            <span className="text-xs text-slate-400 flex items-center gap-0.5"><MapPin size={11} /> {car.company?.qyteti}</span>
+          </button>
+
+          <div className="grid grid-cols-2 gap-2 mt-5">
+            <Spec icon={Fuel} label={t("car.spec.fuel")} value={car.karburanti} />
+            <Spec icon={Gauge} label={t("car.spec.transmission")} value={car.transmisioni} />
+            <Spec icon={UsersIcon} label={t("car.spec.seats")} value={car.numriVendeve} />
+            <Spec icon={Snowflake} label={t("car.spec.aircon")} value={car.klimatizimi ? t("common.yes") : t("common.no")} />
+            {car.kubatura != null && <Spec icon={Cog} label={t("car.spec.engineSize")} value={`${car.kubatura}cc`} />}
+            {car.cilindra != null && <Spec icon={Disc} label={t("car.spec.cylinders")} value={car.cilindra} />}
+          </div>
+
+          {car.amenities && car.amenities.length > 0 && (
+            <div className="mt-5 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setAmenitiesOpen((s) => !s)}
+                className="w-full flex items-center justify-between gap-2 px-3.5 py-3"
+              >
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                  {t("common.amenities")} ({car.amenities.length})
+                </span>
+                <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform ${amenitiesOpen ? "rotate-180" : ""}`} />
+              </button>
+              {amenitiesOpen && (
+                <div className="flex flex-wrap gap-2 px-3.5 pb-3.5">
+                  {car.amenities.map((key) => (
+                    <span key={key} className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" /> {AMENITIES.some((a) => a.key === key) ? t(`amenity.${key}`) : key}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mt-5">
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+              {selTo ? t("car.pickDatesEdit") : t("car.pickDatesStart")}
+            </p>
+            <DateRangeCalendar
+              ranges={bookedRanges}
+              selFrom={selFrom}
+              selTo={selTo}
+              onSelect={(from, to) => { setSelFrom(from); setSelTo(to); }}
+              minDays={minDays}
+            />
+          </div>
 
           <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mt-5">
             <div className="flex items-center justify-between gap-2 flex-wrap">
