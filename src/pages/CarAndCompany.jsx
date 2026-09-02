@@ -316,52 +316,52 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           )}
 
           {(car.company?.ofronKmTePakufizuara || car.company?.cmimiShoferiShtese != null || car.company?.cmimiSediljesBebe != null || car.company?.cmimiDergesesJashtOrarit != null || car.company?.cmimiSigurimit != null) && (
-            <div className="mt-5">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{t("car.extraServicesTitle")}</p>
+            <div className="mt-4">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5">{t("car.extraServicesTitle")}</p>
               <div className="border border-slate-200 dark:border-slate-700 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
                 {car.company.ofronKmTePakufizuara && (
-                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                  <div className="flex items-center gap-2 px-3.5 py-2">
                     <InfinityIcon size={15} className="text-slate-400 shrink-0" />
                     <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.unlimitedKm")}</span>
                     <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{t("common.free")}</span>
                   </div>
                 )}
                 {formatServicePrice(car.company.cmimiShoferiShtese, t) && (
-                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                  <div className="flex items-center gap-2 px-3.5 py-2">
                     <UserPlus size={15} className="text-slate-400 shrink-0" />
                     <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.extraDriver")}</span>
                     <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{formatServicePrice(car.company.cmimiShoferiShtese, t)}</span>
                   </div>
                 )}
                 {formatServicePrice(car.company.cmimiSediljesBebe, t) && (
-                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                  <div className="flex items-center gap-2 px-3.5 py-2">
                     <Baby size={15} className="text-slate-400 shrink-0" />
                     <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.babySeat")}</span>
                     <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{formatServicePrice(car.company.cmimiSediljesBebe, t)}</span>
                   </div>
                 )}
                 {formatServicePrice(car.company.cmimiDergesesJashtOrarit, t) && (
-                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                  <div className="flex items-center gap-2 px-3.5 py-2">
                     <Clock size={15} className="text-slate-400 shrink-0" />
                     <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.outOfHoursDelivery")}</span>
                     <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{formatServicePrice(car.company.cmimiDergesesJashtOrarit, t)}</span>
                   </div>
                 )}
                 {car.company.cmimiSigurimit != null && (
-                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                  <div className="flex items-center gap-2 px-3.5 py-2">
                     <ShieldCheck size={15} className="text-slate-400 shrink-0" />
                     <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.fullInsuranceLabel")}</span>
                     <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{formatServicePrice(car.company.cmimiSigurimit, t)}{t("common.perDaySuffix")}</span>
                   </div>
                 )}
               </div>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("car.extraServicesContactNote")}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{t("car.extraServicesContactNote")}</p>
             </div>
           )}
 
           {car.company?.vendetKufitare?.length > 0 && (
-            <div className="mt-5">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
                 <Globe size={13} /> {t("car.crossBorderTitle")}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -371,37 +371,37 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   </span>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("car.crossBorderNote")}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{t("car.crossBorderNote")}</p>
             </div>
           )}
 
-          <div className="mt-5">
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+          <div className="mt-3">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
               <ShieldCheck size={13} /> {t("car.insuranceOverviewTitle")}
             </p>
             <div className="border border-slate-200 dark:border-slate-700 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
-              <div className="flex items-center gap-2 px-3.5 py-2.5">
+              <div className="flex items-center gap-2 px-3.5 py-2">
                 <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.thirdPartyLiability")}</span>
                 <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{t("car.thirdPartyLiabilityIncluded")}</span>
               </div>
               {car.company?.cmimiSigurimit != null && (
-                <div className="flex items-center gap-2 px-3.5 py-2.5">
+                <div className="flex items-center gap-2 px-3.5 py-2">
                   <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.fullInsuranceLabel")}</span>
                   <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{car.company.cmimiSigurimit}€{t("common.perDaySuffix")}</span>
                 </div>
               )}
             </div>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("car.insuranceCoverageNote")}</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{t("car.insuranceCoverageNote")}</p>
           </div>
 
           {car.company?.deliveryZones?.length > 0 && (
-            <div className="mt-5">
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
                 <Truck size={13} /> {t("car.deliveryPricingTitle")}
               </p>
               <div className="border border-slate-200 dark:border-slate-700 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
                 {car.company.deliveryZones.map((z) => (
-                  <div key={z.id} className="flex items-center gap-2 px-3.5 py-2.5">
+                  <div key={z.id} className="flex items-center gap-2 px-3.5 py-2">
                     <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{z.zona}</span>
                     <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{z.cmimi === 0 ? t("common.free") : `${z.cmimi}€`}</span>
                   </div>
