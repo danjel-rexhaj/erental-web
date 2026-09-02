@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock, Infinity as InfinityIcon, UserPlus, Baby, Globe, CreditCard } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
 import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, ONLINE_SERVICE_FEE } from "../carData";
@@ -42,6 +42,12 @@ function addDaysIso(iso, days) {
   return d.toISOString().split("T")[0];
 }
 const todayIso = () => new Date().toISOString().split("T")[0];
+
+// null = service not offered (row hidden entirely); 0 = offered for free.
+function formatServicePrice(price, t) {
+  if (price == null) return null;
+  return price === 0 ? t("common.free") : `${price}€`;
+}
 
 // Half-hour options for the pickup/return time pickers -- purely informational for the business
 // (never checked against availability, which stays day-granular), so no need for per-car business hours.
@@ -306,6 +312,101 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {(car.company?.ofronKmTePakufizuara || car.company?.cmimiShoferiShtese != null || car.company?.cmimiSediljesBebe != null || car.company?.cmimiDergesesJashtOrarit != null || car.company?.cmimiSigurimit != null) && (
+            <div className="mt-5">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">{t("car.extraServicesTitle")}</p>
+              <div className="border border-slate-200 dark:border-slate-700 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+                {car.company.ofronKmTePakufizuara && (
+                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                    <InfinityIcon size={15} className="text-slate-400 shrink-0" />
+                    <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.unlimitedKm")}</span>
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{t("common.free")}</span>
+                  </div>
+                )}
+                {formatServicePrice(car.company.cmimiShoferiShtese, t) && (
+                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                    <UserPlus size={15} className="text-slate-400 shrink-0" />
+                    <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.extraDriver")}</span>
+                    <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{formatServicePrice(car.company.cmimiShoferiShtese, t)}</span>
+                  </div>
+                )}
+                {formatServicePrice(car.company.cmimiSediljesBebe, t) && (
+                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                    <Baby size={15} className="text-slate-400 shrink-0" />
+                    <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.babySeat")}</span>
+                    <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{formatServicePrice(car.company.cmimiSediljesBebe, t)}</span>
+                  </div>
+                )}
+                {formatServicePrice(car.company.cmimiDergesesJashtOrarit, t) && (
+                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                    <Clock size={15} className="text-slate-400 shrink-0" />
+                    <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.outOfHoursDelivery")}</span>
+                    <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{formatServicePrice(car.company.cmimiDergesesJashtOrarit, t)}</span>
+                  </div>
+                )}
+                {car.company.cmimiSigurimit != null && (
+                  <div className="flex items-center gap-2 px-3.5 py-2.5">
+                    <ShieldCheck size={15} className="text-slate-400 shrink-0" />
+                    <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.fullInsuranceLabel")}</span>
+                    <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{formatServicePrice(car.company.cmimiSigurimit, t)}{t("common.perDaySuffix")}</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("car.extraServicesContactNote")}</p>
+            </div>
+          )}
+
+          {car.company?.vendetKufitare?.length > 0 && (
+            <div className="mt-5">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <Globe size={13} /> {t("car.crossBorderTitle")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {car.company.vendetKufitare.map((c) => (
+                  <span key={c} className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
+                    <Check size={12} className="text-emerald-600 dark:text-emerald-400" /> {c}
+                  </span>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("car.crossBorderNote")}</p>
+            </div>
+          )}
+
+          <div className="mt-5">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+              <ShieldCheck size={13} /> {t("car.insuranceOverviewTitle")}
+            </p>
+            <div className="border border-slate-200 dark:border-slate-700 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+              <div className="flex items-center gap-2 px-3.5 py-2.5">
+                <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.thirdPartyLiability")}</span>
+                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{t("car.thirdPartyLiabilityIncluded")}</span>
+              </div>
+              {car.company?.cmimiSigurimit != null && (
+                <div className="flex items-center gap-2 px-3.5 py-2.5">
+                  <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{t("car.fullInsuranceLabel")}</span>
+                  <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{car.company.cmimiSigurimit}€{t("common.perDaySuffix")}</span>
+                </div>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("car.insuranceCoverageNote")}</p>
+          </div>
+
+          {car.company?.deliveryZones?.length > 0 && (
+            <div className="mt-5">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <Truck size={13} /> {t("car.deliveryPricingTitle")}
+              </p>
+              <div className="border border-slate-200 dark:border-slate-700 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+                {car.company.deliveryZones.map((z) => (
+                  <div key={z.id} className="flex items-center gap-2 px-3.5 py-2.5">
+                    <span className="text-xs text-slate-700 dark:text-slate-200 flex-1">{z.zona}</span>
+                    <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{z.cmimi === 0 ? t("common.free") : `${z.cmimi}€`}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -825,6 +926,9 @@ export function CompanyProfile({ company, cars, dataFillimit, dataPerfundimit, o
               {company.ofronDergimMakine && (
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-teal-300 bg-sky-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0"><Truck size={11} /> {t("common.deliveryBadge")}</span>
               )}
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                <CreditCard size={11} /> {company.allowCashPayment === false ? t("company.paymentMethodsCardOnly") : t("company.paymentMethodsCash")}
+              </span>
             </div>
             <div className="flex items-center gap-3 flex-wrap text-xs text-slate-500 dark:text-slate-400">
               {company.avgRating != null && (
@@ -1005,13 +1109,31 @@ function CompanyReviews({ companyId }) {
   if (reviews.length === 0) return <p className="text-sm text-slate-400">{t("company.noReviewsYet")}</p>;
 
   const avg = (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1);
+  const histogram = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: reviews.filter((r) => r.rating === star).length,
+  }));
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
-        <Stars rating={Math.round(avg)} size={16} />
-        <span className="font-bold text-slate-900 dark:text-slate-100">{avg}</span>
-        <span className="text-sm text-slate-500 dark:text-slate-400">({t("company.reviewsCount", { count: reviews.length })})</span>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <Stars rating={Math.round(avg)} size={16} />
+          <span className="font-bold text-slate-900 dark:text-slate-100">{avg}</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">({t("company.reviewsCount", { count: reviews.length })})</span>
+        </div>
+        <div className="flex flex-col gap-1 sm:max-w-xs w-full">
+          {histogram.map(({ star, count }) => (
+            <div key={star} className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+              <span className="w-2.5 shrink-0">{star}</span>
+              <Star size={10} className="text-amber-400 fill-amber-400 shrink-0" />
+              <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <div className="h-full bg-amber-400" style={{ width: reviews.length ? `${(count / reviews.length) * 100}%` : "0%" }} />
+              </div>
+              <span className="w-4 text-right shrink-0">{count}</span>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {reviews.slice(0, visibleCount).map((r) => (

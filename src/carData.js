@@ -136,6 +136,12 @@ export const CITY_SLUGS = {
 
 export const SLUG_TO_CITY = Object.fromEntries(Object.entries(CITY_SLUGS).map(([city, slug]) => [slug, city]));
 
+// Countries a business can opt into letting its cars cross into (cria.al-style "cross-border
+// destinations") -- Albania's actual neighbors/near neighbors, not an arbitrary list.
+export const BORDER_COUNTRIES = [
+  "Mali i Zi", "Kosove", "Maqedonia e Veriut", "Greqia", "Kroacia", "Bosnja dhe Hercegovina", "Serbia",
+];
+
 export const NATIONALITIES = [
   "Shqiperi", "Kosove", "Maqedoni e Veriut", "Mal i Zi", "Greqi", "Itali", "Gjermani",
   "Zvicer", "Austri", "Spanje", "Franc", "Mbreteri e Bashkuar", "Belgjike", "Holande",
