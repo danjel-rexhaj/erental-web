@@ -270,6 +270,19 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           {lightboxOpen && (
             <PhotoLightbox photos={photos} startIndex={Math.max(0, photos.findIndex((p) => p.photoId === shown?.photoId))} onClose={() => setLightboxOpen(false)} />
           )}
+
+          <div className="mt-5">
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
+              {selTo ? t("car.pickDatesEdit") : t("car.pickDatesStart")}
+            </p>
+            <DateRangeCalendar
+              ranges={bookedRanges}
+              selFrom={selFrom}
+              selTo={selTo}
+              onSelect={(from, to) => { setSelFrom(from); setSelTo(to); }}
+              minDays={minDays}
+            />
+          </div>
         </div>
         <div className="lg:col-span-2 lg:row-start-1 lg:row-span-2 order-2">
           <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{car.marka} {car.modeli} · {car.viti}</p>
@@ -440,19 +453,6 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 <Truck size={13} /> {t("car.deliveryReminder")}
               </p>
             )}
-          </div>
-
-          <div className="mt-5">
-            <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">
-              {selTo ? t("car.pickDatesEdit") : t("car.pickDatesStart")}
-            </p>
-            <DateRangeCalendar
-              ranges={bookedRanges}
-              selFrom={selFrom}
-              selTo={selTo}
-              onSelect={(from, to) => { setSelFrom(from); setSelTo(to); }}
-              minDays={minDays}
-            />
           </div>
 
           {isBusinessOwner ? (
