@@ -18,6 +18,14 @@ import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
 import { SLUG_TO_CITY, CITY_SLUGS } from "./carData";
 
+const LANGUAGES = [
+  { code: "sq", flag: "🇦🇱", label: "Shqip" },
+  { code: "en", flag: "🇬🇧", label: "English" },
+  { code: "de", flag: "🇩🇪", label: "Deutsch" },
+  { code: "fr", flag: "🇫🇷", label: "Français" },
+  { code: "it", flag: "🇮🇹", label: "Italiano" },
+];
+
 // index.html ships a single hardcoded canonical tag pointing at the homepage -- every other
 // route needs its own, and specifically WITHOUT query params (?nga=&deri=&...), or Google treats
 // every date-range combination on a car/results page as separate duplicate-content URLs.
@@ -792,6 +800,8 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const currentLang = LANGUAGES.find((l) => l.code === lang) || LANGUAGES[0];
   const businessLabel = isAdmin ? t("nav.adminPanel") : t("nav.business");
   const links = user?.role === "business"
     ? [
@@ -861,13 +871,31 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
           </nav>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setLang(lang === "sq" ? "en" : "sq")}
-            className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-full w-7 h-7 flex items-center justify-center shrink-0"
-            title={lang === "sq" ? "Switch to English" : "Kalo ne shqip"}
-          >
-            {lang === "sq" ? "EN" : "SQ"}
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen((s) => !s)}
+              onBlur={() => setTimeout(() => setLangOpen(false), 150)}
+              className="text-base border border-slate-200 dark:border-slate-700 rounded-full w-7 h-7 flex items-center justify-center shrink-0 hover:border-slate-300 dark:hover:border-slate-600"
+              title={currentLang.label}
+            >
+              {currentLang.flag}
+            </button>
+            {langOpen && (
+              <div className="absolute top-full right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 w-36 z-30">
+                {LANGUAGES.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => { setLang(l.code); setLangOpen(false); }}
+                    className={`w-full flex items-center gap-2 text-left text-sm px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 ${
+                      lang === l.code ? "text-sky-600 dark:text-emerald-400 font-semibold" : "text-slate-600 dark:text-slate-300"
+                    }`}
+                  >
+                    <span className="text-base">{l.flag}</span> {l.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             onClick={toggleTheme}
             className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
