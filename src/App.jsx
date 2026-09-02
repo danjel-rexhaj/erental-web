@@ -881,7 +881,10 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
               className="border border-slate-200 dark:border-slate-700 rounded-full w-7 h-7 flex items-center justify-center shrink-0 overflow-hidden hover:border-slate-300 dark:hover:border-slate-600"
               title={currentLang.label}
             >
-              <span className={`fi fis fi-${currentLang.country}`} style={{ fontSize: 16 }} />
+              <span
+                className={`fi fi-${currentLang.country} rounded-full block`}
+                style={{ width: 26, height: 26, backgroundSize: "cover", backgroundPosition: "center" }}
+              />
             </button>
             {langOpen && (
               <div className="absolute top-full right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg py-1 w-36 z-30">
@@ -893,7 +896,11 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
                       lang === l.code ? "text-sky-600 dark:text-emerald-400 font-semibold" : "text-slate-600 dark:text-slate-300"
                     }`}
                   >
-                    <span className={`fi fi-${l.country}`} style={{ fontSize: 16 }} /> {l.label}
+                    <span
+                      className={`fi fi-${l.country} rounded-full block shrink-0`}
+                      style={{ width: 18, height: 18, backgroundSize: "cover", backgroundPosition: "center" }}
+                    />
+                    {l.label}
                   </button>
                 ))}
               </div>
