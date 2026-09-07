@@ -7,6 +7,7 @@ import { Logo } from "./Logo";
 import { InstallPwaButton } from "./InstallPwaButton";
 import { useLang } from "./useLang";
 import { Notice, PaymentSuccessModal } from "./components";
+import ItalyWelcomeBack from "./ItalyWelcomeBack";
 import Home from "./pages/Home";
 import Results from "./pages/Results";
 import { CarDetail, CompanyProfile } from "./pages/CarAndCompany";
@@ -794,6 +795,7 @@ export default function App() {
           onClose={() => { setPaymentSuccessInfo(null); go("/rezervimet"); }}
         />
       )}
+      <ItalyWelcomeBack />
     </div>
   );
 }
