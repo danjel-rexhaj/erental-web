@@ -617,6 +617,30 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
   const [buttonReady, setButtonReady] = useState(false);
   const [openingCard, setOpeningCard] = useState(false);
   const buttonsRef = useRef(null);
+  const [cardPopup, setCardPopup] = useState(false);
+
+  // On desktop, PayPal's card form expanding inline stretches the narrow sidebar and wrecks the
+  // page layout, so once it expands we lift it into a centered popup instead. The iframe can't be
+  // moved in the DOM (that reloads it and loses the form), so the same wrappers just switch to a
+  // fixed overlay via CSS. Expansion is detected by height, which also catches PayPal's own X
+  // collapsing the form (that fires no SDK callback). Phones keep the inline form.
+  useEffect(() => {
+    const el = buttonsRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const update = () => setCardPopup(desktop.matches && el.offsetHeight > 160);
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    desktop.addEventListener("change", update);
+    return () => { ro.disconnect(); desktop.removeEventListener("change", update); };
+  }, [token, hasLicense]);
+
+  useEffect(() => {
+    if (!cardPopup) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [cardPopup]);
 
   // createOrder/onApprove run from PayPal SDK callbacks, which capture whatever closure was in
   // scope when the button was last rendered. The button only re-renders on [method, token], so if
@@ -813,7 +837,16 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
               <Loader2 size={14} className="animate-spin" /> {t("booking.openingCardForm")}
             </div>
           )}
-          <div className={`rounded-xl overflow-hidden bg-white p-1.5 ${loading || showRefundPolicy || !buttonReady ? "hidden" : ""}`} ref={buttonsRef} />
+          <div className={cardPopup ? "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" : ""}>
+            <div className={cardPopup ? "w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl" : ""}>
+              {cardPopup && (
+                <p className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-2 px-1.5">
+                  <Lock size={12} /> {t("booking.securePayment")}
+                </p>
+              )}
+              <div className={`rounded-xl overflow-hidden bg-white p-1.5 ${loading || showRefundPolicy || !buttonReady ? "hidden" : ""}`} ref={buttonsRef} />
+            </div>
+          </div>
           {sdkError && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{sdkError}</p>}
         </div>
       )}
