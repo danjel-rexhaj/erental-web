@@ -136,6 +136,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const { t, lang } = useLang();
   const [bookedRanges, setBookedRanges] = useState([]);
   const [hasLicense, setHasLicense] = useState(null);
+  const [isDemo, setIsDemo] = useState(false);
   const [selFrom, setSelFrom] = useState(dataFillimit);
   const [selTo, setSelTo] = useState(dataPerfundimit);
   const [oraMarrjes, setOraMarrjes] = useState("10:00");
@@ -191,7 +192,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   useEffect(() => {
     if (!token) return;
     apiFetch("/Users/me", token)
-      .then((u) => setHasLicense(!!u.hasLicensePara && !!u.hasLicenseMbrapa))
+      .then((u) => { setIsDemo(!!u.isDemo); setHasLicense(!!u.hasLicensePara && !!u.hasLicenseMbrapa); })
       .catch(() => {});
   }, [token]);
 
@@ -480,6 +481,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 needAuth={needAuth}
                 goToProfile={goToProfile}
                 hasLicense={hasLicense}
+                isDemo={isDemo}
                 showError={showError}
                 showOk={showOk}
                 onBooked={onBack}
@@ -605,7 +607,7 @@ function memberSince(raw, lang) {
   return `${monthName(d.getMonth(), lang)} ${d.getFullYear()}`;
 }
 
-function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, token, needAuth, goToProfile, hasLicense, showError, showOk, onBooked }) {
+function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, token, needAuth, goToProfile, hasLicense, isDemo, showError, showOk, onBooked }) {
   const { t } = useLang();
   const [method, setMethod] = useState("paypal_deposit");
   const [doSigurim, setDoSigurim] = useState(false);
@@ -710,12 +712,22 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
       setTimeout(() => { if (!cancelled) setButtonReady(true); }, 450);
     }
 
+    // Demo accounts pay through PayPal Sandbox, which needs the SDK loaded with the Sandbox app's
+    // client id. The SDK is a page-wide singleton, so if it was loaded for the other mode (e.g.
+    // switching accounts without a reload) drop it and load the right one.
+    const mode = isDemo ? "sandbox" : "live";
+    const loaded = document.getElementById("paypal-sdk");
+    if (loaded && loaded.dataset.mode !== mode) {
+      loaded.remove();
+      delete window.paypal;
+    }
+
     if (window.paypal) {
       renderButtons();
       return () => { cancelled = true; setButtonReady(false); };
     }
 
-    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+    const clientId = isDemo ? import.meta.env.VITE_PAYPAL_SANDBOX_CLIENT_ID : import.meta.env.VITE_PAYPAL_CLIENT_ID;
     if (!clientId) {
       const timer = setTimeout(() => setSdkError(t("booking.paymentsNotConfigured")), 0);
       return () => { cancelled = true; clearTimeout(timer); setButtonReady(false); };
@@ -726,6 +738,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
     if (!script) {
       script = document.createElement("script");
       script.id = "paypal-sdk";
+      script.dataset.mode = mode;
       detectPaypalLocale().then((locale) => {
         if (cancelled || document.getElementById("paypal-sdk")) return;
         script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=buttons&currency=EUR&locale=${locale}`;
@@ -743,7 +756,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
       script.removeEventListener("load", renderButtons);
       script.removeEventListener("error", onScriptError);
     };
-  }, [method, token, hasLicense, doSigurim]);
+  }, [method, token, hasLicense, doSigurim, isDemo]);
 
   return (
     <div>
@@ -822,6 +835,11 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
           <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-2">
             <Lock size={11} /> {t("booking.securePayment")}
           </p>
+          {isDemo && (
+            <p className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-2 py-1.5 mb-2">
+              {t("booking.demoMode")}
+            </p>
+          )}
           {loading && (
             <div className="flex items-center justify-center gap-2 py-4 text-sm font-medium text-slate-600 dark:text-slate-300">
               <Loader2 size={16} className="animate-spin" /> {t("booking.processingPayment")}
