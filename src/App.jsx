@@ -246,7 +246,11 @@ export default function App() {
   // stay on stale/missing data (from the login response, which doesn't carry the photo) until then.
   useEffect(() => {
     if (!token) return;
-    apiFetch("/Users/me", token).then((data) => updateUser(data)).catch(() => {});
+    // The role is only set at login, so an account that registered its business afterwards (or
+    // mid-signup, before the company existed) kept a stale "client" role -- re-derive it here.
+    apiFetch("/Users/me", token)
+      .then((data) => updateUser(typeof data.hasCompany === "boolean" ? { ...data, role: data.hasCompany ? "business" : "client" } : data))
+      .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -768,6 +772,7 @@ export default function App() {
             }}
             highlightBookingId={highlightBookingId}
             refreshKey={bookingsRefreshKey}
+            onHasCompany={() => { if (user?.role !== "business") updateUser({ role: "business" }); }}
           />
         ) : <BusinessAuthGate onRegister={() => go("/regjistrohu-biznes")} onLogin={() => go("/profili")} />)}
         {view === "auth" && (
@@ -779,7 +784,7 @@ export default function App() {
           <VerifyView initialData={verifyData} onAuth={handleAuth} showError={showError} showOk={showOk} goTo={(v) => go(viewToHash(v))} />
         )}
         {view === "businessSignup" && (
-          <BusinessSignup onAuth={applyAuthSession} onDone={() => go("/biznesi")} showError={showError} showOk={showOk} />
+          <BusinessSignup onAuth={applyAuthSession} onDone={() => { updateUser({ role: "business" }); go("/biznesi"); }} showError={showError} showOk={showOk} />
         )}
         {view === "privacy" && <Privacy />}
         {view === "terms" && <Terms />}

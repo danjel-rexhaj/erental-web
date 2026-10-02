@@ -9,8 +9,11 @@ import { BusinessAnalytics, AdminAnalytics, AdminLogins, TransactionsPage, Admin
 import { BusinessDetailsForm } from "./BusinessDetailsForm";
 import { useLang } from "../useLang";
 
-export default function Business({ token, showError, showOk, isAdmin, tab, setTab, carId, setCarId, highlightBookingId, refreshKey }) {
+export default function Business({ token, showError, showOk, isAdmin, tab, setTab, carId, setCarId, highlightBookingId, refreshKey, onHasCompany }) {
   const { t } = useLang();
+  // Read through a ref so load() (keyed on token only) doesn't re-run every render on a new callback.
+  const onHasCompanyRef = useRef(onHasCompany);
+  useEffect(() => { onHasCompanyRef.current = onHasCompany; });
   const [company, setCompany] = useState(undefined);
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +26,7 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
     try {
       const c = await apiFetch("/Companies/my-company", token);
       setCompany(c);
+      onHasCompanyRef.current?.();
       const allCars = await apiFetch("/Cars", null);
       setCars(allCars.filter((car) => car.companyId === c.companyId));
     } catch (e) { setCompany(null); } finally { setLoading(false); }
