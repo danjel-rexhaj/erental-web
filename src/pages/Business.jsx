@@ -1136,13 +1136,13 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         <div className="flex flex-col gap-1.5">
           {form.priceOffers.map((o, i) => (
             <div key={i} className="flex items-center gap-1.5">
-              <input type="number" min="1" placeholder={t("business.offerDaysPlaceholder")} className={`${inputClass} w-20 shrink-0`} value={o.dite} onChange={(e) => updateOffer(i, "dite", e.target.value)} />
+              <input type="number" min="1" placeholder={t("business.offerDaysPlaceholder")} className={`${inputClass.replace("w-full", "")} w-20 shrink-0`} value={o.dite} onChange={(e) => updateOffer(i, "dite", e.target.value)} />
               <span className="text-xs text-slate-400 shrink-0">{t("business.offerDaysEquals")}</span>
-              <input type="number" min="0" step="0.01" placeholder={t("business.offerPricePlaceholder")} className={`${inputClass} flex-1 min-w-0`} value={o.cmimiTotal} onChange={(e) => updateOffer(i, "cmimiTotal", e.target.value)} />
+              <input type="number" min="0" step="0.01" placeholder={t("business.offerPricePlaceholder")} className={`${inputClass.replace("w-full", "")} flex-1 min-w-0`} value={o.cmimiTotal} onChange={(e) => updateOffer(i, "cmimiTotal", e.target.value)} />
               <button type="button" onClick={() => removeOffer(i)} className="text-slate-400 hover:text-red-600 shrink-0" title={t("business.removeOffer")}><X size={15} /></button>
             </div>
           ))}
-          <GhostButton type="button" onClick={addOffer} className="text-xs py-1.5 w-fit">{t("business.addOffer")}</GhostButton>
+          <GhostButton type="button" onClick={addOffer} className="text-xs py-1.5 !w-fit px-3">{t("business.addOffer")}</GhostButton>
         </div>
       </Field>
       <PrimaryButton type="submit" disabled={loading} className="mt-2">
