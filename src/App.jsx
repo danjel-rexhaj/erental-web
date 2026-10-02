@@ -817,7 +817,9 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
         { key: "browse", label: t("nav.cars") },
         { key: "favorites", label: t("nav.favorites") },
         { key: "bookings", label: t("nav.bookings") },
-        { key: "business", tab: isAdmin ? "admin" : undefined, label: businessLabel },
+        // The "Business" entry is a sign-up pitch for logged-out visitors; a logged-in client
+        // has no use for it, so only the admin (whose panel lives there) keeps it.
+        ...(!loggedIn || isAdmin ? [{ key: "business", tab: isAdmin ? "admin" : undefined, label: businessLabel }] : []),
       ];
   const moreLinks = [
     { key: "about", label: t("nav.about") },
