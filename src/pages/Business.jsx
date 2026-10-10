@@ -3,10 +3,11 @@ import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, Us
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar, AmenityPicker, CroppedPhoto } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
-import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS, BORDER_COUNTRIES } from "../carData";
+import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins, TransactionsPage, AdminUsersPage, AdminCompaniesPage, AdminCarsPage, AdminBookingsPage, BusinessBookingsPage } from "./Analytics";
-import { BusinessDetailsForm } from "./BusinessDetailsForm";
+import { BusinessDetailsForm, CompanyExtrasFields } from "./BusinessDetailsForm";
+import { companyExtrasPayload, validDeliveryZones } from "../companyExtras";
 import { useLang } from "../useLang";
 
 export default function Business({ token, showError, showOk, isAdmin, tab, setTab, carId, setCarId, highlightBookingId, refreshKey, onHasCompany }) {
@@ -816,30 +817,15 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
     company.deliveryZones?.length ? company.deliveryZones.map((z) => ({ zona: z.zona, cmimi: String(z.cmimi) })) : []
   );
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const toggleCountry = (c) => setForm((f) => ({
-    ...f,
-    vendetKufitare: f.vendetKufitare.includes(c) ? f.vendetKufitare.filter((x) => x !== c) : [...f.vendetKufitare, c],
-  }));
-  const setZone = (i, k) => (e) => setZones((zs) => zs.map((z, idx) => (idx === i ? { ...z, [k]: e.target.value } : z)));
-  const removeZone = (i) => setZones((zs) => zs.filter((_, idx) => idx !== i));
-  const addZone = () => setZones((zs) => [...zs, { zona: "", cmimi: "" }]);
 
   async function submit(e) {
     e.preventDefault();
     setLoading(true);
     try {
-      const payload = {
-        ...form,
-        minimumDitesh: form.minimumDitesh ? Number(form.minimumDitesh) : null,
-        cmimiSigurimit: form.cmimiSigurimit ? Number(form.cmimiSigurimit) : null,
-        cmimiShoferiShtese: form.cmimiShoferiShtese !== "" ? Number(form.cmimiShoferiShtese) : null,
-        cmimiSediljesBebe: form.cmimiSediljesBebe !== "" ? Number(form.cmimiSediljesBebe) : null,
-        cmimiDergesesJashtOrarit: form.cmimiDergesesJashtOrarit !== "" ? Number(form.cmimiDergesesJashtOrarit) : null,
-      };
-      await apiFetch("/Companies/my-company", token, { method: "PUT", body: JSON.stringify(payload) });
+      const { emri, telefoni, adresa, qyteti, iban } = form;
+      await apiFetch("/Companies/my-company", token, { method: "PUT", body: JSON.stringify({ emri, telefoni, adresa, qyteti, iban, ...companyExtrasPayload(form) }) });
 
-      const validZones = zones.filter((z) => z.zona.trim() && z.cmimi !== "").map((z) => ({ zona: z.zona.trim(), cmimi: Number(z.cmimi) }));
-      await apiFetch("/Companies/my-delivery-zones", token, { method: "PUT", body: JSON.stringify(validZones) });
+      await apiFetch("/Companies/my-delivery-zones", token, { method: "PUT", body: JSON.stringify(validDeliveryZones(zones)) });
 
       onDone();
     } catch (e) { showError(e); } finally { setLoading(false); }
@@ -857,64 +843,7 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
         </select>
       </Field>
       <Field label={t("business.ibanForPayments")}><input className={inputClass} value={form.iban} onChange={set("iban")} placeholder="AL47212110090000000235698741" /></Field>
-      <Field label={t("business.minimumDaysDefault")}>
-        <input type="number" min="1" className={inputClass} value={form.minimumDitesh} onChange={set("minimumDitesh")} placeholder="1" />
-        <span className="block text-[11px] text-slate-400 mt-1">{t("business.minimumDaysDefaultHint")}</span>
-      </Field>
-      <Field label={t("business.fullInsurancePrice")}>
-        <input type="number" min="0" step="0.01" className={inputClass} value={form.cmimiSigurimit} onChange={set("cmimiSigurimit")} placeholder="10" />
-        <span className="block text-[11px] text-slate-400 mt-1">{t("business.fullInsurancePriceHint")}</span>
-      </Field>
-      <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
-        <input
-          type="checkbox"
-          className="mt-0.5"
-          checked={form.ofronDergimMakine}
-          onChange={(e) => setForm((f) => ({ ...f, ofronDergimMakine: e.target.checked }))}
-        />
-        <span>{t("business.offersDeliveryEdit")}</span>
-      </label>
-
-      <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-2">{t("business.extraServicesTitle")}</p>
-      <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300">
-        <input
-          type="checkbox"
-          className="mt-0.5"
-          checked={form.ofronKmTePakufizuara}
-          onChange={(e) => setForm((f) => ({ ...f, ofronKmTePakufizuara: e.target.checked }))}
-        />
-        <span>{t("business.unlimitedKmOffer")}</span>
-      </label>
-      <Field label={t("business.extraDriverPrice")}>
-        <input type="number" min="0" step="0.01" className={inputClass} value={form.cmimiShoferiShtese} onChange={set("cmimiShoferiShtese")} placeholder="0" />
-        <span className="block text-[11px] text-slate-400 mt-1">{t("business.extraServicePriceHint")}</span>
-      </Field>
-      <Field label={t("business.babySeatPrice")}>
-        <input type="number" min="0" step="0.01" className={inputClass} value={form.cmimiSediljesBebe} onChange={set("cmimiSediljesBebe")} placeholder="0" />
-      </Field>
-      <Field label={t("business.outOfHoursDeliveryPrice")}>
-        <input type="number" min="0" step="0.01" className={inputClass} value={form.cmimiDergesesJashtOrarit} onChange={set("cmimiDergesesJashtOrarit")} placeholder="0" />
-      </Field>
-
-      <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-2">{t("business.crossBorderTitle")}</p>
-      <div className="grid grid-cols-2 gap-1.5">
-        {BORDER_COUNTRIES.map((c) => (
-          <label key={c} className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-            <input type="checkbox" checked={form.vendetKufitare.includes(c)} onChange={() => toggleCountry(c)} />
-            {c}
-          </label>
-        ))}
-      </div>
-
-      <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-2">{t("business.deliveryZonesTitle")}</p>
-      {zones.map((z, i) => (
-        <div key={i} className="flex items-center gap-1.5">
-          <input className={inputClass} value={z.zona} onChange={setZone(i, "zona")} placeholder={t("business.deliveryZonePlaceholder")} />
-          <input type="number" min="0" step="0.01" className={inputClass} value={z.cmimi} onChange={setZone(i, "cmimi")} placeholder="0" />
-          <button type="button" onClick={() => removeZone(i)} className="text-slate-400 hover:text-red-600 shrink-0"><X size={14} /></button>
-        </div>
-      ))}
-      <button type="button" onClick={addZone} className="text-xs font-medium text-sky-600 dark:text-emerald-400 text-left">{t("business.addDeliveryZone")}</button>
+      <CompanyExtrasFields form={form} setForm={setForm} zones={zones} setZones={setZones} deliveryLabel={t("business.offersDeliveryEdit")} />
 
       <div className="flex gap-2 mt-2">
         <PrimaryButton type="submit" disabled={loading} className="text-xs py-2">{loading ? t("common.saving") : t("common.save")}</PrimaryButton>
