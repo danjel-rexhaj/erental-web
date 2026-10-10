@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { LogOut, Menu, X, Bell, Sun, Moon, Car } from "lucide-react";
 import { apiFetch, decodeJwt } from "./api";
 import { useNotifications } from "./notifications";
-import { subscribeToPush, unsubscribeFromPush } from "./push";
+import { subscribeToPush, unsubscribeFromPush, pushSupported } from "./push";
 import { Logo } from "./Logo";
 import { InstallPwaButton } from "./InstallPwaButton";
 import { useLang } from "./useLang";
@@ -256,12 +256,25 @@ export default function App() {
 
   // Re-registers the push subscription on every app load, but only silently -- if the browser
   // permission is already "granted" from a previous session, requesting it again resolves
-  // instantly with no prompt. If it's still "default" (never asked), this deliberately does
-  // nothing; that first prompt only ever fires from the explicit button in ProfileView, since
-  // browsers increasingly ignore/auto-deny permission prompts not triggered by a user gesture.
+  // instantly with no prompt.
   useEffect(() => {
     if (!token || typeof Notification === "undefined" || Notification.permission !== "granted") return;
     subscribeToPush(token).catch(() => {});
+  }, [token]);
+
+  // Never asked yet: show the browser's permission prompt on the first tap anywhere in the app,
+  // not straight on load -- iOS (and increasingly Chrome/Firefox) ignore or auto-deny a prompt that
+  // isn't triggered by a user gesture. Asked only once per device; if it's dismissed, the button in
+  // ProfileView is still there, and repeated dismissals would get the site blocked by the browser.
+  useEffect(() => {
+    if (!token || !pushSupported() || Notification.permission !== "default") return;
+    if (localStorage.getItem("erental_push_asked")) return;
+    function onFirstTap() {
+      localStorage.setItem("erental_push_asked", "1");
+      subscribeToPush(token).catch(() => {});
+    }
+    window.addEventListener("click", onFirstTap, { once: true });
+    return () => window.removeEventListener("click", onFirstTap);
   }, [token]);
 
   // The service worker can't reach the SPA router directly, so a notification tap posts a message
