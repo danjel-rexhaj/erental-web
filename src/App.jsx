@@ -5,6 +5,7 @@ import { useNotifications } from "./notifications";
 import { subscribeToPush, unsubscribeFromPush, pushSupported } from "./push";
 import { Logo } from "./Logo";
 import { InstallPwaButton } from "./InstallPwaButton";
+import SupportChat from "./SupportChat";
 import { useLang } from "./useLang";
 import { Notice, PaymentSuccessModal } from "./components";
 import Home from "./pages/Home";
@@ -761,6 +762,7 @@ export default function App() {
         toggleTheme={toggleTheme}
       />
       <Notice notice={notice} onClose={() => setNotice(null)} />
+      <SupportChat />
       <div className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
         {view === "browse" && renderBrowse()}
         {view === "bookings" && (token ? <Bookings token={token} showError={showError} showOk={showOk} highlightBookingId={highlightBookingId} refreshKey={bookingsRefreshKey} /> : <AuthGate onGo={() => go("/profili")} text={t("app.needLoginFor", { feature: t("app.featureYourBookings") })} />)}
