@@ -118,6 +118,8 @@ function updateUnreadBadge(count) {
   currentUnreadCount = count;
   applyTitleBadge();
   drawFaviconBadge();
+  // Keeps the installed app's icon number (set by sw.js when a push arrives) in step with the bell.
+  if (navigator.setAppBadge) (count > 0 ? navigator.setAppBadge(count) : navigator.clearAppBadge()).catch(() => {});
 }
 
 function updatePageMeta(title, description) {

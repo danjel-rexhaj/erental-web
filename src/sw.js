@@ -30,7 +30,11 @@ self.addEventListener("push", (event) => {
     data: { url: data.url || "/" },
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  // Number on the installed app's icon -- only where the OS supports it (iOS home-screen apps,
+  // desktop); Android shows its own dot for any pending notification instead.
+  const badge = data.unread > 0 && self.navigator.setAppBadge ? self.navigator.setAppBadge(data.unread).catch(() => {}) : null;
+
+  event.waitUntil(Promise.all([self.registration.showNotification(title, options), badge]));
 });
 
 self.addEventListener("notificationclick", (event) => {
