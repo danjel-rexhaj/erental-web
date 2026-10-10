@@ -557,6 +557,8 @@ export default function App() {
       go("/biznesi?tab=amenity-suggestions");
     } else if (n.target === "admin_car_suggestion") {
       go("/biznesi?tab=car-suggestions");
+    } else if (n.target === "admin_new_user") {
+      go("/biznesi?tab=admin-users");
     }
   }
 
