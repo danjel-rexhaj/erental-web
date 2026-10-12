@@ -16,6 +16,8 @@ export default function SupportChat() {
   const [loading, setLoading] = useState(false);
   const listRef = useRef(null);
   const inputRef = useRef(null);
+  const launcherRef = useRef(null);
+  const [covering, setCovering] = useState(false);
 
   useEffect(() => {
     apiFetch("/Support/status", null).then((d) => setEnabled(!!d?.enabled)).catch(() => {});
@@ -28,6 +30,37 @@ export default function SupportChat() {
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
+
+  // The launcher floats over the page, so wherever the visitor scrolls it could land on top of a
+  // real control -- a Pay button, the PayPal card form, a form field. Whenever one is underneath,
+  // the launcher steps aside (fades out and lets taps through) until the page moves on. Popups sit
+  // above it anyway (z-50 and up); this covers everything inline.
+  useEffect(() => {
+    if (!enabled || open) return;
+    function check() {
+      const el = launcherRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const points = [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 4, r.top + 4], [r.right - 4, r.top + 4], [r.left + 4, r.bottom - 4], [r.right - 4, r.bottom - 4]];
+      const blocked = points.some(([x, y]) => document.elementsFromPoint(x, y).some((under) => {
+        if (under === el || el.contains(under)) return false;
+        if (under.tagName === "IFRAME") return true;
+        // Small controls only: a whole car card is clickable too, and hiding over those would
+        // leave the launcher invisible on most of the results page.
+        return under.matches('button, a, input, select, textarea, [role="button"]') && under.getBoundingClientRect().height <= 80;
+      }));
+      setCovering(blocked);
+    }
+    check();
+    const timer = setInterval(check, 400);
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [enabled, open]);
 
   async function send(text) {
     const question = text.trim();
@@ -60,21 +93,19 @@ export default function SupportChat() {
   if (!open) {
     return (
       <button
+        ref={launcherRef}
         onClick={() => setOpen(true)}
         aria-label={t("chat.open")}
-        style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
-        className="fixed right-4 z-40 w-12 h-12 rounded-full bg-sky-600 dark:bg-emerald-700 text-white shadow-lg shadow-slate-900/20 flex items-center justify-center hover:bg-sky-700 dark:hover:bg-emerald-800 active:scale-95 transition"
+        className={`fixed right-2 sm:right-4 bottom-[max(0.5rem,env(safe-area-inset-bottom))] sm:bottom-4 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-sky-600 dark:bg-emerald-700 text-white shadow-lg shadow-slate-900/20 flex items-center justify-center hover:bg-sky-700 dark:hover:bg-emerald-800 active:scale-95 transition ${covering ? "opacity-0 pointer-events-none" : ""}`}
       >
-        <MessageCircle size={22} />
+        <MessageCircle size={20} />
       </button>
     );
   }
 
+  // Phones: a small card docked in the bottom corner, never the whole screen. Desktop: floating.
   return (
-    <div
-      style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
-      className="fixed inset-x-3 sm:inset-x-auto sm:right-4 z-40 sm:w-[360px] h-[480px] max-h-[75vh] flex flex-col rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl shadow-slate-900/25"
-    >
+    <div className="fixed right-2 sm:right-4 bottom-[env(safe-area-inset-bottom)] sm:bottom-4 z-40 w-[min(19rem,calc(100vw-1rem))] sm:w-[360px] h-[24rem] sm:h-[480px] max-h-[58vh] sm:max-h-[75vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl shadow-slate-900/25">
       <div className="flex items-center gap-2.5 px-3.5 py-3 bg-sky-600 dark:bg-emerald-700 text-white shrink-0">
         <span className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0"><MessageCircle size={18} /></span>
         <span className="min-w-0 flex-1">
@@ -121,7 +152,8 @@ export default function SupportChat() {
           onChange={(e) => setDraft(e.target.value)}
           maxLength={500}
           placeholder={t("chat.placeholder")}
-          className="flex-1 min-w-0 text-sm rounded-full px-3.5 py-2 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-sky-500 dark:focus:ring-emerald-500"
+          // 16px on phones: iOS zooms the whole page into any focused input smaller than that.
+          className="flex-1 min-w-0 text-base sm:text-sm rounded-full px-3.5 py-2 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-sky-500 dark:focus:ring-emerald-500"
         />
         <button
           type="submit"
