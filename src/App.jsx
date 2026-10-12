@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { LogOut, Menu, X, Bell, Sun, Moon, Car } from "lucide-react";
-import { apiFetch, decodeJwt } from "./api";
+import { apiFetch, decodeJwt, genericErrorText } from "./api";
 import { useNotifications } from "./notifications";
 import { subscribeToPush, unsubscribeFromPush, pushSupported } from "./push";
 import { Logo } from "./Logo";
@@ -313,7 +313,12 @@ export default function App() {
   }
 
   const showError = (e) => {
-    setNotice({ type: "error", text: e.message || String(e) });
+    // Errors we raise ourselves (apiFetch, validation) are plain `Error`s carrying customer-facing
+    // text. Anything else is a code fault (TypeError: Cannot read properties of undefined...) whose
+    // message means nothing to a customer -- log it and show the generic line instead.
+    const ours = e instanceof Error && e.name === "Error" && e.message;
+    if (!ours) console.error(e);
+    setNotice({ type: "error", text: ours ? e.message : genericErrorText() });
     window.clearTimeout(window.__noticeTimeout);
     window.__noticeTimeout = window.setTimeout(() => setNotice(null), 5000);
   };

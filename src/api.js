@@ -1,15 +1,23 @@
 export const API_BASE = import.meta.env.VITE_API_BASE || "https://localhost:7096/api";
 
-// Not a React module, so no useLang() -- these two fallback strings (never backend-authored)
-// are looked up directly against the same localStorage key i18n.jsx itself reads from.
+// Not a React module, so no useLang() -- these fallback strings (never backend-authored) are
+// looked up directly against the same localStorage key i18n.jsx itself reads from. They are what
+// a customer sees when a request fails, so they say what to do next and nothing about the stack.
 const API_TEXT = {
-  sq: { networkDown: "S'u lidh dot me serverin. Kontrollo qe backend-i (Visual Studio) te jete duke punuar.", genericError: (status) => `Gabim ${status}` },
-  en: { networkDown: "Couldn't connect to the server. Check that the backend (Visual Studio) is running.", genericError: (status) => `Error ${status}` },
+  sq: { networkDown: "Lidhja deshtoi. Kontrollo internetin dhe provo perseri.", serverError: "Dicka shkoi keq nga ana jone. Provo perseri pas pak.", genericError: (status) => `Kerkesa nuk u krye (kodi ${status}). Provo perseri.` },
+  en: { networkDown: "Connection failed. Check your internet and try again.", serverError: "Something went wrong on our side. Please try again in a moment.", genericError: (status) => `The request didn't go through (code ${status}). Please try again.` },
+  de: { networkDown: "Verbindung fehlgeschlagen. Prüfe dein Internet und versuche es erneut.", serverError: "Bei uns ist etwas schiefgelaufen. Bitte versuche es gleich noch einmal.", genericError: (status) => `Die Anfrage ist fehlgeschlagen (Code ${status}). Bitte versuche es erneut.` },
+  fr: { networkDown: "Connexion échouée. Vérifie ta connexion internet et réessaie.", serverError: "Un problème est survenu de notre côté. Réessaie dans un instant.", genericError: (status) => `La demande n'a pas abouti (code ${status}). Réessaie.` },
+  it: { networkDown: "Connessione non riuscita. Controlla internet e riprova.", serverError: "Qualcosa è andato storto da parte nostra. Riprova tra poco.", genericError: (status) => `La richiesta non è andata a buon fine (codice ${status}). Riprova.` },
 };
 function apiText() {
-  const lang = localStorage.getItem("lang") === "en" ? "en" : "sq";
-  return API_TEXT[lang];
+  return API_TEXT[localStorage.getItem("lang")] || API_TEXT.sq;
 }
+
+// For failures that aren't an API response at all (a code fault caught by a try/catch).
+export const genericErrorText = () => apiText().serverError;
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function decodeJwt(token) {
   try {
@@ -55,11 +63,18 @@ export async function apiFetch(path, token, options = {}) {
   if (options.body && !(options.body instanceof FormData)) {
     headers["Content-Type"] = "application/json";
   }
+  // A blip (flaky mobile data, the API restarting mid-deploy) shouldn't surface as an error when
+  // simply asking again works. Reads only -- repeating a POST could book or charge twice.
+  const retries = !options.method || options.method === "GET" ? 2 : 0;
   let res;
-  try {
-    res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  } catch {
-    throw new Error(apiText().networkDown);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      if (![502, 503, 504].includes(res.status) || attempt >= retries) break;
+    } catch {
+      if (attempt >= retries) throw new Error(apiText().networkDown);
+    }
+    await wait(1200 * (attempt + 1));
   }
   const text = await res.text();
   let data = null;
@@ -75,6 +90,13 @@ export async function apiFetch(path, token, options = {}) {
     // instead of leaving the UI in a half-authenticated, everything-is-broken state.
     if (res.status === 401 && token) {
       window.dispatchEvent(new Event("erental:sessionExpired"));
+    }
+    // A 5xx body is usually whatever the server or the proxy in front of it produced (an HTML error
+    // page, a stack trace) -- never something to show a customer. The one exception is the short
+    // plain-text reason our own controllers attach on purpose ("Dergimi i email-it deshtoi.").
+    if (res.status >= 500) {
+      const deliberate = res.status === 500 && typeof data === "string" && data.length < 160 && !data.includes("<");
+      throw new Error(deliberate ? data : apiText().serverError);
     }
     const msg = typeof data === "string" ? data : data?.message || data?.title || apiText().genericError(res.status);
     throw new Error(msg || apiText().genericError(res.status));

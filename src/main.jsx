@@ -7,6 +7,7 @@ import 'flag-icons/css/flag-icons.min.css'
 import './index.css'
 import App from './App.jsx'
 import Maintenance from './Maintenance.jsx'
+import ErrorBoundary from './ErrorBoundary.jsx'
 import { LangProvider } from './i18n.jsx'
 
 registerSW({ immediate: true })
@@ -21,11 +22,13 @@ createRoot(document.getElementById('root')).render(
     {MAINTENANCE_MODE ? (
       <Maintenance />
     ) : (
-      <LangProvider>
-        <App />
-        <Analytics />
-        <SpeedInsights />
-      </LangProvider>
+      <ErrorBoundary>
+        <LangProvider>
+          <App />
+          <Analytics />
+          <SpeedInsights />
+        </LangProvider>
+      </ErrorBoundary>
     )}
   </StrictMode>,
 )
