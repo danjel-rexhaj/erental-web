@@ -3,7 +3,7 @@ export const OTHER_MODEL = "Tjeter";
 
 // Flat platform fee added to what the client pays on every online (PayPal) booking — must match
 // the backend's OnlineServiceFee constant in PaymentsController.cs/BookingsController.cs.
-export const ONLINE_SERVICE_FEE = 10;
+export const ONLINE_SERVICE_FEE = 5;
 
 // Ordered by how common each brand is on Albanian roads (Mercedes-Benz/VW/BMW/Audi's
 // dominance there is well known, not from a formal registry dataset), so the most

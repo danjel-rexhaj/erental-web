@@ -781,10 +781,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
             </label>
           )}
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: car.cmimiDites, fee: ONLINE_SERVICE_FEE })}
+            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: car.cmimiDites + ONLINE_SERVICE_FEE })}
           </label>
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: doSigurim && insurancePrice != null ? (Number(total) + Number(insurancePrice)).toFixed(2) : total, fee: ONLINE_SERVICE_FEE })}
+            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: (doSigurim && insurancePrice != null ? Number(total) + Number(insurancePrice) : Number(total)) + ONLINE_SERVICE_FEE })}
           </label>
           {doSigurim && method === "paypal_deposit" && insurancePrice != null && (
             <p className="text-[11px] text-slate-400">{t("booking.insuranceCashNote", { amount: insurancePrice })}</p>
