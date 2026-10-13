@@ -154,10 +154,14 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
       </p>
       <form onSubmit={submit}>
         {mode === "register" && (
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t("auth.firstName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="Andi" /></Field>
-            <Field label={t("auth.lastName")}><input required className={inputClass} value={form.mbiemri} onChange={set("mbiemri")} placeholder="Krasniqi" /></Field>
-          </div>
+          businessMode ? (
+            <Field label={t("auth.accountName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="Rent Albania" /></Field>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <Field label={t("auth.firstName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="Andi" /></Field>
+              <Field label={t("auth.lastName")}><input required className={inputClass} value={form.mbiemri} onChange={set("mbiemri")} placeholder="Krasniqi" /></Field>
+            </div>
+          )
         )}
         <Field label="Email"><input required type="email" className={inputClass} value={form.email} onChange={set("email")} placeholder="ti@email.com" /></Field>
         {mode === "register" && (
@@ -170,7 +174,7 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
             </div>
           </Field>
         )}
-        {mode === "register" && (
+        {mode === "register" && !businessMode && (
           <Field label={t("auth.nationality")}>
             <select className={inputClass} value={form.kombesia} onChange={set("kombesia")}>
               {NATIONALITIES.map((n) => <option key={n} value={n}>{n}</option>)}
