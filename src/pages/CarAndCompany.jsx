@@ -430,15 +430,25 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 <Calendar size={14} /> {formatShortDate(activeFrom, lang)} → {formatShortDate(activeTo, lang)}
               </div>
             </div>
-            <div className="flex items-center gap-1.5 mt-2">
-              <Clock size={12} className="text-slate-400 shrink-0" />
-              <select value={oraMarrjes} onChange={(e) => setOraMarrjes(e.target.value)} className="text-xs font-semibold border border-slate-200 dark:border-slate-700 rounded-lg px-1.5 py-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 outline-none">
-                {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
-              </select>
-              <ArrowRight size={10} className="opacity-50 shrink-0" />
-              <select value={oraKthimit} onChange={(e) => setOraKthimit(e.target.value)} className="text-xs font-semibold border border-slate-200 dark:border-slate-700 rounded-lg px-1.5 py-1 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 outline-none">
-                {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
-              </select>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 bg-white dark:bg-slate-900">
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1">Check-in</p>
+                <div className="flex items-center gap-1">
+                  <Clock size={11} className="text-sky-500 dark:text-emerald-400 shrink-0" />
+                  <select value={oraMarrjes} onChange={(e) => setOraMarrjes(e.target.value)} className="text-xs font-bold text-slate-900 dark:text-slate-100 bg-transparent outline-none w-full">
+                    {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 bg-white dark:bg-slate-900">
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1">Check-out</p>
+                <div className="flex items-center gap-1">
+                  <Clock size={11} className="text-sky-500 dark:text-emerald-400 shrink-0" />
+                  <select value={oraKthimit} onChange={(e) => setOraKthimit(e.target.value)} className="text-xs font-bold text-slate-900 dark:text-slate-100 bg-transparent outline-none w-full">
+                    {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                </div>
+              </div>
             </div>
             <div className="flex items-center justify-between mt-2">
               {matchedOffer ? (
