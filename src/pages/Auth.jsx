@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2, Clock, Bell } from "lucide-react";
+import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2, Clock, Bell, Star } from "lucide-react";
 import { apiFetch, apiFetchBlob } from "../api";
 import { subscribeToPush, unsubscribeFromPush, isPushSubscribed, pushSupported } from "../push";
 import { Field, PrimaryButton, GhostButton, inputClass } from "../components";
@@ -68,7 +68,7 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
   const [loading, setLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [hasWhatsapp, setHasWhatsapp] = useState(false);
-  const [form, setForm] = useState({ emri: "", mbiemri: "", email: "", password: "", telefoni: "", telefoniPrefix: "+355", kombesia: "Shqiperi" });
+  const [form, setForm] = useState({ emri: "", mbiemri: "", email: "", password: "", telefoni: "", telefoniPrefix: "+355", kombesia: "Shqiperi", kodPromocional: "" });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const [forgotStep, setForgotStep] = useState("request");
@@ -191,6 +191,9 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
             <input type="checkbox" checked={hasWhatsapp} onChange={(e) => setHasWhatsapp(e.target.checked)} />
             {t("auth.hasWhatsappCheckbox")}
           </label>
+        )}
+        {mode === "register" && (
+          <Field label={t("auth.promoCode")}><input className={inputClass} value={form.kodPromocional} onChange={set("kodPromocional")} placeholder="p.sh. TETOR" /></Field>
         )}
         <Field label={t("auth.password")}><input required type="password" className={inputClass} value={form.password} onChange={set("password")} placeholder="••••••••" /></Field>
 
@@ -492,6 +495,18 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
           {memberSince(user?.dataRegjistrimit, lang) && <span>{t("car.memberSince", { date: memberSince(user.dataRegjistrimit, lang) })}</span>}
         </div>
       </div>
+
+      {user?.kodPromocional && (
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 px-5 py-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-400 dark:bg-amber-500 flex items-center justify-center shrink-0">
+            <Star size={18} className="text-white fill-white" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-bold text-amber-900 dark:text-amber-200">{t("auth.promoVipLabel")} · {user.kodPromocional}</p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">{t("auth.promoVipDesc")}</p>
+          </div>
+        </div>
+      )}
 
       {user?.role !== "business" && !isAdmin && (
         <div className={`border rounded-2xl bg-white dark:bg-slate-800 overflow-hidden text-left ${user?.patentaStatus === "verified" ? "border-slate-200 dark:border-slate-700" : "border-amber-200 dark:border-amber-800"}`}>
