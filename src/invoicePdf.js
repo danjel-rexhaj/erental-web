@@ -96,7 +96,7 @@ export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit
   let y = 64;
   if (logoDataUrl) {
     const logoH = 44;
-    const logoW = logoH * (974 / 375);
+    const logoW = logoH * (2034 / 773);
     doc.addImage(logoDataUrl, "PNG", mx, y - 32, logoW, logoH);
   } else {
     doc.setFont("helvetica", "bold");

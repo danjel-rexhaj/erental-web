@@ -46,7 +46,7 @@ export async function generateStatementPdf({ payments, admin = false, periodLabe
     let y = 64;
     if (logoDataUrl) {
       const logoH = 34;
-      const logoW = logoH * (974 / 375);
+      const logoW = logoH * (2034 / 773);
       doc.addImage(logoDataUrl, "PNG", mx, y - 26, logoW, logoH);
     } else {
       doc.setFont("helvetica", "bold");
