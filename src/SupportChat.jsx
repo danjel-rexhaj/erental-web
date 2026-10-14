@@ -96,7 +96,7 @@ export default function SupportChat() {
         ref={launcherRef}
         onClick={() => setOpen(true)}
         aria-label={t("chat.open")}
-        className={`fixed right-2 sm:right-4 bottom-[max(0.5rem,env(safe-area-inset-bottom))] sm:bottom-4 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-sky-600 dark:bg-emerald-700 text-white shadow-lg shadow-slate-900/20 flex items-center justify-center hover:bg-sky-700 dark:hover:bg-emerald-800 active:scale-95 transition ${covering ? "opacity-0 pointer-events-none" : ""}`}
+        className={`fixed right-3 sm:right-4 bottom-20 sm:bottom-4 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-sky-600 dark:bg-emerald-700 text-white shadow-lg shadow-slate-900/20 flex items-center justify-center hover:bg-sky-700 dark:hover:bg-emerald-800 active:scale-95 transition ${covering ? "opacity-0 pointer-events-none" : ""}`}
       >
         <MessageCircle size={20} />
       </button>
@@ -105,7 +105,7 @@ export default function SupportChat() {
 
   // Phones: a small card docked in the bottom corner, never the whole screen. Desktop: floating.
   return (
-    <div className="fixed right-2 sm:right-4 bottom-[env(safe-area-inset-bottom)] sm:bottom-4 z-40 w-[min(19rem,calc(100vw-1rem))] sm:w-[360px] h-[24rem] sm:h-[480px] max-h-[58vh] sm:max-h-[75vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl shadow-slate-900/25">
+    <div className="fixed right-3 sm:right-4 bottom-20 sm:bottom-4 z-40 w-[min(19rem,calc(100vw-1rem))] sm:w-[360px] h-[24rem] sm:h-[480px] max-h-[58vh] sm:max-h-[75vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl shadow-slate-900/25">
       <div className="flex items-center gap-2.5 px-3.5 py-3 bg-sky-600 dark:bg-emerald-700 text-white shrink-0">
         <span className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0"><MessageCircle size={18} /></span>
         <span className="min-w-0 flex-1">
