@@ -860,7 +860,7 @@ function buildCarForm(car) {
       viti: "2020", km: "0", karburanti: "diesel", transmisioni: "manual",
       ngjyra: "", targa: "", kategoria: "economy", numriVendeve: "5",
       klimatizimi: true, cmimiDites: "20", pershkrimi: "", kubatura: "", cilindra: "", amenities: [],
-      minimumDitesh: "", priceOffers: [],
+      minimumDitesh: "", feeVonesaPerOre: "", feeVonesaPerDite: "", priceOffers: [],
     };
   }
   const markaKnown = Object.prototype.hasOwnProperty.call(CAR_BRANDS, car.marka);
@@ -885,6 +885,8 @@ function buildCarForm(car) {
     cilindra: car.cilindra != null ? String(car.cilindra) : "",
     amenities: car.amenities || [],
     minimumDitesh: car.minimumDitesh != null ? String(car.minimumDitesh) : "",
+    feeVonesaPerOre: car.feeVonesaPerOre != null ? String(car.feeVonesaPerOre) : "",
+    feeVonesaPerDite: car.feeVonesaPerDite != null ? String(car.feeVonesaPerDite) : "",
     priceOffers: (car.priceOffers || []).map((o) => ({ dite: String(o.dite), cmimiTotal: String(o.cmimiTotal) })),
   };
 }
@@ -957,6 +959,8 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         cilindra: form.cilindra ? Number(form.cilindra) : null,
         amenities: form.amenities,
         minimumDitesh: form.minimumDitesh ? Number(form.minimumDitesh) : null,
+        feeVonesaPerOre: form.feeVonesaPerOre ? Number(form.feeVonesaPerOre) : null,
+        feeVonesaPerDite: form.feeVonesaPerDite ? Number(form.feeVonesaPerDite) : null,
         priceOffers: form.priceOffers
           .filter((o) => o.dite && o.cmimiTotal)
           .map((o) => ({ dite: Number(o.dite), cmimiTotal: Number(o.cmimiTotal) })),
@@ -1023,6 +1027,15 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
           <input type="number" min="1" className={inputClass} value={form.minimumDitesh} onChange={set("minimumDitesh")} placeholder="1" />
           <span className="block text-[11px] text-slate-400 mt-1">{t("business.minimumDaysCarHint")}</span>
         </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t("business.carField.lateFeePerHour")}>
+            <input type="number" min="0" step="0.5" className={inputClass} value={form.feeVonesaPerOre} onChange={set("feeVonesaPerOre")} placeholder="—" />
+          </Field>
+          <Field label={t("business.carField.lateFeePerDay")}>
+            <input type="number" min="0" step="0.5" className={inputClass} value={form.feeVonesaPerDite} onChange={set("feeVonesaPerDite")} placeholder="—" />
+          </Field>
+        </div>
+        <span className="block text-[11px] text-slate-400 -mt-2 mb-1">{t("business.carField.lateFeeHint")}</span>
         <Field label={t("car.spec.fuel")}>
           <select className={inputClass} value={form.karburanti} onChange={set("karburanti")}>
             <option value="diesel">Diesel</option><option value="benzine">Benzine</option><option value="hybrid">Hybrid</option><option value="elektrik">Elektrik</option>

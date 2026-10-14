@@ -806,6 +806,16 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
           >
             <Info size={11} /> {t("booking.refundPolicy")}
           </button>
+          {(car.feeVonesaPerOre || car.feeVonesaPerDite) && (
+            <div className="flex items-start gap-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2.5 mt-2">
+              <AlertTriangle size={12} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                {car.feeVonesaPerOre
+                  ? t("booking.lateFeePerHour", { amount: car.feeVonesaPerOre })
+                  : t("booking.lateFeePerDay", { amount: car.feeVonesaPerDite })}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
