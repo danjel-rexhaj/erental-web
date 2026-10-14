@@ -70,6 +70,25 @@ export function CompanyExtrasFields({ form, setForm, zones, setZones, deliveryLa
         ))}
       </div>
 
+      <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-2">{t("business.lateReturnPolicyTitle")}</p>
+      <div className="space-y-1.5">
+        <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+          <input type="radio" name="vonjesaPolicy" value="" checked={form.vonjesaPolicy === ""} onChange={set("vonjesaPolicy")} />
+          {t("business.lateReturnPolicy.none")}
+        </label>
+        <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+          <input type="radio" name="vonjesaPolicy" value="day" checked={form.vonjesaPolicy === "day"} onChange={set("vonjesaPolicy")} />
+          {t("business.lateReturnPolicy.day")}
+        </label>
+        <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+          <input type="radio" name="vonjesaPolicy" value="fixed" checked={form.vonjesaPolicy === "fixed"} onChange={set("vonjesaPolicy")} />
+          {t("business.lateReturnPolicy.fixed")}
+        </label>
+        {form.vonjesaPolicy === "fixed" && (
+          <input type="number" min="0" step="0.01" className={inputClass} value={form.vonjesaAmount} onChange={set("vonjesaAmount")} placeholder="0" />
+        )}
+      </div>
+
       <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-2">{t("business.deliveryZonesTitle")}</p>
       {zones.map((z, i) => (
         <div key={i} className="flex items-center gap-1.5">

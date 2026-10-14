@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock, Infinity as InfinityIcon, UserPlus, Baby, Globe, CreditCard } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
-import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, ONLINE_SERVICE_FEE } from "../carData";
+import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP } from "../carData";
 import { useLang } from "../useLang";
 import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
 
@@ -147,6 +147,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const days = activeFrom && activeTo ? Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000)) : 0;
   const matchedOffer = car.priceOffers?.find((o) => o.dite === days);
   const total = (matchedOffer ? matchedOffer.cmimiTotal : days * car.cmimiDites).toFixed(2);
+  const customerTotal = (Number(total) + days * PLATFORM_MARKUP).toFixed(2);
   const minDays = car.minimumDitesh ?? car.company?.minimumDitesh ?? 1;
   const belowMinDays = days > 0 && days < minDays;
   // Results shows near-miss cars (free in X days) using the searched dates, which for this car
@@ -472,10 +473,10 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
               {matchedOffer ? (
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-cyan-700 dark:text-teal-300 bg-cyan-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full w-fit">{t("car.specialPriceFor", { days })}</span>
               ) : (
-                <p className="text-xs text-slate-500 dark:text-slate-400">{t("car.pricePerDay", { days, price: car.cmimiDites })}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("car.pricePerDay", { days, price: car.cmimiDites + PLATFORM_MARKUP })}</p>
               )}
             </div>
-            <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{total}€</p>
+            <p className="font-bold text-slate-900 dark:text-slate-100 text-2xl mt-1">{customerTotal}€</p>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">{t("home.standardTimes")}</p>
             {car.company?.ofronDergimMakine && (
               <p className="flex items-center gap-1 text-xs text-sky-600 dark:text-teal-400 font-medium mt-1">
@@ -528,7 +529,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   <div className="flex gap-3 w-max sm:w-full sm:grid sm:grid-cols-3">
                     {car.priceOffers.map((o) => {
                       const active = o.dite === days;
-                      const perDite = (o.cmimiTotal / o.dite).toFixed(0);
+                      const customerOfferTotal = o.cmimiTotal + o.dite * PLATFORM_MARKUP;
+                      const perDite = (customerOfferTotal / o.dite).toFixed(0);
                       return (
                         <button
                           key={o.dite}
@@ -545,7 +547,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                           }`}
                         >
                           <p className={`text-xs font-semibold ${active ? "text-sky-600 dark:text-teal-300" : "text-slate-500 dark:text-slate-400"}`}>{t("car.daysCount", { count: o.dite })}</p>
-                          <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{o.cmimiTotal}€</p>
+                          <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{customerOfferTotal}€</p>
                           <p className="text-[11px] text-slate-400">{t("car.priceOffers.approxPerDay", { price: perDite })}</p>
                         </button>
                       );
@@ -809,10 +811,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
             </label>
           )}
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: car.cmimiDites + ONLINE_SERVICE_FEE })}
+            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: car.cmimiDites + PLATFORM_MARKUP })}
           </label>
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: (doSigurim && insurancePrice != null ? Number(total) + Number(insurancePrice) : Number(total)) + ONLINE_SERVICE_FEE })}
+            <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: Number(customerTotal) + (doSigurim && insurancePrice != null ? Number(insurancePrice) : 0) })}
           </label>
           {doSigurim && method === "paypal_deposit" && insurancePrice != null && (
             <p className="text-[11px] text-slate-400">{t("booking.insuranceCashNote", { amount: insurancePrice })}</p>
@@ -824,13 +826,13 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
           >
             <Info size={11} /> {t("booking.refundPolicy")}
           </button>
-          {(car.feeVonesaPerOre || car.feeVonesaPerDite) && (
+          {car.company?.vonjesaPolicy && (
             <div className="flex items-start gap-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2.5 mt-2">
               <AlertTriangle size={12} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
               <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                {car.feeVonesaPerOre
-                  ? t("booking.lateFeePerHour", { amount: car.feeVonesaPerOre })
-                  : t("booking.lateFeePerDay", { amount: car.feeVonesaPerDite })}
+                {car.company.vonjesaPolicy === "day"
+                  ? t("booking.lateFeePerDay", { amount: car.cmimiDites })
+                  : t("booking.lateFeeFixed", { amount: car.company.vonjesaAmount })}
               </p>
             </div>
           )}

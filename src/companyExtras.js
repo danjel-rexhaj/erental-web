@@ -10,6 +10,8 @@ export const EMPTY_COMPANY_EXTRAS = {
   cmimiSediljesBebe: "",
   cmimiDergesesJashtOrarit: "",
   vendetKufitare: [],
+  vonjesaPolicy: "",
+  vonjesaAmount: "",
 };
 
 // Empty means "not offered" (null); for the three extra-service prices 0 is a real value (free).
@@ -23,6 +25,8 @@ export function companyExtrasPayload(form) {
     cmimiSediljesBebe: form.cmimiSediljesBebe !== "" ? Number(form.cmimiSediljesBebe) : null,
     cmimiDergesesJashtOrarit: form.cmimiDergesesJashtOrarit !== "" ? Number(form.cmimiDergesesJashtOrarit) : null,
     vendetKufitare: form.vendetKufitare,
+    vonjesaPolicy: form.vonjesaPolicy || null,
+    vonjesaAmount: form.vonjesaPolicy === "fixed" && form.vonjesaAmount !== "" ? Number(form.vonjesaAmount) : null,
   };
 }
 

@@ -812,6 +812,8 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
     cmimiSediljesBebe: company.cmimiSediljesBebe != null ? String(company.cmimiSediljesBebe) : "",
     cmimiDergesesJashtOrarit: company.cmimiDergesesJashtOrarit != null ? String(company.cmimiDergesesJashtOrarit) : "",
     vendetKufitare: company.vendetKufitare || [],
+    vonjesaPolicy: company.vonjesaPolicy || "",
+    vonjesaAmount: company.vonjesaAmount != null ? String(company.vonjesaAmount) : "",
   });
   const [zones, setZones] = useState(
     company.deliveryZones?.length ? company.deliveryZones.map((z) => ({ zona: z.zona, cmimi: String(z.cmimi) })) : []
@@ -860,7 +862,7 @@ function buildCarForm(car) {
       viti: "2020", km: "0", karburanti: "diesel", transmisioni: "manual",
       ngjyra: "", targa: "", kategoria: "economy", numriVendeve: "5",
       klimatizimi: true, cmimiDites: "20", pershkrimi: "", kubatura: "", cilindra: "", amenities: [],
-      minimumDitesh: "", feeVonesaPerOre: "", feeVonesaPerDite: "", oraDefault: "", priceOffers: [],
+      minimumDitesh: "", oraDefault: "", priceOffers: [],
     };
   }
   const markaKnown = Object.prototype.hasOwnProperty.call(CAR_BRANDS, car.marka);
@@ -885,8 +887,6 @@ function buildCarForm(car) {
     cilindra: car.cilindra != null ? String(car.cilindra) : "",
     amenities: car.amenities || [],
     minimumDitesh: car.minimumDitesh != null ? String(car.minimumDitesh) : "",
-    feeVonesaPerOre: car.feeVonesaPerOre != null ? String(car.feeVonesaPerOre) : "",
-    feeVonesaPerDite: car.feeVonesaPerDite != null ? String(car.feeVonesaPerDite) : "",
     oraDefault: car.oraDefault ?? "",
     priceOffers: (car.priceOffers || []).map((o) => ({ dite: String(o.dite), cmimiTotal: String(o.cmimiTotal) })),
   };
@@ -960,8 +960,6 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         cilindra: form.cilindra ? Number(form.cilindra) : null,
         amenities: form.amenities,
         minimumDitesh: form.minimumDitesh ? Number(form.minimumDitesh) : null,
-        feeVonesaPerOre: form.feeVonesaPerOre ? Number(form.feeVonesaPerOre) : null,
-        feeVonesaPerDite: form.feeVonesaPerDite ? Number(form.feeVonesaPerDite) : null,
         oraDefault: form.oraDefault || null,
         priceOffers: form.priceOffers
           .filter((o) => o.dite && o.cmimiTotal)
@@ -1029,15 +1027,6 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
           <input type="number" min="1" className={inputClass} value={form.minimumDitesh} onChange={set("minimumDitesh")} placeholder="1" />
           <span className="block text-[11px] text-slate-400 mt-1">{t("business.minimumDaysCarHint")}</span>
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t("business.carField.lateFeePerHour")}>
-            <input type="number" min="0" step="0.5" className={inputClass} value={form.feeVonesaPerOre} onChange={set("feeVonesaPerOre")} placeholder="—" />
-          </Field>
-          <Field label={t("business.carField.lateFeePerDay")}>
-            <input type="number" min="0" step="0.5" className={inputClass} value={form.feeVonesaPerDite} onChange={set("feeVonesaPerDite")} placeholder="—" />
-          </Field>
-        </div>
-        <span className="block text-[11px] text-slate-400 -mt-2 mb-1">{t("business.carField.lateFeeHint")}</span>
         <Field label={t("business.carField.defaultTime")}>
           <select className={inputClass} value={form.oraDefault} onChange={set("oraDefault")}>
             <option value="">{t("business.carField.defaultTimeFree")}</option>

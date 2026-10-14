@@ -4,7 +4,7 @@ import { decodeJwt } from "./api";
 import { generateInvoicePdf } from "./invoicePdf";
 import { useLang } from "./useLang";
 import { monthName, weekdayInitials } from "./dateFormat";
-import { AMENITY_CATEGORIES, ONLINE_SERVICE_FEE } from "./carData";
+import { AMENITY_CATEGORIES, PLATFORM_MARKUP } from "./carData";
 
 export function AvailabilityCalendar({ ranges = [] }) {
   const { t, lang } = useLang();
@@ -251,12 +251,12 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
       carMakeModel: `${car.marka} ${car.modeli}`,
       dataFillimit,
       dataPerfundimit,
-      cmimiPerDite: car.cmimiDites,
+      cmimiPerDite: car.cmimiDites + PLATFORM_MARKUP,
       dite,
-      totalPrice: dite * car.cmimiDites,
+      totalPrice: dite * (car.cmimiDites + PLATFORM_MARKUP),
       amountPaid: successInfo.amountPaid,
       eshtePagesePlote: successInfo.method === "paypal_full",
-      serviceFee: ONLINE_SERVICE_FEE,
+      serviceFee: 0,
       insuranceFee: successInfo.insuranceFee || 0,
       clientLabel: decodeJwt(token)?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
       company: car.company,
@@ -342,7 +342,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
       <div className="p-3">
         <div className="flex items-start justify-between">
           <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{car.marka} {car.modeli}</p>
-          <span className="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites}€{t("common.perDaySuffix")}</span>
+          <span className="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites + PLATFORM_MARKUP}€{t("common.perDaySuffix")}</span>
         </div>
         {showCompany && (
           <span
