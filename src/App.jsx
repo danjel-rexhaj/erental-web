@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { LogOut, Menu, X, Bell, Sun, Moon, Car } from "lucide-react";
+import { LogOut, Menu, X, Bell, Sun, Moon, Car, Tag, Copy, Check } from "lucide-react";
 import { apiFetch, decodeJwt, genericErrorText } from "./api";
 import { useNotifications } from "./notifications";
 import { subscribeToPush, unsubscribeFromPush, pushSupported } from "./push";
@@ -197,6 +197,9 @@ export default function App() {
   const [highlightBookingId, setHighlightBookingId] = useState(null);
   const [bookingsRefreshKey, setBookingsRefreshKey] = useState(0);
   const [theme, setTheme] = useState(() => localStorage.getItem("erental_theme") || "light");
+  const [dismissedPromo, setDismissedPromo] = useState(() => {
+    try { return !!localStorage.getItem("erental_promo_tetor"); } catch { return false; }
+  });
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -767,6 +770,9 @@ export default function App() {
         toggleTheme={toggleTheme}
       />
       <Notice notice={notice} onClose={() => setNotice(null)} />
+      {!token && !dismissedPromo && new Date() < new Date("2026-11-01") && (
+        <PromoBanner onDismiss={() => { setDismissedPromo(true); try { localStorage.setItem("erental_promo_tetor", "1"); } catch {} }} onRegister={() => go("/profili")} />
+      )}
       <SupportChat />
       <div className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
         {view === "browse" && renderBrowse()}
@@ -823,6 +829,45 @@ export default function App() {
           onClose={() => { setPaymentSuccessInfo(null); go("/rezervimet"); }}
         />
       )}
+    </div>
+  );
+}
+
+function PromoBanner({ onDismiss, onRegister }) {
+  const [copied, setCopied] = useState(false);
+  function copyCode() {
+    try { navigator.clipboard.writeText("TETOR"); } catch {}
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <div className="bg-sky-600 dark:bg-sky-700 text-white w-full">
+      <div className="max-w-6xl mx-auto px-4 py-2.5 flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Tag size={14} className="shrink-0 text-sky-200" />
+          <p className="text-xs sm:text-sm text-sky-50 leading-snug">
+            Regjistrohu tani me kodin{" "}
+            <button
+              onClick={copyCode}
+              className="inline-flex items-center gap-1 bg-white/20 hover:bg-white/30 transition rounded px-2 py-0.5 font-bold tracking-widest text-white text-xs sm:text-sm"
+            >
+              TETOR {copied ? <Check size={11} /> : <Copy size={11} />}
+            </button>
+            {" "}dhe merr statusin <strong className="text-white">VIP</strong> falas — vlefshëm deri më 31 Tetor 2026.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={onRegister}
+            className="text-xs font-semibold bg-white text-sky-700 hover:bg-sky-50 transition rounded-full px-3 py-1"
+          >
+            Regjistrohu
+          </button>
+          <button onClick={onDismiss} className="text-sky-200 hover:text-white transition p-1">
+            <X size={16} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

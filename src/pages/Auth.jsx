@@ -195,7 +195,7 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
           </label>
         )}
         {mode === "register" && (
-          <Field label={t("auth.promoCode")}><input className={inputClass} value={form.kodPromocional} onChange={set("kodPromocional")} placeholder="Opsionale" /></Field>
+          <Field label={t("auth.promoCode")}><input className={inputClass} value={form.kodPromocional} onChange={(e) => setForm((f) => ({ ...f, kodPromocional: e.target.value.toUpperCase() }))} placeholder="p.sh. TETOR" style={{ textTransform: "uppercase", letterSpacing: "0.08em" }} /></Field>
         )}
         <Field label={t("auth.password")}><input required type="password" className={inputClass} value={form.password} onChange={set("password")} placeholder="••••••••" /></Field>
 
