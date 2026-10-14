@@ -506,6 +506,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 oraMarrjes={oraMarrjes}
                 oraKthimit={oraKthimit}
                 total={total}
+                customerTotal={customerTotal}
                 token={token}
                 needAuth={needAuth}
                 goToProfile={goToProfile}
@@ -637,7 +638,7 @@ function memberSince(raw, lang) {
   return `${monthName(d.getMonth(), lang)} ${d.getFullYear()}`;
 }
 
-function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, token, needAuth, goToProfile, hasLicense, isDemo, showError, showOk, onBooked }) {
+function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, customerTotal, token, needAuth, goToProfile, hasLicense, isDemo, showError, showOk, onBooked }) {
   const { t } = useLang();
   const [method, setMethod] = useState("paypal_deposit");
   const [doSigurim, setDoSigurim] = useState(false);
