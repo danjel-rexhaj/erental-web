@@ -99,7 +99,10 @@ export async function apiFetch(path, token, options = {}) {
       throw new Error(deliberate ? data : apiText().serverError);
     }
     const msg = typeof data === "string" ? data : data?.message || data?.title || apiText().genericError(res.status);
-    throw new Error(msg || apiText().genericError(res.status));
+    const err = new Error(msg || apiText().genericError(res.status));
+    err.status = res.status;
+    err.data = data;
+    throw err;
   }
   return data;
 }

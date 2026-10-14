@@ -96,7 +96,12 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
         const data = await apiFetch("/Auth/login", null, { method: "POST", body: JSON.stringify({ email: form.email, password: form.password }) });
         onAuth(data);
       }
-    } catch (e) { showError(e); } finally { setLoading(false); }
+    } catch (e) {
+      if (e.data?.pendingVerification) {
+        showOk && showOk(e.message);
+        goTo("verifyEmail", { email: e.data.email, emri: e.data.emri });
+      } else showError(e);
+    } finally { setLoading(false); }
   }
 
   async function requestReset(e) {
