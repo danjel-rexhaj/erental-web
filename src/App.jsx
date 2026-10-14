@@ -360,6 +360,11 @@ export default function App() {
   }, []);
 
   const { notifications, unreadCount, markAllRead, dismissNotification, clearAllNotifications, connection: hubConnection } = useNotifications(token, handleAvailabilityChanged, handleLiveNotification);
+  // Feeds the admin "online now" panel with which page each visitor is on.
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+  useEffect(() => {
+    if (hubConnection) hubConnection.invoke("SetPage", currentPath).catch(() => {});
+  }, [hubConnection, currentPath]);
 
   // Browser-tab badge (title prefix + red dot on the favicon) mirroring the in-app bell count.
   useEffect(() => { updateUnreadBadge(unreadCount); }, [unreadCount]);

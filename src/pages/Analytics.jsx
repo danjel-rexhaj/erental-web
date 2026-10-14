@@ -1388,6 +1388,71 @@ function AdminBookingsPanel({ token, showError, showOk }) {
   );
 }
 
+function deviceLabel(ua) {
+  if (!ua) return "-";
+  const os = /iPhone|iPad/.test(ua) ? "iOS" : /Android/.test(ua) ? "Android" : /Windows/.test(ua) ? "Windows" : /Mac OS/.test(ua) ? "Mac" : /Linux/.test(ua) ? "Linux" : "";
+  const browser = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "";
+  return [browser, os].filter(Boolean).join(" · ") || "-";
+}
+
+function OnlineNow({ token }) {
+  const { t } = useLang();
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    const load = () => apiFetch("/Analytics/admin/online", token).then((d) => { if (alive) setData(d); }).catch(() => {});
+    load();
+    const timer = setInterval(load, 10000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [token]);
+
+  if (!data) return null;
+
+  return (
+    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+        </span>
+        <h3 className="font-semibold text-slate-900 dark:text-slate-100">{t("analytics.online.title")}</h3>
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{t("analytics.online.summary", { total: data.total, loggedIn: data.loggedIn, guests: data.guests })}</p>
+      {data.visitors.length === 0 ? (
+        <p className="text-sm text-slate-400 text-center py-4">{t("analytics.online.empty")}</p>
+      ) : (
+        <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
+          {data.visitors.map((v, i) => {
+            const mins = Math.max(0, Math.round((Date.now() - new Date(v.connectedAt + (v.connectedAt.endsWith("Z") ? "" : "Z"))) / 60000));
+            return (
+              <div key={(v.userId ?? v.ip) + "-" + i} className="py-2.5 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  {v.userId ? (
+                    <>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">{v.name || v.email}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{v.email}</p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-slate-500 dark:text-slate-400 italic">{t("analytics.online.guest")}</p>
+                  )}
+                  <p className="text-xs text-slate-400 mt-0.5 truncate">
+                    <span className="font-mono">{v.ip || "-"}</span> · {deviceLabel(v.userAgent)}{v.tabs > 1 ? ` · ${t("analytics.online.tabs", { count: v.tabs })}` : ""}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-mono text-sky-700 dark:text-sky-300 max-w-[140px] sm:max-w-[260px] truncate">{v.page || "/"}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">{t("analytics.online.since", { min: mins })}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminLogins({ token, showError, refreshKey }) {
   const { t, lang } = useLang();
   const [data, setData] = useState(null);
@@ -1412,6 +1477,7 @@ export function AdminLogins({ token, showError, refreshKey }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <OnlineNow token={token} />
       <div className="border border-amber-200 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-900/20 rounded-2xl p-4 flex items-center gap-3">
         <ShieldAlert size={20} className="text-amber-700 dark:text-amber-400 shrink-0" />
         <p className="text-sm text-amber-800 dark:text-amber-300">{t("analytics.failedLoginsNotice", { count: data.failedLast24h })}</p>
