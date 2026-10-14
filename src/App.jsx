@@ -17,7 +17,7 @@ import Business from "./pages/Business";
 import { AuthGate, BusinessAuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
 import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
-import { SLUG_TO_CITY, CITY_SLUGS } from "./carData";
+import { SLUG_TO_CITY, CITY_SLUGS, mergeApprovedCarSuggestions } from "./carData";
 
 // Real SVG flags via flag-icons (className="fi fi-<country>") -- flag emoji render as plain
 // two-letter text on Windows (no color flag glyphs in the system font), so an emoji here would
@@ -171,6 +171,12 @@ function SearchLoading() {
 
 export default function App() {
   const { t } = useLang();
+  // Approved brand/model suggestions extend the built-in list; re-render once they arrive.
+  const [, setCarListVersion] = useState(0);
+  useEffect(() => {
+    apiFetch("/CarSuggestions/approved").then((list) => { mergeApprovedCarSuggestions(list); setCarListVersion((v) => v + 1); }).catch(() => {});
+  }, []);
+
   const [token, setToken] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("erental_auth"));

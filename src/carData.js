@@ -44,6 +44,30 @@ export const CAR_BRANDS = {
   [OTHER_BRAND]: [],
 };
 
+// Admin-approved "Tjeter" suggestions (GET /CarSuggestions/approved) are merged into CAR_BRANDS in
+// place, so every reader of the list picks them up without a deploy. Matching is case-insensitive
+// so "ml 350" doesn't sit next to "ML 350"; new brands go before "Tjeter", which stays last.
+export function mergeApprovedCarSuggestions(list) {
+  const findKey = (name) => Object.keys(CAR_BRANDS).find((k) => k.toLowerCase() === name.toLowerCase());
+  const addBrand = (name) => {
+    const other = CAR_BRANDS[OTHER_BRAND];
+    delete CAR_BRANDS[OTHER_BRAND];
+    CAR_BRANDS[name] = [];
+    CAR_BRANDS[OTHER_BRAND] = other;
+    return name;
+  };
+  for (const s of list || []) {
+    const value = (s.suggestedValue || "").trim();
+    if (!value) continue;
+    if (s.type === "brand") {
+      if (!findKey(value)) addBrand(value);
+    } else if (s.type === "model" && s.marka && s.marka !== OTHER_BRAND) {
+      const brand = findKey(s.marka) || addBrand(s.marka);
+      if (!CAR_BRANDS[brand].some((m) => m.toLowerCase() === value.toLowerCase())) CAR_BRANDS[brand].push(value);
+    }
+  }
+}
+
 // Display labels for these keys/categories live in src/i18n.jsx under amenity.*/amenityCategory.*,
 // not here. Keys that already existed (sunroof/sedilje_lekuri/sensore_parkimi/kamera_pas/bluetooth/
 // usb/traksion_4x4/sedilje_bebe/bagazh_i_madh) are kept as-is so cars that already have amenities
