@@ -186,8 +186,8 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
       ]} />
 
       {activeFilterCount > 0 && (
-        <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="text-xs text-slate-500 dark:text-slate-400 font-medium underline px-0 hover:text-slate-800 dark:hover:text-slate-200 mt-3">
-          {t("common.clearFilters")}
+        <button onClick={() => setFilters((f) => ({ ...f, marka: "", modeli: "", biznesi: "", karburanti: "", kategoria: "", zona: "", vitiMin: "", vitiMax: "", cmimiMax: "", amenities: [], sort: "" }))} className="w-full mt-4 inline-flex items-center justify-center gap-1.5 text-xs font-semibold py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+          <X size={13} /> {t("common.clearFilters")}
         </button>
       )}
     </>

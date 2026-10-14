@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock, Infinity as InfinityIcon, UserPlus, Baby, Globe, CreditCard } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
-import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP, amenityLabel } from "../carData";
+import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP, amenityLabel, computeRentalQuote } from "../carData";
 import { useLang } from "../useLang";
 import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
 
@@ -145,8 +145,9 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const activeFrom = selTo ? selFrom : dataFillimit;
   const activeTo = selTo ? selTo : dataPerfundimit;
   const days = activeFrom && activeTo ? Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000)) : 0;
-  const matchedOffer = car.priceOffers?.find((o) => o.dite === days);
-  const total = (matchedOffer ? matchedOffer.cmimiTotal : days * car.cmimiDites).toFixed(2);
+  const quote = activeFrom && activeTo ? computeRentalQuote(car, activeFrom, activeTo) : { total: 0, firstDay: car.cmimiDites, seasonal: false, offer: null };
+  const matchedOffer = quote.offer;
+  const total = Number(quote.total).toFixed(2);
   const customerTotal = (Number(total) + days * PLATFORM_MARKUP).toFixed(2);
   const minDays = car.minimumDitesh ?? car.company?.minimumDitesh ?? 1;
   const belowMinDays = days > 0 && days < minDays;
@@ -472,6 +473,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             <div className="flex items-center justify-between mt-2">
               {matchedOffer ? (
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-cyan-700 dark:text-teal-300 bg-cyan-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full w-fit">{t("car.specialPriceFor", { days })}</span>
+              ) : quote.seasonal ? (
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-full w-fit">{t("car.seasonalPriceFor", { days })}</span>
               ) : (
                 <p className="text-xs text-slate-500 dark:text-slate-400">{t("car.pricePerDay", { days, price: car.cmimiDites + PLATFORM_MARKUP })}</p>
               )}
@@ -507,6 +510,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 oraKthimit={oraKthimit}
                 total={total}
                 customerTotal={customerTotal}
+                depositAmount={Number(quote.firstDay) + PLATFORM_MARKUP}
                 token={token}
                 needAuth={needAuth}
                 goToProfile={goToProfile}
@@ -638,9 +642,11 @@ function memberSince(raw, lang) {
   return `${monthName(d.getMonth(), lang)} ${d.getFullYear()}`;
 }
 
-function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, customerTotal, token, needAuth, goToProfile, hasLicense, isDemo, showError, showOk, onBooked }) {
+function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, customerTotal, depositAmount, token, needAuth, goToProfile, hasLicense, isDemo, showError, showOk, onBooked }) {
   const { t } = useLang();
-  const [method, setMethod] = useState("paypal_deposit");
+  // Some businesses require the whole rental paid online for a given car (no deposit).
+  const [method, setMethod] = useState(car.vetemPagesePlote ? "paypal_full" : "paypal_deposit");
+  useEffect(() => { if (car.vetemPagesePlote) setMethod("paypal_full"); }, [car.vetemPagesePlote]);
   const [doSigurim, setDoSigurim] = useState(false);
   const insurancePrice = car.company?.cmimiSigurimit;
   const [loading, setLoading] = useState(false);
@@ -811,9 +817,13 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
               {t("booking.fullInsuranceOption", { amount: insurancePrice })}
             </label>
           )}
-          <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
-            <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: car.cmimiDites + PLATFORM_MARKUP })}
-          </label>
+          {car.vetemPagesePlote ? (
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("booking.fullPaymentOnly")}</p>
+          ) : (
+            <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
+              <input type="radio" name="paymentMethod" checked={method === "paypal_deposit"} onChange={() => { setMethod("paypal_deposit"); setSdkError(null); }} /> {t("booking.depositOption", { amount: depositAmount })}
+            </label>
+          )}
           <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-200">
             <input type="radio" name="paymentMethod" checked={method === "paypal_full"} onChange={() => { setMethod("paypal_full"); setSdkError(null); }} /> {t("booking.fullOption", { amount: Number(customerTotal) + (doSigurim && insurancePrice != null ? Number(insurancePrice) : 0) })}
           </label>

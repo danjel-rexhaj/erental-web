@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon, Star, ChevronDown, Truck } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon, Star, ChevronDown, Truck, CalendarRange } from "lucide-react";
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar, AmenityPicker, CroppedPhoto } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
+import { formatLocaleDate } from "../dateFormat";
 import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS, mergeApprovedCarSuggestions, mergeApprovedAmenities } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins, TransactionsPage, AdminUsersPage, AdminCompaniesPage, AdminCarsPage, AdminBookingsPage, BusinessBookingsPage } from "./Analytics";
@@ -605,6 +606,7 @@ function RegisterCompanyForm({ token, onDone, showError, showOk }) {
 function CompanyDashboard({ token, company, cars, reload, showError, showOk, managingCarId, setManagingCarId }) {
   const { t } = useLang();
   const [showAddCar, setShowAddCar] = useState(false);
+  const [showSeasons, setShowSeasons] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
   const [coords, setCoords] = useState(null);
   const [savingLocation, setSavingLocation] = useState(false);
@@ -745,10 +747,15 @@ function CompanyDashboard({ token, company, cars, reload, showError, showOk, man
         />
       ) : (
         <>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
             <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{t("business.myCars", { count: cars.length })}</h3>
-            <button onClick={() => setShowAddCar((s) => !s)} className="flex items-center gap-1 text-xs font-semibold text-sky-600 dark:text-emerald-400 underline"><Plus size={14} /> {t("business.addCar")}</button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowSeasons((s) => !s)} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-sky-600 dark:border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40 transition"><CalendarRange size={14} /> {t("business.seasonPrices")}</button>
+              <button onClick={() => setShowAddCar((s) => !s)} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-sky-600 dark:border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40 transition"><Plus size={14} /> {t("business.addCar")}</button>
+            </div>
           </div>
+
+          {showSeasons && <div className="max-w-xl mb-4"><SeasonPricing token={token} showError={showError} showOk={showOk} onChanged={reload} /></div>}
 
           {showAddCar && <div className="max-w-xl"><AddCarForm token={token} companyId={company.companyId} onDone={() => { setShowAddCar(false); reload(); }} showError={showError} showOk={showOk} /></div>}
 
@@ -862,7 +869,7 @@ function buildCarForm(car) {
       viti: "2020", km: "0", karburanti: "diesel", transmisioni: "manual",
       ngjyra: "", targa: "", kategoria: "economy", numriVendeve: "5",
       klimatizimi: true, cmimiDites: "20", pershkrimi: "", kubatura: "", cilindra: "", amenities: [],
-      minimumDitesh: "", oraDefault: "", priceOffers: [],
+      minimumDitesh: "", oraDefault: "", priceOffers: [], pricePeriods: [], vetemPagesePlote: false,
     };
   }
   const markaKnown = Object.prototype.hasOwnProperty.call(CAR_BRANDS, car.marka);
@@ -889,6 +896,8 @@ function buildCarForm(car) {
     minimumDitesh: car.minimumDitesh != null ? String(car.minimumDitesh) : "",
     oraDefault: car.oraDefault ?? "",
     priceOffers: (car.priceOffers || []).map((o) => ({ dite: String(o.dite), cmimiTotal: String(o.cmimiTotal) })),
+    pricePeriods: (car.pricePeriods || []).map((p) => ({ dataFillimit: p.dataFillimit, dataPerfundimit: p.dataPerfundimit, cmimiDites: String(p.cmimiDites) })),
+    vetemPagesePlote: !!car.vetemPagesePlote,
   };
 }
 
@@ -936,6 +945,16 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
     setForm((f) => ({ ...f, priceOffers: f.priceOffers.filter((_, idx) => idx !== i) }));
   }
 
+  function addPeriod() {
+    setForm((f) => ({ ...f, pricePeriods: [...f.pricePeriods, { dataFillimit: "", dataPerfundimit: "", cmimiDites: "" }] }));
+  }
+  function updatePeriod(i, key, value) {
+    setForm((f) => ({ ...f, pricePeriods: f.pricePeriods.map((p, idx) => (idx === i ? { ...p, [key]: value } : p)) }));
+  }
+  function removePeriod(i) {
+    setForm((f) => ({ ...f, pricePeriods: f.pricePeriods.filter((_, idx) => idx !== i) }));
+  }
+
   async function submit(e) {
     e.preventDefault();
     setLoading(true);
@@ -964,6 +983,10 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         priceOffers: form.priceOffers
           .filter((o) => o.dite && o.cmimiTotal)
           .map((o) => ({ dite: Number(o.dite), cmimiTotal: Number(o.cmimiTotal) })),
+        pricePeriods: form.pricePeriods
+          .filter((p) => p.dataFillimit && p.dataPerfundimit && p.cmimiDites && p.dataPerfundimit >= p.dataFillimit)
+          .map((p) => ({ dataFillimit: p.dataFillimit, dataPerfundimit: p.dataPerfundimit, cmimiDites: Number(p.cmimiDites) })),
+        vetemPagesePlote: form.vetemPagesePlote,
       };
       if (isEdit) {
         await apiFetch(`/Cars/${existingCar.carId}`, token, { method: "PUT", body: JSON.stringify(payload) });
@@ -1085,10 +1108,98 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
           <GhostButton type="button" onClick={addOffer} className="text-xs py-1.5 !w-fit px-3">{t("business.addOffer")}</GhostButton>
         </div>
       </Field>
+      <Field label={t("business.pricePeriodsLabel")}>
+        <div className="flex flex-col gap-2">
+          <p className="text-[11px] text-slate-400">{t("business.pricePeriodsHint")}</p>
+          {form.pricePeriods.map((p, i) => (
+            <div key={i} className="flex flex-wrap items-center gap-1.5 border border-slate-200 dark:border-slate-700 rounded-xl p-2">
+              <input type="date" className={`${inputClass.replace("w-full", "")} flex-1 min-w-[130px]`} value={p.dataFillimit} onChange={(e) => updatePeriod(i, "dataFillimit", e.target.value)} />
+              <span className="text-xs text-slate-400">–</span>
+              <input type="date" min={p.dataFillimit || undefined} className={`${inputClass.replace("w-full", "")} flex-1 min-w-[130px]`} value={p.dataPerfundimit} onChange={(e) => updatePeriod(i, "dataPerfundimit", e.target.value)} />
+              <input type="number" min="1" step="0.01" placeholder={t("business.pricePerDayPlaceholder")} className={`${inputClass.replace("w-full", "")} w-24 shrink-0`} value={p.cmimiDites} onChange={(e) => updatePeriod(i, "cmimiDites", e.target.value)} />
+              <span className="text-xs text-slate-400 shrink-0">€{t("common.perDaySuffix")}</span>
+              <button type="button" onClick={() => removePeriod(i)} className="text-slate-400 hover:text-red-600 shrink-0 ml-auto" title={t("business.removeOffer")}><X size={15} /></button>
+            </div>
+          ))}
+          <GhostButton type="button" onClick={addPeriod} className="text-xs py-1.5 !w-fit px-3">{t("business.addPricePeriod")}</GhostButton>
+        </div>
+      </Field>
+      <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl p-3">
+        <input type="checkbox" className="mt-0.5" checked={form.vetemPagesePlote} onChange={(e) => setForm((f) => ({ ...f, vetemPagesePlote: e.target.checked }))} />
+        <span>
+          <span className="font-medium">{t("business.fullPaymentOnlyLabel")}</span>
+          <span className="block text-[11px] text-slate-400 mt-0.5">{t("business.fullPaymentOnlyHint")}</span>
+        </span>
+      </label>
       <PrimaryButton type="submit" disabled={loading} className="mt-2">
         {loading ? t("common.saving") : isEdit ? t("business.saveChanges") : t("business.saveCar")}
       </PrimaryButton>
     </form>
+  );
+}
+
+// Company-wide seasonal surcharge (+€/day on every car for a date range). Priced in
+// ERental/Services/CarPricing.cs and computeRentalQuote() in carData.js.
+function SeasonPricing({ token, showError, showOk, onChanged }) {
+  const { t, lang } = useLang();
+  const [seasons, setSeasons] = useState([]);
+  const [form, setForm] = useState({ dataFillimit: "", dataPerfundimit: "", shtesaDites: "" });
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(() => {
+    apiFetch("/Companies/my-company/seasons", token).then(setSeasons).catch((e) => showError(e));
+  }, [token]);
+  useEffect(() => { load(); }, [load]);
+
+  async function add(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await apiFetch("/Companies/my-company/seasons", token, { method: "POST", body: JSON.stringify({ ...form, shtesaDites: Number(form.shtesaDites) }) });
+      setForm({ dataFillimit: "", dataPerfundimit: "", shtesaDites: "" });
+      showOk(t("business.seasonAdded"));
+      load();
+      onChanged && onChanged();
+    } catch (err) { showError(err); } finally { setSaving(false); }
+  }
+
+  async function remove(id) {
+    try {
+      await apiFetch(`/Companies/my-company/seasons/${id}`, token, { method: "DELETE" });
+      setSeasons((list) => list.filter((s) => s.id !== id));
+      onChanged && onChanged();
+    } catch (err) { showError(err); }
+  }
+
+  const fmt = (d) => formatLocaleDate(d, lang);
+
+  return (
+    <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+      <h4 className="font-semibold text-sm text-slate-900 dark:text-slate-100">{t("business.seasonPrices")}</h4>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">{t("business.seasonPricesHint")}</p>
+      {seasons.length > 0 && (
+        <div className="flex flex-col gap-1.5 mb-3">
+          {seasons.map((s) => (
+            <div key={s.id} className="flex items-center justify-between gap-2 text-sm bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2">
+              <span className="text-slate-700 dark:text-slate-200">{fmt(s.dataFillimit)} – {fmt(s.dataPerfundimit)}</span>
+              <span className="flex items-center gap-2">
+                <span className="font-semibold text-amber-700 dark:text-amber-300">+{s.shtesaDites}€{t("common.perDaySuffix")}</span>
+                <button type="button" onClick={() => remove(s.id)} className="text-slate-400 hover:text-red-600" title={t("business.removeOffer")}><X size={15} /></button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      <form onSubmit={add} className="flex flex-wrap items-center gap-1.5">
+        <input required type="date" className={`${inputClass.replace("w-full", "")} flex-1 min-w-[130px]`} value={form.dataFillimit} onChange={(e) => setForm((f) => ({ ...f, dataFillimit: e.target.value }))} />
+        <span className="text-xs text-slate-400">–</span>
+        <input required type="date" min={form.dataFillimit || undefined} className={`${inputClass.replace("w-full", "")} flex-1 min-w-[130px]`} value={form.dataPerfundimit} onChange={(e) => setForm((f) => ({ ...f, dataPerfundimit: e.target.value }))} />
+        <span className="text-xs text-slate-400 shrink-0">+</span>
+        <input required type="number" min="1" step="0.01" placeholder="10" className={`${inputClass.replace("w-full", "")} w-20 shrink-0`} value={form.shtesaDites} onChange={(e) => setForm((f) => ({ ...f, shtesaDites: e.target.value }))} />
+        <span className="text-xs text-slate-400 shrink-0">€{t("common.perDaySuffix")}</span>
+        <PrimaryButton type="submit" disabled={saving} className="text-xs py-2 !w-fit px-4 mt-1">{t("business.addSeason")}</PrimaryButton>
+      </form>
+    </div>
   );
 }
 

@@ -200,3 +200,29 @@ export const PHOTO_SLOTS = [
   { key: "interior_back" },
   { key: "trunk" },
 ];
+
+// Mirrors ERental/Services/CarPricing.cs -- the backend recomputes this for the PayPal amount and
+// rejects any mismatch, so keep the two identical. Each rental day (start inclusive, end exclusive)
+// is priced alone: a car price period covering it wins, else base price + the largest company
+// season surcharge covering it. Only when no day hit either does the multi-day offer apply.
+// Returns business-side amounts (no platform markup).
+export function computeRentalQuote(car, from, to) {
+  const start = new Date(`${from}T00:00:00Z`);
+  const days = Math.max(0, Math.round((new Date(`${to}T00:00:00Z`) - start) / 86400000));
+  const periods = car.pricePeriods || [];
+  const seasons = car.company?.seasonRules || [];
+  let total = 0, firstDay = Number(car.cmimiDites), seasonal = false;
+  for (let i = 0; i < days; i++) {
+    const day = new Date(start.getTime() + i * 86400000).toISOString().slice(0, 10);
+    const period = periods.find((p) => p.dataFillimit <= day && day <= p.dataPerfundimit);
+    const hits = seasons.filter((s) => s.dataFillimit <= day && day <= s.dataPerfundimit);
+    let price = Number(car.cmimiDites);
+    if (period) { price = Number(period.cmimiDites); seasonal = true; }
+    else if (hits.length) { price += Math.max(...hits.map((s) => Number(s.shtesaDites))); seasonal = true; }
+    total += price;
+    if (i === 0) firstDay = price;
+  }
+  const offer = !seasonal ? car.priceOffers?.find((o) => o.dite === days) : null;
+  if (!seasonal) total = offer ? Number(offer.cmimiTotal) : days * Number(car.cmimiDites);
+  return { days, total, firstDay, seasonal, offer };
+}

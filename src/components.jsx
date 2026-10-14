@@ -4,7 +4,7 @@ import { decodeJwt } from "./api";
 import { generateInvoicePdf } from "./invoicePdf";
 import { useLang } from "./useLang";
 import { monthName, weekdayInitials } from "./dateFormat";
-import { AMENITY_CATEGORIES, PLATFORM_MARKUP, amenityLabel } from "./carData";
+import { AMENITY_CATEGORIES, PLATFORM_MARKUP, amenityLabel, computeRentalQuote } from "./carData";
 
 export function AvailabilityCalendar({ ranges = [] }) {
   const { t, lang } = useLang();
@@ -246,14 +246,16 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
 
   async function downloadInvoice() {
     const dite = Math.max(1, Math.round((new Date(dataPerfundimit) - new Date(dataFillimit)) / 86400000));
+    // Same price the backend charged (seasons, car price periods, multi-day offers) + markup.
+    const customerRental = computeRentalQuote(car, dataFillimit, dataPerfundimit).total + dite * PLATFORM_MARKUP;
     await generateInvoicePdf({
       bookingId: successInfo.bookingId,
       carMakeModel: `${car.marka} ${car.modeli}`,
       dataFillimit,
       dataPerfundimit,
-      cmimiPerDite: car.cmimiDites + PLATFORM_MARKUP,
+      cmimiPerDite: Math.round((customerRental / dite) * 100) / 100,
       dite,
-      totalPrice: dite * (car.cmimiDites + PLATFORM_MARKUP),
+      totalPrice: customerRental,
       amountPaid: successInfo.amountPaid,
       eshtePagesePlote: successInfo.method === "paypal_full",
       serviceFee: 0,
