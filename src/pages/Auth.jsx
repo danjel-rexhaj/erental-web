@@ -86,9 +86,11 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
     setLoading(true);
     try {
       if (mode === "register") {
-        const { telefoniPrefix, ...rest } = form;
+        const { telefoniPrefix, kodPromocional, ...rest } = form;
         const telefoni = telefoniPrefix === "+355" ? form.telefoni : `${telefoniPrefix}${form.telefoni.replace(/^0+/, "")}`;
-        await apiFetch("/Auth/register", null, { method: "POST", body: JSON.stringify({ ...rest, telefoni, hasWhatsapp }) });
+        const payload = { ...rest, telefoni, hasWhatsapp };
+        if (kodPromocional.trim()) payload.kodPromocional = kodPromocional.trim();
+        await apiFetch("/Auth/register", null, { method: "POST", body: JSON.stringify(payload) });
         goTo("verifyEmail", { email: form.email, emri: form.emri });
       } else {
         const data = await apiFetch("/Auth/login", null, { method: "POST", body: JSON.stringify({ email: form.email, password: form.password }) });
