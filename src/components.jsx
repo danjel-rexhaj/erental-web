@@ -4,7 +4,7 @@ import { decodeJwt } from "./api";
 import { generateInvoicePdf } from "./invoicePdf";
 import { useLang } from "./useLang";
 import { monthName, weekdayInitials } from "./dateFormat";
-import { AMENITY_CATEGORIES, PLATFORM_MARKUP } from "./carData";
+import { AMENITY_CATEGORIES, PLATFORM_MARKUP, amenityLabel } from "./carData";
 
 export function AvailabilityCalendar({ ranges = [] }) {
   const { t, lang } = useLang();
@@ -545,7 +545,7 @@ export function AmenityPicker({ selected, onToggle }) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      {AMENITY_CATEGORIES.map((cat) => {
+      {AMENITY_CATEGORIES.filter((cat) => cat.items.length > 0).map((cat) => {
         const open = openCategories.has(cat.key);
         const selectedCount = cat.items.filter((key) => selected.includes(key)).length;
         return (
@@ -567,7 +567,7 @@ export function AmenityPicker({ selected, onToggle }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 px-3 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800">
                 {cat.items.map((key) => (
                   <label key={key} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                    <input type="checkbox" checked={selected.includes(key)} onChange={() => onToggle(key)} /> {t(`amenity.${key}`)}
+                    <input type="checkbox" checked={selected.includes(key)} onChange={() => onToggle(key)} /> {amenityLabel(t, key)}
                   </label>
                 ))}
               </div>

@@ -113,6 +113,24 @@ export const AMENITY_CATEGORIES = [
 
 export const AMENITIES = AMENITY_CATEGORIES.flatMap((c) => c.items.map((key) => ({ key, category: c.key })));
 
+// Built-in amenities have i18n labels (amenity.<key>); admin-approved suggestions don't -- their key
+// *is* the text the business typed, so it's shown as-is.
+const BUILTIN_AMENITY_KEYS = new Set(AMENITIES.map((a) => a.key));
+export const amenityLabel = (t, key) => (BUILTIN_AMENITY_KEYS.has(key) ? t(`amenity.${key}`) : key);
+
+// Approved suggestions (GET /AmenitySuggestions/approved) land in an "other" category, which the
+// picker hides while empty.
+const OTHER_AMENITY_CATEGORY = { key: "other", items: [] };
+AMENITY_CATEGORIES.push(OTHER_AMENITY_CATEGORY);
+export function mergeApprovedAmenities(list) {
+  for (const s of list || []) {
+    const value = (s.suggestion || "").trim();
+    if (!value || AMENITIES.some((a) => a.key.toLowerCase() === value.toLowerCase())) continue;
+    OTHER_AMENITY_CATEGORY.items.push(value);
+    AMENITIES.push({ key: value, category: "other" });
+  }
+}
+
 export const CAR_CATEGORIES = [
   { key: "economy" },
   { key: "compact" },

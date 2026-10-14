@@ -3,7 +3,7 @@ import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, Us
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar, AmenityPicker, CroppedPhoto } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
-import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS, mergeApprovedCarSuggestions } from "../carData";
+import { CAR_BRANDS, OTHER_BRAND, OTHER_MODEL, AMENITIES, CAR_CATEGORIES, ALBANIAN_LOCATIONS, mergeApprovedCarSuggestions, mergeApprovedAmenities } from "../carData";
 import CarPhotoManager from "./CarPhotoManager";
 import { BusinessAnalytics, AdminAnalytics, AdminLogins, TransactionsPage, AdminUsersPage, AdminCompaniesPage, AdminCarsPage, AdminBookingsPage, BusinessBookingsPage } from "./Analytics";
 import { BusinessDetailsForm, CompanyExtrasFields } from "./BusinessDetailsForm";
@@ -1642,7 +1642,12 @@ function AdminAmenitySuggestions({ token, showError, showOk }) {
   useEffect(() => { load(); }, [load]);
 
   async function approve(id) {
-    try { await apiFetch(`/AmenitySuggestions/${id}/approve`, token, { method: "PUT" }); showOk(t("business.suggestionApproved")); load(); }
+    try {
+      const s = await apiFetch(`/AmenitySuggestions/${id}/approve`, token, { method: "PUT" });
+      mergeApprovedAmenities([s]);
+      showOk(t("business.suggestionApproved"));
+      load();
+    }
     catch (e) { showError(e); }
   }
 

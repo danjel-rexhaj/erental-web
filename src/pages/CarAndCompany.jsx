@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock, Infinity as InfinityIcon, UserPlus, Baby, Globe, CreditCard } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
-import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP } from "../carData";
+import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP, amenityLabel } from "../carData";
 import { useLang } from "../useLang";
 import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
 
@@ -405,7 +405,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 <div className="flex flex-wrap gap-2 px-3.5 pb-3.5">
                   {car.amenities.map((key) => (
                     <span key={key} className="flex items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1 rounded-full">
-                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" /> {AMENITIES.some((a) => a.key === key) ? t(`amenity.${key}`) : key}
+                      <Check size={12} className="text-emerald-600 dark:text-emerald-400" /> {amenityLabel(t, key)}
                     </span>
                   ))}
                 </div>
