@@ -1505,7 +1505,7 @@ export function AdminLogins({ token, showError, refreshKey }) {
                   {l.sukses ? (
                     <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">{t("analytics.statusSuccess")}</span>
                   ) : (
-                    <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full">{t("analytics.loginFailed")}</span>
+                    <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full">{l.userId ? t("analytics.loginWrongPassword") : t("analytics.loginNoAccount")}</span>
                   )}
                 </td>
               </tr>
@@ -1522,7 +1522,7 @@ export function AdminLogins({ token, showError, refreshKey }) {
               {l.sukses ? (
                 <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full shrink-0">{t("analytics.statusSuccess")}</span>
               ) : (
-                <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full shrink-0">{t("analytics.loginFailed")}</span>
+                <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-full shrink-0">{l.userId ? t("analytics.loginWrongPassword") : t("analytics.loginNoAccount")}</span>
               )}
             </div>
             <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
