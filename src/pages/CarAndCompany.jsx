@@ -139,8 +139,9 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const [isDemo, setIsDemo] = useState(false);
   const [selFrom, setSelFrom] = useState(dataFillimit);
   const [selTo, setSelTo] = useState(dataPerfundimit);
-  const [oraMarrjes, setOraMarrjes] = useState("10:00");
-  const [oraKthimit, setOraKthimit] = useState("10:00");
+  const [oraMarrjes, setOraMarrjes] = useState(car.oraDefault ?? "10:00");
+  const [oraKthimit, setOraKthimit] = useState(car.oraDefault ?? "10:00");
+  const oraEFiksuar = !!car.oraDefault;
   const activeFrom = selTo ? selFrom : dataFillimit;
   const activeTo = selTo ? selTo : dataPerfundimit;
   const days = activeFrom && activeTo ? Math.max(1, Math.round((new Date(activeTo) - new Date(activeFrom)) / 86400000)) : 0;
@@ -427,7 +428,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mt-5">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-1.5 text-sm font-bold text-sky-600 dark:text-emerald-400 bg-sky-50 dark:bg-emerald-900/30 rounded-lg px-2.5 py-1.5 w-fit">
-                <Calendar size={14} /> {formatShortDate(activeFrom, lang)} → {formatShortDate(activeTo, lang)}
+                <Calendar size={14} /> {formatShortDate(activeFrom, lang)} {oraMarrjes} → {formatShortDate(activeTo, lang)} {oraKthimit}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 mt-2">
@@ -435,21 +436,38 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1">Check-in</p>
                 <div className="flex items-center gap-1">
                   <Clock size={11} className="text-sky-500 dark:text-emerald-400 shrink-0" />
-                  <select value={oraMarrjes} onChange={(e) => setOraMarrjes(e.target.value)} className="text-xs font-bold text-slate-900 dark:text-slate-100 bg-transparent outline-none w-full">
-                    {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
-                  </select>
+                  {oraEFiksuar ? (
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex-1 flex items-center gap-1">
+                      {oraMarrjes} <Lock size={9} className="text-slate-400 shrink-0" />
+                    </span>
+                  ) : (
+                    <select value={oraMarrjes} onChange={(e) => setOraMarrjes(e.target.value)} className="text-xs font-bold text-slate-900 dark:text-slate-100 bg-transparent outline-none w-full">
+                      {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                  )}
                 </div>
               </div>
               <div className="border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-2 bg-white dark:bg-slate-900">
                 <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1">Check-out</p>
                 <div className="flex items-center gap-1">
                   <Clock size={11} className="text-sky-500 dark:text-emerald-400 shrink-0" />
-                  <select value={oraKthimit} onChange={(e) => setOraKthimit(e.target.value)} className="text-xs font-bold text-slate-900 dark:text-slate-100 bg-transparent outline-none w-full">
-                    {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
-                  </select>
+                  {oraEFiksuar ? (
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex-1 flex items-center gap-1">
+                      {oraKthimit} <Lock size={9} className="text-slate-400 shrink-0" />
+                    </span>
+                  ) : (
+                    <select value={oraKthimit} onChange={(e) => setOraKthimit(e.target.value)} className="text-xs font-bold text-slate-900 dark:text-slate-100 bg-transparent outline-none w-full">
+                      {TIME_OPTIONS.map((h) => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                  )}
                 </div>
               </div>
             </div>
+            {oraEFiksuar && (
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1 mt-1">
+                <Lock size={9} className="shrink-0" /> {t("booking.fixedTime")}
+              </p>
+            )}
             <div className="flex items-center justify-between mt-2">
               {matchedOffer ? (
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-cyan-700 dark:text-teal-300 bg-cyan-50 dark:bg-teal-900/30 px-2 py-0.5 rounded-full w-fit">{t("car.specialPriceFor", { days })}</span>

@@ -860,7 +860,7 @@ function buildCarForm(car) {
       viti: "2020", km: "0", karburanti: "diesel", transmisioni: "manual",
       ngjyra: "", targa: "", kategoria: "economy", numriVendeve: "5",
       klimatizimi: true, cmimiDites: "20", pershkrimi: "", kubatura: "", cilindra: "", amenities: [],
-      minimumDitesh: "", feeVonesaPerOre: "", feeVonesaPerDite: "", priceOffers: [],
+      minimumDitesh: "", feeVonesaPerOre: "", feeVonesaPerDite: "", oraDefault: "", priceOffers: [],
     };
   }
   const markaKnown = Object.prototype.hasOwnProperty.call(CAR_BRANDS, car.marka);
@@ -887,6 +887,7 @@ function buildCarForm(car) {
     minimumDitesh: car.minimumDitesh != null ? String(car.minimumDitesh) : "",
     feeVonesaPerOre: car.feeVonesaPerOre != null ? String(car.feeVonesaPerOre) : "",
     feeVonesaPerDite: car.feeVonesaPerDite != null ? String(car.feeVonesaPerDite) : "",
+    oraDefault: car.oraDefault ?? "",
     priceOffers: (car.priceOffers || []).map((o) => ({ dite: String(o.dite), cmimiTotal: String(o.cmimiTotal) })),
   };
 }
@@ -961,6 +962,7 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
         minimumDitesh: form.minimumDitesh ? Number(form.minimumDitesh) : null,
         feeVonesaPerOre: form.feeVonesaPerOre ? Number(form.feeVonesaPerOre) : null,
         feeVonesaPerDite: form.feeVonesaPerDite ? Number(form.feeVonesaPerDite) : null,
+        oraDefault: form.oraDefault || null,
         priceOffers: form.priceOffers
           .filter((o) => o.dite && o.cmimiTotal)
           .map((o) => ({ dite: Number(o.dite), cmimiTotal: Number(o.cmimiTotal) })),
@@ -1036,6 +1038,13 @@ function AddCarForm({ token, companyId, existingCar, onDone, showError, showOk, 
           </Field>
         </div>
         <span className="block text-[11px] text-slate-400 -mt-2 mb-1">{t("business.carField.lateFeeHint")}</span>
+        <Field label={t("business.carField.defaultTime")}>
+          <select className={inputClass} value={form.oraDefault} onChange={set("oraDefault")}>
+            <option value="">{t("business.carField.defaultTimeFree")}</option>
+            {Array.from({ length: 32 }, (_, i) => { const h = String(6 + Math.floor(i / 2)).padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map((h) => <option key={h} value={h}>{h}</option>)}
+          </select>
+          <span className="block text-[11px] text-slate-400 mt-1">{t("business.carField.defaultTimeHint")}</span>
+        </Field>
         <Field label={t("car.spec.fuel")}>
           <select className={inputClass} value={form.karburanti} onChange={set("karburanti")}>
             <option value="diesel">Diesel</option><option value="benzine">Benzine</option><option value="hybrid">Hybrid</option><option value="elektrik">Elektrik</option>
