@@ -18,6 +18,9 @@ export default function BusinessSignup({ onAuth, onDone, showError, showOk }) {
     if (page === "verifyEmail") {
       setVerifyData(data);
       setStep("verify");
+    } else if (page === "termsBusiness") {
+      // New tab, so the half-filled signup form isn't lost.
+      window.open("/kushtet-biznes", "_blank", "noopener");
     }
   }
 

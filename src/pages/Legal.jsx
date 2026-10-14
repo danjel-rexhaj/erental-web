@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Briefcase, Shield, FileText, Send, CheckCircle2, Info, Mail, MessageCircle, Car as CarIcon, Users, ShieldCheck, ChevronLeft } from "lucide-react";
 import { PrimaryButton, Field, inputClass } from "../components";
 import { apiFetch } from "../api";
@@ -121,41 +121,60 @@ export function Privacy() {
   );
 }
 
-export function Terms() {
+// Two audiences, two documents: customers (and logged-out visitors) get the customer terms,
+// business accounts get the business terms. App picks the variant from the account role;
+// the link at the bottom lets anyone read the other one.
+export function Terms({ variant = "client" }) {
   const { t } = useLang();
+  const [shown, setShown] = useState(variant);
+  useEffect(() => { setShown(variant); }, [variant]);
+  const business = shown === "business";
+  const sectionClass = "font-semibold text-slate-900 dark:text-slate-100 mb-1";
   return (
     <div className="max-w-2xl mx-auto py-8">
       <BackButton />
-      <div className="flex items-center gap-2 mb-1"><FileText size={20} className="text-sky-600 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("legal.terms.title")}</h1></div>
+      <div className="flex items-center gap-2 mb-1"><FileText size={20} className="text-sky-600 dark:text-emerald-400" /><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t(business ? "legal.termsBiz.title" : "legal.terms.title")}</h1></div>
       <p className="text-xs text-slate-400 mb-6">{t("legal.lastUpdated")}</p>
 
       <div className="space-y-5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
         <section className="bg-sky-50 dark:bg-emerald-900/20 border border-sky-200 dark:border-emerald-800/60 rounded-xl p-4">
-          <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{t("legal.terms.marketplaceTitle")}</h2>
-          <p>{t("legal.terms.marketplaceBody1")} <strong>{t("legal.terms.marketplaceBodyBold")}</strong> {t("legal.terms.marketplaceBody2")}</p>
+          {business ? (
+            <>
+              <h2 className={sectionClass}>{t("legal.termsBiz.introTitle")}</h2>
+              <p>{t("legal.termsBiz.introBody")}</p>
+            </>
+          ) : (
+            <>
+              <h2 className={sectionClass}>{t("legal.terms.marketplaceTitle")}</h2>
+              <p>{t("legal.terms.marketplaceBody1")} <strong>{t("legal.terms.marketplaceBodyBold")}</strong> {t("legal.terms.marketplaceBody2")}</p>
+            </>
+          )}
         </section>
 
-        <section>
-          <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{t("legal.terms.s1Title")}</h2>
-          <p>{t("legal.terms.s1Body")}</p>
-        </section>
-        <section>
-          <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{t("legal.terms.s2Title")}</h2>
-          <p>{t("legal.terms.s2Body1")} <strong>{t("legal.terms.s2BodyBold")}</strong> {t("legal.terms.s2Body2")}</p>
-        </section>
-        <section>
-          <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{t("legal.terms.s3Title")}</h2>
-          <p>{t("legal.terms.s3Body")}</p>
-        </section>
-        <section>
-          <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{t("legal.terms.s4Title")}</h2>
-          <p>{t("legal.terms.s4Body")}</p>
-        </section>
-        <section>
-          <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{t("legal.terms.s5Title")}</h2>
-          <p>{t("legal.terms.s5Body")}</p>
-        </section>
+        {business ? (
+          [1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+            <section key={n}>
+              <h2 className={sectionClass}>{t(`legal.termsBiz.s${n}Title`)}</h2>
+              <p>{t(`legal.termsBiz.s${n}Body`)}</p>
+            </section>
+          ))
+        ) : (
+          [1, 2, 3, 4, 5, 6].map((n) => (
+            <section key={n}>
+              <h2 className={sectionClass}>{t(`legal.terms.s${n}Title`)}</h2>
+              {n === 2
+                ? <p>{t("legal.terms.s2Body1")} <strong>{t("legal.terms.s2BodyBold")}</strong> {t("legal.terms.s2Body2")}</p>
+                : <p>{t(`legal.terms.s${n}Body`)}</p>}
+            </section>
+          ))
+        )}
       </div>
+
+      {(
+        <button onClick={() => { setShown(business ? "client" : "business"); window.scrollTo(0, 0); }} className="mt-8 text-sm font-semibold text-sky-600 dark:text-emerald-400 underline">
+          {t(business ? "legal.terms.switchToClient" : "legal.terms.switchToBusiness")}
+        </button>
+      )}
     </div>
   );
 }

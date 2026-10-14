@@ -214,7 +214,7 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
           <label className="flex items-start gap-2 mb-4 text-xs text-slate-600 dark:text-slate-300">
             <input type="checkbox" className="mt-0.5" checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} />
             <span>
-              {t("auth.acceptPrefix")} <button type="button" onClick={() => goTo && goTo("terms")} className="text-sky-600 dark:text-emerald-400 underline">{t("auth.termsOfService")}</button> {t("auth.and")}{" "}
+              {t("auth.acceptPrefix")} <button type="button" onClick={() => goTo && goTo(businessMode ? "termsBusiness" : "terms")} className="text-sky-600 dark:text-emerald-400 underline">{t("auth.termsOfService")}</button> {t("auth.and")}{" "}
               <button type="button" onClick={() => goTo && goTo("privacy")} className="text-sky-600 dark:text-emerald-400 underline">{t("auth.privacyPolicy")}</button>.
               {" "}{t("auth.marketplaceDisclaimer")}
             </span>

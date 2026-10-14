@@ -61,6 +61,7 @@ const PAGE_META = {
   careers: { title: `Karriera — ERental`, description: "Shiko pozicionet e hapura dhe bashkohu me ekipin e ERental." },
   privacy: { title: `Politika e privatësisë — ERental`, description: DEFAULT_DESCRIPTION },
   terms: { title: `Kushtet e përdorimit — ERental`, description: DEFAULT_DESCRIPTION },
+  termsBusiness: { title: `Kushtet për bizneset — ERental`, description: DEFAULT_DESCRIPTION },
 };
 
 // Unread-count badge on the browser tab (title prefix + a red dot drawn onto the favicon), like
@@ -391,7 +392,7 @@ export default function App() {
   const VIEW_TO_PATH = {
     browse: "/", bookings: "/rezervimet", favorites: "/preferuarat", business: "/biznesi", auth: "/profili",
     verifyEmail: "/verifiko", businessSignup: "/regjistrohu-biznes", about: "/rreth-nesh", contact: "/kontakt", careers: "/karriere",
-    privacy: "/privatesia", terms: "/kushtet",
+    privacy: "/privatesia", terms: "/kushtet", termsBusiness: "/kushtet-biznes",
   };
   const viewToHash = (v) => VIEW_TO_PATH[v] || "/";
 
@@ -521,6 +522,7 @@ export default function App() {
     if (segs[0] === "karriere") { setView("careers"); return; }
     if (segs[0] === "privatesia") { setView("privacy"); return; }
     if (segs[0] === "kushtet") { setView("terms"); return; }
+    if (segs[0] === "kushtet-biznes") { setView("termsBusiness"); return; }
 
     setView("browse");
     setStage("landing");
@@ -840,7 +842,8 @@ export default function App() {
           <BusinessSignup onAuth={applyAuthSession} onDone={() => { updateUser({ role: "business" }); go("/biznesi"); }} showError={showError} showOk={showOk} />
         )}
         {view === "privacy" && <Privacy />}
-        {view === "terms" && <Terms />}
+        {view === "terms" && <Terms variant={user?.role === "business" ? "business" : "client"} />}
+        {view === "termsBusiness" && <Terms variant="business" />}
         {view === "careers" && <Careers showError={showError} />}
         {view === "about" && <About />}
         {view === "contact" && <Contact />}
