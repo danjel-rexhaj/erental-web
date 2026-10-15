@@ -24,9 +24,20 @@ export async function shrinkImage(file, maxSide = 1920, quality = 0.85) {
 }
 
 // Resized copy of a CDN photo via Cloudflare Image Transformations (must be enabled on the
-// erental.store zone). Callers fall back to the original URL on error, so this is safe while it's off.
+// erental.store zone). Callers fall back to the original URL on error -- but while it's off that
+// means a 404 round trip before every photo, so after the first failure we stop asking for resized
+// copies for a day (remembered across visits) and load originals straight away.
 const CDN_HOST = "https://cdn.erental.store/";
+const RESIZE_OFF_KEY = "erental.resizeOffUntil";
+let resizeOff = (() => {
+  try { return Number(localStorage.getItem(RESIZE_OFF_KEY)) > Date.now(); } catch { return false; }
+})();
+export function markResizeUnavailable() {
+  if (resizeOff) return;
+  resizeOff = true;
+  try { localStorage.setItem(RESIZE_OFF_KEY, String(Date.now() + 24 * 3600 * 1000)); } catch { /* private mode */ }
+}
 export function resizedPhotoUrl(url, width) {
-  if (!url || !width || !url.startsWith(CDN_HOST)) return url;
+  if (resizeOff || !url || !width || !url.startsWith(CDN_HOST)) return url;
   return `${CDN_HOST}cdn-cgi/image/width=${width},quality=82,format=auto/${url.slice(CDN_HOST.length)}`;
 }

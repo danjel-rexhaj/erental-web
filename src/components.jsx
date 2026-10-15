@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, ChevronDown, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart, Truck } from "lucide-react";
 import { decodeJwt } from "./api";
 import { generateInvoicePdf } from "./invoicePdf";
-import { resizedPhotoUrl } from "./imageResize";
+import { resizedPhotoUrl, markResizeUnavailable } from "./imageResize";
 import { useLang } from "./useLang";
 import { monthName, weekdayInitials } from "./dateFormat";
 import { AMENITY_CATEGORIES, PLATFORM_MARKUP, amenityLabel, computeRentalQuote } from "./carData";
@@ -310,7 +310,7 @@ export function CroppedPhoto({ url, alt, positionY, className, width, onError, .
       className={className}
       style={{ objectPosition: `center ${positionY ?? 50}%` }}
       onError={(e) => {
-        if (resized !== url && e.currentTarget.src !== url) { e.currentTarget.src = url; return; }
+        if (resized !== url && e.currentTarget.src !== url) { markResizeUnavailable(); e.currentTarget.src = url; return; }
         onError && onError(e);
       }}
       {...rest}

@@ -176,6 +176,18 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
     apiFetch(`/Cars/${car.carId}/availability`, null).then(setBookedRanges).catch(() => {});
   }, [car.carId]);
 
+  // Warm the cache with every photo so flipping through the gallery (and the full-screen viewer,
+  // which shows originals) is instant instead of a blank pause per photo.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      for (const p of photos) {
+        if (p.urlFotos) new Image().src = p.urlFotos;
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [car.carId]);
+
   // Live-updates the calendar when the business blocks/unblocks dates or a booking gets
   // confirmed/cancelled elsewhere, without the client needing to refresh this page.
   useEffect(() => {
@@ -222,6 +234,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
         <div className="lg:col-span-3 lg:row-start-1 order-1">
           <div className="relative rounded-2xl overflow-hidden">
             <CroppedPhoto
+              key={shown?.photoId}
               url={shown?.urlFotos}
               width={1600}
               alt={`${car.marka} ${car.modeli}`}
