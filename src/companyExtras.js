@@ -12,6 +12,7 @@ export const EMPTY_COMPANY_EXTRAS = {
   vendetKufitare: [],
   vonjesaPolicy: "",
   vonjesaAmount: "",
+  kerkoBileten: false,
 };
 
 // Empty means "not offered" (null); for the three extra-service prices 0 is a real value (free).
@@ -27,6 +28,7 @@ export function companyExtrasPayload(form) {
     vendetKufitare: form.vendetKufitare,
     vonjesaPolicy: form.vonjesaPolicy || null,
     vonjesaAmount: form.vonjesaPolicy === "fixed" && form.vonjesaAmount !== "" ? Number(form.vonjesaAmount) : null,
+    kerkoBileten: !!form.kerkoBileten,
   };
 }
 

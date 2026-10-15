@@ -89,6 +89,14 @@ export function CompanyExtrasFields({ form, setForm, zones, setZones, deliveryLa
         )}
       </div>
 
+      <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-300 mt-2">
+        <input type="checkbox" className="mt-0.5" checked={!!form.kerkoBileten} onChange={(e) => setForm((f) => ({ ...f, kerkoBileten: e.target.checked }))} />
+        <span>
+          <span className="font-semibold text-slate-700 dark:text-slate-200">{t("business.requireFlightTicket")}</span>
+          <span className="block text-[11px] text-slate-400 mt-0.5">{t("business.requireFlightTicketHint")}</span>
+        </span>
+      </label>
+
       <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-2">{t("business.deliveryZonesTitle")}</p>
       {zones.map((z, i) => (
         <div key={i} className="flex items-center gap-1.5">

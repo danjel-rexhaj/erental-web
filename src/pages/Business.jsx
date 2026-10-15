@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon, Star, ChevronDown, Truck, CalendarRange } from "lucide-react";
+import { Building2, Plus, Upload, ShieldCheck, Clock, CheckCircle2, Calendar, User as UserIcon, MessageCircle, Mail, MapPin, CreditCard, Pencil, Ban, Trash2, X, Download, ChevronLeft, Car as CarIcon, Star, ChevronDown, Truck, CalendarRange, Plane } from "lucide-react";
 import { apiFetch, apiFetchBlob, toWhatsappNumber, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { Field, PrimaryButton, GhostButton, inputClass, CarPhoto, StatusPill, LocationPicker, DateRangeCalendar, AmenityPicker, CroppedPhoto } from "../components";
 import { generateInvoicePdf } from "../invoicePdf";
@@ -126,6 +126,16 @@ export default function Business({ token, showError, showOk, isAdmin, tab, setTa
       )}
     </div>
   );
+}
+
+// Private file behind auth, so it is fetched as a blob; the tab is opened first (synchronously)
+// so popup blockers allow it.
+async function openFlightTicket(bookingId, token, showError) {
+  const win = window.open("", "_blank");
+  try {
+    const url = await apiFetchBlob(`/Bookings/${bookingId}/flight-ticket`, token);
+    if (win) win.location.href = url; else window.location.href = url;
+  } catch (e) { win?.close(); showError(e); }
 }
 
 function PaymentBadge({ b }) {
@@ -289,6 +299,11 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
           <Download size={11} /> {t("paymentSuccess.downloadInvoice")}
         </button>
       )}
+      {b.hasBiletaAvionit && (
+        <button type="button" onClick={() => openFlightTicket(b.bookingId, token, showError)} className="flex items-center gap-1 text-[11px] font-medium text-sky-700 dark:text-sky-300 underline underline-offset-2 mt-1">
+          <Plane size={11} /> {t("business.viewFlightTicket")}
+        </button>
+      )}
       {b.statusi === "confirmed" && (
         b.idVerifikuar ? (
           <p className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-2 py-1.5 mt-2 flex items-center gap-1">
@@ -376,6 +391,11 @@ function CompanyBookings({ token, showError, showOk, highlightBookingId, company
                     className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline underline-offset-2 mt-1"
                   >
                     <Download size={11} /> {t("paymentSuccess.downloadInvoice")}
+                  </button>
+                )}
+                {b.hasBiletaAvionit && (
+                  <button type="button" onClick={() => openFlightTicket(b.bookingId, token, showError)} className="flex items-center gap-1 text-[11px] font-medium text-sky-700 dark:text-sky-300 underline underline-offset-2 mt-1">
+                    <Plane size={11} /> {t("business.viewFlightTicket")}
                   </button>
                 )}
                 {b.idVerifikuar && (
@@ -820,6 +840,7 @@ function EditCompanyDetailsForm({ token, company, showError, onDone, onCancel })
     cmimiDergesesJashtOrarit: company.cmimiDergesesJashtOrarit != null ? String(company.cmimiDergesesJashtOrarit) : "",
     vendetKufitare: company.vendetKufitare || [],
     vonjesaPolicy: company.vonjesaPolicy || "",
+    kerkoBileten: !!company.kerkoBileten,
     vonjesaAmount: company.vonjesaAmount != null ? String(company.vonjesaAmount) : "",
   });
   const [zones, setZones] = useState(

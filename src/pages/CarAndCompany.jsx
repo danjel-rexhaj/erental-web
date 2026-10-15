@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock, Infinity as InfinityIcon, UserPlus, Baby, Globe, CreditCard } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock, Infinity as InfinityIcon, UserPlus, Baby, Globe, CreditCard, Plane, Upload } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
+import { shrinkImage } from "../imageResize";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
 import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP, amenityLabel, computeRentalQuote } from "../carData";
 import { useLang } from "../useLang";
@@ -658,6 +659,24 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
   const [openingCard, setOpeningCard] = useState(false);
   const buttonsRef = useRef(null);
   const [cardPopup, setCardPopup] = useState(false);
+  // Some businesses require the flight ticket (photo/PDF). It is uploaded privately first; the
+  // returned key goes with the PayPal order and the booking, and payment stays hidden until then.
+  const needsTicket = !!car.company?.kerkoBileten;
+  const [biletaKey, setBiletaKey] = useState(null);
+  const [biletaName, setBiletaName] = useState("");
+  const [uploadingBileta, setUploadingBileta] = useState(false);
+  async function uploadBileta(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingBileta(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", await shrinkImage(file, 2400, 0.9));
+      const res = await apiFetch("/Bookings/flight-ticket", token, { method: "POST", body: fd });
+      setBiletaKey(res.key);
+      setBiletaName(file.name);
+    } catch (err) { showError(err); } finally { setUploadingBileta(false); e.target.value = ""; }
+  }
 
   // On desktop, PayPal's card form expanding inline stretches the narrow sidebar and wrecks the
   // page layout, so once it expands we lift it into a centered popup instead. The iframe can't be
@@ -688,8 +707,8 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
   // without changing the payment method would silently submit the stale dates from initial render.
   const latestRef = useRef({ dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, carId: car.carId });
   useEffect(() => {
-    latestRef.current = { dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, carId: car.carId };
-  }, [dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, car.carId]);
+    latestRef.current = { dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, carId: car.carId, biletaKey };
+  }, [dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, car.carId, biletaKey]);
 
   useEffect(() => {
     if (!token || hasLicense !== true) return;
@@ -697,10 +716,10 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
     const paymentMethod = method === "paypal_deposit" ? "deposit" : "full";
 
     async function createOrder() {
-      const { carId, dataFillimit, dataPerfundimit } = latestRef.current;
+      const { carId, dataFillimit, dataPerfundimit, biletaKey } = latestRef.current;
       const res = await apiFetch("/Payments/paypal/create-order", token, {
         method: "POST",
-        body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod, doSigurim }),
+        body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod, doSigurim, biletaKey }),
       });
       return res.orderId;
     }
@@ -709,14 +728,14 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
       setOpeningCard(false);
       setLoading(true);
       try {
-        const { carId, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit } = latestRef.current;
+        const { carId, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, biletaKey } = latestRef.current;
         const cap = await apiFetch("/Payments/paypal/capture", token, {
           method: "POST",
           body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, method: paymentMethod, paypalOrderId: data.orderID, doSigurim }),
         });
         const booking = await apiFetch("/Bookings", token, {
           method: "POST",
-          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, paymentMethod: method, paypalCaptureId: cap.captureId, doSigurim }),
+          body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, paymentMethod: method, paypalCaptureId: cap.captureId, doSigurim, biletaKey }),
         });
         setSuccessInfo({ bookingId: booking.bookingId, amountPaid: cap.amountPaid, method, cardLast4: cap.cardLast4, captureId: cap.captureId, insuranceFee: doSigurim ? insurancePrice : 0 });
       } catch (e) { showError(e); } finally { setLoading(false); }
@@ -882,8 +901,23 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
         <p className="text-xs text-slate-400 py-2">{t("booking.checkingData")}</p>
       )}
 
+      {token && hasLicense === true && needsTicket && (
+        <div className={`border rounded-2xl p-3 mb-3 ${biletaKey ? "border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-900/20" : "border-amber-200 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-900/20"}`}>
+          <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5"><Plane size={13} /> {t("booking.flightTicketTitle")}</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 mb-2">{t("booking.flightTicketHint")}</p>
+          {biletaKey ? (
+            <p className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300"><Check size={13} /> {t("booking.flightTicketUploaded")} <span className="truncate text-slate-500">{biletaName}</span></p>
+          ) : null}
+          <label className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 mt-1 rounded-xl border border-sky-600 dark:border-sky-500 bg-white dark:bg-slate-800 text-sky-700 dark:text-sky-300 cursor-pointer ${uploadingBileta ? "opacity-60 pointer-events-none" : ""}`}>
+            {uploadingBileta ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+            {biletaKey ? t("booking.flightTicketReplace") : t("booking.flightTicketUpload")}
+            <input type="file" accept="image/*,application/pdf" className="hidden" onChange={uploadBileta} />
+          </label>
+        </div>
+      )}
+
       {token && hasLicense === true && (
-        <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-3 bg-slate-50/60 dark:bg-slate-900/40">
+        <div className={`border border-slate-200 dark:border-slate-700 rounded-2xl p-3 bg-slate-50/60 dark:bg-slate-900/40 ${needsTicket && !biletaKey ? "hidden" : ""}`}>
           <p className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-2">
             <Lock size={11} /> {t("booking.securePayment")}
           </p>
