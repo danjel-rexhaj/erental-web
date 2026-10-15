@@ -17,7 +17,7 @@ import Business from "./pages/Business";
 import { AuthGate, BusinessAuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
 import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
-import { SLUG_TO_CITY, CITY_SLUGS, mergeApprovedCarSuggestions, mergeApprovedAmenities } from "./carData";
+import { SLUG_TO_CITY, CITY_SLUGS, mergeApprovedCarSuggestions, mergeApprovedAmenities, companyPath, companyIdFromSlug } from "./carData";
 
 // Real SVG flags via flag-icons (className="fi fi-<country>") -- flag emoji render as plain
 // two-letter text on Windows (no color flag glyphs in the system font), so an emoji here would
@@ -454,16 +454,18 @@ export default function App() {
       return;
     }
     if (segs[0] === "kompania" && segs[1]) {
-      const id = Number(segs[1]);
+      // /kompania/<name-slug> (shareable), old /kompania/<id> links still resolve and are
+      // rewritten to the slug form. Back-to-car context rides in the hint, not the URL.
+      let list = hint?.cars;
+      if (!list) { try { list = await apiFetch("/Cars", null); } catch { list = []; } }
+      setCars(list);
+      const id = companyIdFromSlug(segs[1], list);
       setSelectedCompanyId(id);
-      setCompanyProfileFromCarId(params.get("nga_faqja") === "makina" && params.get("makina") ? Number(params.get("makina")) : null);
+      setCompanyProfileFromCarId(hint?.fromCarId ?? (params.get("nga_faqja") === "makina" && params.get("makina") ? Number(params.get("makina")) : null));
       setView("browse");
       setStage("companyProfile");
-      if (hint?.cars) {
-        setCars(hint.cars);
-      } else {
-        try { setCars(await apiFetch("/Cars", null)); } catch { /* ignore */ }
-      }
+      const pretty = companyPath(id, list);
+      if (id && pretty !== path) { window.history.replaceState(null, "", pretty); updateCanonical(pretty); }
       return;
     }
     if (segs[0] && segs[0].startsWith("makina-me-qera-") && SLUG_TO_CITY[segs[0].slice("makina-me-qera-".length)]) {
@@ -708,9 +710,9 @@ export default function App() {
           dataFillimit={dataFillimit}
           dataPerfundimit={dataPerfundimit}
           onBack={carDetailFrom === "companyProfile"
-            ? () => go(`/kompania/${selectedCompanyId}`, { cars })
+            ? () => go(companyPath(selectedCompanyId, cars), { cars })
             : () => go(`/rezultate?nga=${dataFillimit}&deri=${dataPerfundimit}`)}
-          onSelectCompany={(id) => go(`/kompania/${id}?nga_faqja=makina&makina=${selectedCar.carId}`, { cars })}
+          onSelectCompany={(id) => go(companyPath(id, cars), { cars, fromCarId: selectedCar.carId })}
           onGoToBookings={() => go("/rezervimet")}
           hubConnection={hubConnection}
           token={token}
@@ -732,7 +734,7 @@ export default function App() {
           dataPerfundimit={dataPerfundimit}
           onBack={() => go("/")}
           onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}&nga_faqja=rezultate`, { car })}
-          onSelectCompany={(id) => go(`/kompania/${id}`, { cars })}
+          onSelectCompany={(id) => go(companyPath(id, cars), { cars })}
           favoriteIds={favoriteIds}
           onToggleFavorite={toggleFavorite}
           filters={resultFilters}
@@ -758,7 +760,7 @@ export default function App() {
         onSearch={search}
         loading={searching}
         onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}`, { car })}
-        onSelectCompany={(id) => go(`/kompania/${id}`)}
+        onSelectCompany={(id) => go(companyPath(id, cars))}
         favoriteIds={favoriteIds}
         onToggleFavorite={toggleFavorite}
         goHash={go}
@@ -796,7 +798,7 @@ export default function App() {
       />
       <Notice notice={notice} onClose={() => setNotice(null)} />
       {!token && !dismissedPromo && new Date() < new Date("2026-11-01") && (
-        <PromoBanner onDismiss={() => { setDismissedPromo(true); try { localStorage.setItem("erental_promo_tetor", "1"); } catch {} }} onRegister={() => go("/profili")} />
+        <PromoBanner onDismiss={() => { setDismissedPromo(true); try { localStorage.setItem("erental_promo_tetor", "1"); } catch {} }} onRegister={() => go("/profili?regjistrohu")} />
       )}
       <SupportChat />
       <div className="max-w-6xl mx-auto px-6 py-8 flex-1 w-full">
@@ -807,7 +809,7 @@ export default function App() {
             token={token}
             showError={showError}
             onSelectCar={(car) => go(`/makina/${car.carId}?nga=${dataFillimit}&deri=${dataPerfundimit}`, { car })}
-            onSelectCompany={(id) => go(`/kompania/${id}`)}
+            onSelectCompany={(id) => go(companyPath(id, cars))}
             favoriteIds={favoriteIds}
             onToggleFavorite={toggleFavorite}
           />
@@ -833,7 +835,7 @@ export default function App() {
         {view === "auth" && (
           token
             ? <ProfileView user={user} token={token} isAdmin={isAdmin} onLogout={logout} showError={showError} showOk={showOk} onVerified={markEmailVerified} onUpdated={updateUser} goToBusiness={() => go("/biznesi")} goTo={go} />
-            : <AuthView onAuth={handleAuth} showError={showError} showOk={showOk} goTo={handleGoTo} />
+            : <AuthView key={window.location.search} onAuth={handleAuth} showError={showError} showOk={showOk} goTo={handleGoTo} />
         )}
         {view === "verifyEmail" && (
           <VerifyView initialData={verifyData} onAuth={handleAuth} showError={showError} showOk={showOk} goTo={(v) => go(viewToHash(v))} />

@@ -64,7 +64,8 @@ export function BusinessAuthGate({ onRegister, onLogin }) {
 
 export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false }) {
   const { t } = useLang();
-  const [mode, setMode] = useState(businessMode ? "register" : "login");
+  // "?regjistrohu" (e.g. from the promo banner) opens straight on the sign-up form.
+  const [mode, setMode] = useState(() => (businessMode || new URLSearchParams(window.location.search).has("regjistrohu") ? "register" : "login"));
   const [loading, setLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [hasWhatsapp, setHasWhatsapp] = useState(false);

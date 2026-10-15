@@ -226,3 +226,33 @@ export function computeRentalQuote(car, from, to) {
   if (!seasonal) total = offer ? Number(offer.cmimiTotal) : days * Number(car.cmimiDites);
   return { days, total, firstDay, seasonal, offer };
 }
+
+// Shareable company profile URLs: /kompania/autorentdemo instead of /kompania/27. "ë"/"ç" etc.
+// are folded to plain letters. Two companies whose names slug the same get "-<id>" appended so
+// each link stays unambiguous. Companies are taken from the loaded cars list (car.company).
+export function slugify(text) {
+  return (text || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function companiesFromCars(cars) {
+  const map = new Map();
+  for (const c of cars || []) if (c.company && !map.has(c.companyId)) map.set(c.companyId, c.company.emri);
+  return map;
+}
+
+export function companyPath(companyId, cars) {
+  const companies = companiesFromCars(cars);
+  const slug = slugify(companies.get(companyId));
+  if (!slug) return `/kompania/${companyId}`;
+  const clash = [...companies].some(([id, name]) => id !== companyId && slugify(name) === slug);
+  return `/kompania/${clash ? `${slug}-${companyId}` : slug}`;
+}
+
+export function companyIdFromSlug(segment, cars) {
+  if (/^\d+$/.test(segment)) return Number(segment);
+  const companies = companiesFromCars(cars);
+  for (const [id, name] of companies) if (slugify(name) === segment) return id;
+  const m = segment.match(/-(\d+)$/);
+  return m && companies.has(Number(m[1])) ? Number(m[1]) : null;
+}
