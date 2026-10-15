@@ -104,11 +104,13 @@ export function CompanyExtrasFields({ form, setForm, zones, setZones, deliveryLa
 
 // Shared by the logged-in-client "upgrade to business" path (Business.jsx's RegisterCompanyForm)
 // and the unauthenticated BusinessSignup flow, so the validation below applies to both at once.
-export function BusinessDetailsForm({ token, onDone, showError, showOk, submitLabel }) {
+// `prefill` ({ emri, telefoni }) comes from the signup account step: those fields were just typed
+// there, so they are pre-set and hidden here instead of being asked a second time.
+export function BusinessDetailsForm({ token, onDone, showError, showOk, submitLabel, prefill }) {
   const { t } = useLang();
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
-  const [form, setForm] = useState({ emri: "", telefoni: "", adresa: "", qyteti: "", nipt: "", iban: "", ...EMPTY_COMPANY_EXTRAS });
+  const [form, setForm] = useState({ emri: prefill?.emri || "", telefoni: prefill?.telefoni || "", adresa: "", qyteti: "", nipt: "", iban: "", ...EMPTY_COMPANY_EXTRAS });
   const [zones, setZones] = useState([]);
   const [coords, setCoords] = useState(null);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -146,8 +148,8 @@ export function BusinessDetailsForm({ token, onDone, showError, showOk, submitLa
       <div className="flex items-center gap-2 mb-1"><Building2 size={20} className="text-emerald-700 dark:text-emerald-400" /><h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t("business.registerBusiness")}</h2></div>
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("business.willUseAccountEmail")}</p>
       <form onSubmit={submit}>
-        <Field label={t("business.businessName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="AutoRent Tirana" /></Field>
-        <Field label={t("auth.phone")}><input required className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder="0691234567" /></Field>
+        {!prefill?.emri && <Field label={t("business.businessName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="AutoRent Tirana" /></Field>}
+        {!prefill?.telefoni && <Field label={t("auth.phone")}><input required className={inputClass} value={form.telefoni} onChange={set("telefoni")} placeholder="0691234567" /></Field>}
         <Field label={t("business.address")}><input required className={inputClass} value={form.adresa} onChange={set("adresa")} placeholder="Rruga..." /></Field>
         <Field label={t("business.cityZone")}>
           <select required className={inputClass} value={form.qyteti} onChange={set("qyteti")}>

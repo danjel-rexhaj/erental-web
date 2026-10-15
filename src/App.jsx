@@ -797,7 +797,8 @@ export default function App() {
         toggleTheme={toggleTheme}
       />
       <Notice notice={notice} onClose={() => setNotice(null)} />
-      {!token && !dismissedPromo && new Date() < new Date("2026-11-01") && (
+      {/* Client-only promo: never on the business signup / business pages. */}
+      {!token && !dismissedPromo && view !== "businessSignup" && view !== "business" && view !== "termsBusiness" && new Date() < new Date("2026-11-01") && (
         <PromoBanner onDismiss={() => { setDismissedPromo(true); try { localStorage.setItem("erental_promo_tetor", "1"); } catch {} }} onRegister={() => go("/profili?regjistrohu")} />
       )}
       <SupportChat />

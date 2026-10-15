@@ -45,7 +45,7 @@ export default function BusinessSignup({ onAuth, onDone, showError, showOk }) {
       )}
       {step === "details" && (
         <div className="py-4">
-          <BusinessDetailsForm token={sessionToken} onDone={onDone} showError={showError} showOk={showOk} submitLabel={t("auth.register")} />
+          <BusinessDetailsForm token={sessionToken} onDone={onDone} showError={showError} showOk={showOk} submitLabel={t("auth.register")} prefill={{ emri: verifyData?.emri, telefoni: verifyData?.telefoni }} />
         </div>
       )}
     </div>

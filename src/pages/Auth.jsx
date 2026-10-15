@@ -93,7 +93,7 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
         const payload = { ...rest, telefoni, hasWhatsapp };
         if (kodPromocional.trim()) payload.kodPromocional = kodPromocional.trim();
         await apiFetch("/Auth/register", null, { method: "POST", body: JSON.stringify(payload) });
-        goTo("verifyEmail", { email: form.email, emri: form.emri });
+        goTo("verifyEmail", { email: form.email, emri: form.emri, telefoni });
       } else {
         const data = await apiFetch("/Auth/login", null, { method: "POST", body: JSON.stringify({ email: form.email, password: form.password }) });
         onAuth(data);
@@ -201,7 +201,7 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
             {t("auth.hasWhatsappCheckbox")}
           </label>
         )}
-        {mode === "register" && (
+        {mode === "register" && !businessMode && (
           <Field label={t("auth.promoCode")}><input className={inputClass} value={form.kodPromocional} onChange={(e) => setForm((f) => ({ ...f, kodPromocional: e.target.value.toUpperCase() }))} placeholder="p.sh. TETOR" style={{ textTransform: "uppercase", letterSpacing: "0.08em" }} /></Field>
         )}
         <Field label={t("auth.password")}><input required type="password" className={inputClass} value={form.password} onChange={set("password")} placeholder="••••••••" /></Field>
@@ -505,7 +505,7 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
         </div>
       </div>
 
-      {user?.kodPromocional && (
+      {user?.kodPromocional && user?.role !== "business" && (
         <div className="rounded-2xl border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 px-5 py-4 flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-amber-400 dark:bg-amber-500 flex items-center justify-center shrink-0">
             <Star size={18} className="text-white fill-white" />
