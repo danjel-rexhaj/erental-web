@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Car as CarIcon, CheckCircle2, AlertCircle, MapPin, Search, Crosshair, ChevronLeft, ChevronRight, ChevronDown, Download, Building2, ShieldCheck, Star, Fuel, Gauge, Users as UsersIcon, Clock, Heart, Truck } from "lucide-react";
 import { decodeJwt } from "./api";
 import { generateInvoicePdf } from "./invoicePdf";
+import { resizedPhotoUrl } from "./imageResize";
 import { useLang } from "./useLang";
 import { monthName, weekdayInitials } from "./dateFormat";
 import { AMENITY_CATEGORIES, PLATFORM_MARKUP, amenityLabel, computeRentalQuote } from "./carData";
@@ -298,15 +299,30 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
 // Every place a car photo renders with object-cover reads objectPositionY (0-100, null/undefined
 // = dead-center) so a business can drag a photo into place once (CarPhotoManager) and have it
 // stay correctly framed everywhere the photo shows up, instead of always center-cropping.
-export function CroppedPhoto({ url, alt, positionY, className, ...rest }) {
-  return <img src={url} alt={alt} className={className} style={{ objectPosition: `center ${positionY ?? 50}%` }} {...rest} />;
+// `width` requests a resized copy from the CDN (see resizedPhotoUrl) for small slots like cards;
+// if that fails (transformations off, non-CDN url) the original is loaded instead.
+export function CroppedPhoto({ url, alt, positionY, className, width, onError, ...rest }) {
+  const resized = resizedPhotoUrl(url, width);
+  return (
+    <img
+      src={resized}
+      alt={alt}
+      className={className}
+      style={{ objectPosition: `center ${positionY ?? 50}%` }}
+      onError={(e) => {
+        if (resized !== url && e.currentTarget.src !== url) { e.currentTarget.src = url; return; }
+        onError && onError(e);
+      }}
+      {...rest}
+    />
+  );
 }
 
 export function CarPhoto({ car }) {
   const photos = (car.carPhotos || []).filter(Boolean);
   const main = photos.find((p) => p.eshteKryesore) || photos[0];
   if (main?.urlFotos) {
-    return <CroppedPhoto url={main.urlFotos} alt={`${car.marka} ${car.modeli}`} positionY={main.objectPositionY} className="w-full h-44 object-cover rounded-t-2xl bg-slate-100 dark:bg-slate-800" />;
+    return <CroppedPhoto url={main.urlFotos} width={800} alt={`${car.marka} ${car.modeli}`} positionY={main.objectPositionY} className="w-full h-44 object-cover rounded-t-2xl bg-slate-100 dark:bg-slate-800" />;
   }
   return <div className="w-full h-44 rounded-t-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><CarIcon size={32} className="text-slate-300 dark:text-slate-600" /></div>;
 }

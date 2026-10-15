@@ -1344,7 +1344,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
         <div>
           <div className="rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
             {shownPhoto ? (
-              <CroppedPhoto url={shownPhoto.urlFotos} alt={`${car.marka} ${car.modeli}`} positionY={shownPhoto.objectPositionY} className="w-full h-64 object-cover" />
+              <CroppedPhoto url={shownPhoto.urlFotos} width={1200} alt={`${car.marka} ${car.modeli}`} positionY={shownPhoto.objectPositionY} className="w-full h-64 object-cover" />
             ) : (
               <div className="w-full h-64 flex items-center justify-center text-slate-300 dark:text-slate-600"><CarIcon size={40} /></div>
             )}
@@ -1358,7 +1358,7 @@ function BusinessCarDetail({ car, token, reload, showError, showOk, onBack }) {
                   onClick={() => setPreviewPhoto(p)}
                   className={`relative rounded-xl overflow-hidden border-2 ${p.photoId === shownPhoto?.photoId ? "border-sky-500 dark:border-emerald-500" : "border-transparent hover:border-slate-300 dark:hover:border-slate-600"}`}
                 >
-                  <CroppedPhoto url={p.urlFotos} alt="" positionY={p.objectPositionY} className="w-full h-16 object-cover" />
+                  <CroppedPhoto url={p.urlFotos} width={300} alt="" positionY={p.objectPositionY} className="w-full h-16 object-cover" />
                   {p.eshteKryesore && (
                     <span className="absolute top-1 left-1 bg-amber-400 text-amber-950 rounded-full w-4 h-4 flex items-center justify-center" title={t("business.mainPhoto")}>
                       <Star size={9} className="fill-current" />

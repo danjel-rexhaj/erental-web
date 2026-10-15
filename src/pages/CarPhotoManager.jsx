@@ -4,6 +4,7 @@ import { apiFetch } from "../api";
 import { PHOTO_SLOTS } from "../carData";
 import { useLang } from "../useLang";
 import { CroppedPhoto } from "../components";
+import { shrinkImage } from "../imageResize";
 
 function PhotoPositionAdjuster({ photo, token, onSave, onCancel, showError, t }) {
   const [y, setY] = useState(photo.objectPositionY ?? 50);
@@ -102,7 +103,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
     setBusyKey(slotKey);
     try {
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", await shrinkImage(file));
       fd.append("carId", carId);
       fd.append("eshteKryesore", totalCount === 0 ? "true" : "false");
       fd.append("kategoria", slotKey);
@@ -148,7 +149,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
                 className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 cursor-pointer"
                 title={t("photos.adjustPosition")}
               >
-                <CroppedPhoto url={photo.urlFotos} alt={t(`photoSlot.${slot.key}`)} positionY={photo.objectPositionY} className="w-full h-20 object-cover" />
+                <CroppedPhoto url={photo.urlFotos} width={300} alt={t(`photoSlot.${slot.key}`)} positionY={photo.objectPositionY} className="w-full h-20 object-cover" />
                 <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] px-1.5 py-0.5 flex items-center justify-between gap-1">
                   {t(`photoSlot.${slot.key}`)}
                   <Move size={10} className="shrink-0 opacity-80" />
@@ -212,7 +213,7 @@ export default function CarPhotoManager({ carId, token, photos, onChanged, showE
                 className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 cursor-pointer"
                 title={t("photos.adjustPosition")}
               >
-                <CroppedPhoto url={photo.urlFotos} alt="" positionY={photo.objectPositionY} className="w-full h-20 object-cover" />
+                <CroppedPhoto url={photo.urlFotos} width={300} alt="" positionY={photo.objectPositionY} className="w-full h-20 object-cover" />
                 <span className="absolute bottom-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-80">
                   <Move size={11} />
                 </span>

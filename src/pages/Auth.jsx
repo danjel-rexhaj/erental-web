@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2, Clock, Bell, Star } from "lucide-react";
 import { apiFetch, apiFetchBlob } from "../api";
+import { shrinkImage } from "../imageResize";
 import { subscribeToPush, unsubscribeFromPush, isPushSubscribed, pushSupported } from "../push";
 import { Field, PrimaryButton, GhostButton, inputClass } from "../components";
 import { NATIONALITIES } from "../carData";
@@ -408,7 +409,7 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
     setUploadingPhoto(true);
     try {
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", await shrinkImage(file, 800));
       const res = await apiFetch("/Users/me/photo", token, { method: "POST", body: fd });
       onUpdated && onUpdated({ fotoProfili: res.fotoProfili });
       showOk(t("auth.profilePhotoChanged"));
@@ -421,7 +422,7 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
     setUploadingLogo(true);
     try {
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", await shrinkImage(file, 800));
       const res = await apiFetch("/Companies/my-company/logo", token, { method: "POST", body: fd });
       setCompany((c) => (c ? { ...c, logoUrl: res.logoUrl } : c));
       showOk(t("auth.logoChanged"));
@@ -432,7 +433,7 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
     setUploadingLicense(side);
     try {
       const fd = new FormData();
-      fd.append(side, file);
+      fd.append(side, await shrinkImage(file, 2400, 0.9));
       const res = await apiFetch("/Users/me/license", token, { method: "POST", body: fd });
       onUpdated && onUpdated({ hasLicensePara: res.hasLicensePara, hasLicenseMbrapa: res.hasLicenseMbrapa, patentaStatus: res.patentaStatus });
       setLicenseVersion((v) => v + 1);

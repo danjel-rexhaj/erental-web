@@ -222,6 +222,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           <div className="relative rounded-2xl overflow-hidden">
             <CroppedPhoto
               url={shown?.urlFotos}
+              width={1600}
               alt={`${car.marka} ${car.modeli}`}
               positionY={shown?.objectPositionY}
               className="w-full h-72 object-cover bg-slate-100 dark:bg-slate-800 cursor-zoom-in"
@@ -266,7 +267,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                   onClick={() => setActivePhoto(p)}
                   className={`relative rounded-xl overflow-hidden border h-16 ${shown?.photoId === p.photoId ? "border-sky-600 dark:border-emerald-500 ring-2 ring-sky-200 dark:ring-emerald-900/40" : "border-slate-200 dark:border-slate-700"}`}
                 >
-                  <CroppedPhoto url={p.urlFotos} alt={slotLabel(p.kategoria) || ""} positionY={p.objectPositionY} className="w-full h-full object-cover" />
+                  <CroppedPhoto url={p.urlFotos} width={400} alt={slotLabel(p.kategoria) || ""} positionY={p.objectPositionY} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
