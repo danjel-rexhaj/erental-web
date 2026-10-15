@@ -18,6 +18,7 @@ export default function SupportChat() {
   const inputRef = useRef(null);
   const launcherRef = useRef(null);
   const [covering, setCovering] = useState(false);
+  const [keyboard, setKeyboard] = useState(null);
 
   useEffect(() => {
     apiFetch("/Support/status", null).then((d) => setEnabled(!!d?.enabled)).catch(() => {});
@@ -27,8 +28,28 @@ export default function SupportChat() {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages, loading, open]);
 
+  // On phones, focusing straight away pops the keyboard over the quick questions -- let them tap.
   useEffect(() => {
-    if (open) inputRef.current?.focus();
+    if (open && !matchMedia("(pointer: coarse)").matches) inputRef.current?.focus();
+  }, [open]);
+
+  // The docked panel is position:fixed, and some phone browsers (Samsung Internet) leave fixed
+  // elements where they were when the keyboard opens, hiding the input behind it. Track the
+  // visible viewport and lift/shrink the panel to sit just above the keyboard.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!open || !vv) return;
+    function update() {
+      const inset = window.innerHeight - (vv.height + vv.offsetTop);
+      setKeyboard(inset > 80 ? { bottom: inset + 8, maxHeight: vv.height - 16 } : null);
+    }
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
   }, [open]);
 
   // The launcher floats over the page, so wherever the visitor scrolls it could land on top of a
@@ -105,7 +126,7 @@ export default function SupportChat() {
 
   // Phones: a small card docked in the bottom corner, never the whole screen. Desktop: floating.
   return (
-    <div className="fixed right-3 sm:right-4 bottom-5 sm:bottom-4 z-40 w-[min(19rem,calc(100vw-1rem))] sm:w-[360px] h-[24rem] sm:h-[480px] max-h-[58vh] sm:max-h-[75vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl shadow-slate-900/25">
+    <div className="fixed right-3 sm:right-4 bottom-5 sm:bottom-4 z-40 w-[min(19rem,calc(100vw-1rem))] sm:w-[360px] h-[24rem] sm:h-[480px] max-h-[58vh] sm:max-h-[75vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl shadow-slate-900/25" style={keyboard || undefined}>
       <div className="flex items-center gap-2.5 px-3.5 py-3 bg-sky-600 dark:bg-emerald-700 text-white shrink-0">
         <span className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center shrink-0"><MessageCircle size={18} /></span>
         <span className="min-w-0 flex-1">
