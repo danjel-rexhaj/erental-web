@@ -300,22 +300,80 @@ export function PaymentSuccessModal({ car, dataFillimit, dataPerfundimit, succes
 // = dead-center) so a business can drag a photo into place once (CarPhotoManager) and have it
 // stay correctly framed everywhere the photo shows up, instead of always center-cropping.
 // `width` requests a resized copy from the CDN (see resizedPhotoUrl) for small slots like cards;
-// if that fails (transformations off, non-CDN url) the original is loaded instead.
+// If the CDN can't resize (transformations off), the original is scaled down here instead
+// (DownscaledPhoto) -- letting the browser squeeze a 1600px photo into a 64px thumbnail in one
+// step is what makes it grainy and jagged.
 export function CroppedPhoto({ url, alt, positionY, className, width, onError, ...rest }) {
   const resized = resizedPhotoUrl(url, width);
+  const [cdnFailed, setCdnFailed] = useState(false);
+  const style = { objectPosition: `center ${positionY ?? 50}%` };
+  if (width && url && (resized === url || cdnFailed)) {
+    return <DownscaledPhoto key={url} url={url} alt={alt} className={className} style={style} width={width} onError={onError} {...rest} />;
+  }
   return (
     <img
       src={resized}
       alt={alt}
       className={className}
-      style={{ objectPosition: `center ${positionY ?? 50}%` }}
+      style={style}
       onError={(e) => {
-        if (resized !== url && e.currentTarget.src !== url) { markResizeUnavailable(); e.currentTarget.src = url; return; }
+        if (resized !== url) { markResizeUnavailable(); setCdnFailed(true); return; }
         onError && onError(e);
       }}
       {...rest}
     />
   );
+}
+
+// Draws the photo onto a canvas at roughly `width` px, halving step by step so every pixel is an
+// average of its neighbours rather than a skipped sample. The canvas keeps object-fit/position
+// from the same classes, so it frames exactly like the <img> it replaces. Photos already close to
+// the target size, or any failure, just render as a plain <img>.
+function DownscaledPhoto({ url, alt, className, style, width, onError, ...rest }) {
+  const canvasRef = useRef(null);
+  const [mode, setMode] = useState("canvas");
+
+  useEffect(() => {
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      if (cancelled || !canvas) return;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      // Size to the slot actually on screen (enough to cover it at this screen's density);
+      // `width` is the fallback when the slot hasn't been laid out yet.
+      const dpr = window.devicePixelRatio || 1;
+      const cw = canvas.clientWidth, ch = canvas.clientHeight;
+      const target = cw && ch ? Math.ceil(Math.max(cw * dpr, ((ch * dpr) * w) / h)) : width;
+      if (w < target * 1.5) { setMode("img"); return; }
+      try {
+        const tw = target, th = Math.max(1, Math.round((h * target) / w));
+        let src = img;
+        while (w / 2 >= tw) {
+          const step = document.createElement("canvas");
+          step.width = Math.round(w / 2);
+          step.height = Math.round(h / 2);
+          const sctx = step.getContext("2d");
+          sctx.imageSmoothingQuality = "high";
+          sctx.drawImage(src, 0, 0, step.width, step.height);
+          src = step; w = step.width; h = step.height;
+        }
+        canvas.width = tw;
+        canvas.height = th;
+        const ctx = canvas.getContext("2d");
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(src, 0, 0, tw, th);
+      } catch {
+        setMode("img");
+      }
+    };
+    img.onerror = () => { if (!cancelled) setMode("img"); };
+    img.src = url;
+    return () => { cancelled = true; };
+  }, [url, width]);
+
+  if (mode === "img") return <img src={url} alt={alt} className={className} style={style} onError={onError} {...rest} />;
+  return <canvas ref={canvasRef} role="img" aria-label={alt} className={className} style={style} {...rest} />;
 }
 
 export function CarPhoto({ car }) {
