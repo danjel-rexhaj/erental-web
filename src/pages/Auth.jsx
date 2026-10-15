@@ -167,8 +167,8 @@ export function AuthView({ onAuth, showError, showOk, goTo, businessMode = false
             <Field label={t("auth.accountName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="Rent Albania" /></Field>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <Field label={t("auth.firstName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder="Andi" /></Field>
-              <Field label={t("auth.lastName")}><input required className={inputClass} value={form.mbiemri} onChange={set("mbiemri")} placeholder="Krasniqi" /></Field>
+              <Field label={t("auth.firstName")}><input required className={inputClass} value={form.emri} onChange={set("emri")} placeholder={t("auth.firstName")} /></Field>
+              <Field label={t("auth.lastName")}><input required className={inputClass} value={form.mbiemri} onChange={set("mbiemri")} placeholder={t("auth.lastName")} /></Field>
             </div>
           )
         )}
