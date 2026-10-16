@@ -863,6 +863,7 @@ export default function App() {
 }
 
 function PromoBanner({ onDismiss, onRegister }) {
+  const { t } = useLang();
   const [copied, setCopied] = useState(false);
   function copyCode() {
     try { navigator.clipboard.writeText("TETOR"); } catch {}
@@ -875,14 +876,14 @@ function PromoBanner({ onDismiss, onRegister }) {
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Tag size={14} className="shrink-0 text-sky-200" />
           <p className="text-xs sm:text-sm text-sky-50 leading-snug">
-            Regjistrohu tani me kodin{" "}
+            {t("promo.signupWith")}{" "}
             <button
               onClick={copyCode}
               className="inline-flex items-center gap-1 bg-white/20 hover:bg-white/30 transition rounded px-2 py-0.5 font-bold tracking-widest text-white text-xs sm:text-sm"
             >
               TETOR {copied ? <Check size={11} /> : <Copy size={11} />}
             </button>
-            {" "}dhe merr statusin <strong className="text-white">VIP</strong> falas — vlefshëm deri më 31 Tetor 2026.
+            {" "}{t("promo.getStatus")} <strong className="text-white">VIP</strong> {t("promo.freeUntil")}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -890,7 +891,7 @@ function PromoBanner({ onDismiss, onRegister }) {
             onClick={onRegister}
             className="text-xs font-semibold bg-white text-sky-700 hover:bg-sky-50 transition rounded-full px-3 py-1"
           >
-            Regjistrohu
+            {t("promo.register")}
           </button>
           <button onClick={onDismiss} className="text-sky-200 hover:text-white transition p-1">
             <X size={16} />
