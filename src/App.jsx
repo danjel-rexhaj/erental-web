@@ -18,7 +18,8 @@ import { AuthGate, BusinessAuthGate, AuthView, ProfileView, VerifyView } from ".
 import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
 import { SITE, seoPageForPath, seoPageForCity, alternatesFor, localizePath, seoLangFor, seoMetaFor, NOINDEX_PREFIXES } from "./seo";
-import { SLUG_TO_CITY, CITY_SLUGS, mergeApprovedCarSuggestions, mergeApprovedAmenities, companyPath, companyIdFromSlug } from "./carData";
+import { useActiveCities } from "./activeCities";
+import { SLUG_TO_CITY, CITY_SLUGS, placeName, mergeApprovedCarSuggestions, mergeApprovedAmenities, companyPath, companyIdFromSlug } from "./carData";
 
 // Real SVG flags via flag-icons (className="fi fi-<country>") -- flag emoji render as plain
 // two-letter text on Windows (no color flag glyphs in the system font), so an emoji here would
@@ -1239,7 +1240,10 @@ function TopBar({ view, setView, businessTab, goHash, user, isAdmin, onLogout, l
 const FOOTER_CITIES = ["Tirane", "Aeroporti Rinas (Tirane)", "Durres", "Vlore", "Sarande", "Shkoder"];
 
 function Footer({ setView, goHash }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  // Only cities that currently have cars -- the others' pages exist but are empty (noindex).
+  const activeCities = useActiveCities();
+  const footerCities = FOOTER_CITIES.filter((city) => activeCities?.has(city));
   return (
     <div className="bg-slate-900">
       <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
@@ -1266,14 +1270,14 @@ function Footer({ setView, goHash }) {
         <div>
           <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-3">{t("footer.popularCities")}</p>
           <div className="flex flex-col gap-2">
-            {FOOTER_CITIES.map((city) => (
+            {footerCities.map((city) => (
               <a
                 key={city}
-                href={`/makina-me-qera-${CITY_SLUGS[city]}`}
+                href={localizePath(`/makina-me-qera-${CITY_SLUGS[city]}`, lang)}
                 onClick={(e) => { e.preventDefault(); goHash?.(`/makina-me-qera-${CITY_SLUGS[city]}`); }}
                 className="text-xs text-slate-400 hover:text-white"
               >
-                {city}
+                {placeName(city, lang)}
               </a>
             ))}
           </div>

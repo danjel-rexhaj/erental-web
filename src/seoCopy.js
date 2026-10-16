@@ -19,7 +19,7 @@ export const SEO_COPY_MORE = {
       },
       fr: {
         title: "Location de voiture en Albanie | Comparez les prix - ERental",
-        description: "Comparez les voitures de location en Albanie proposées par des loueurs locaux vérifiés. Voitures à Tirana, à l'aéroport de Tirana et dans toute l'Albanie : réservez en ligne avec ERental.",
+        description: "Comparez les voitures de location de loueurs locaux vérifiés en Albanie : à Tirana, à l'aéroport de Tirana et au-delà. Réservez en ligne avec ERental.",
         h1: "Location de voiture en Albanie",
         intro: "ERental rassemble au même endroit les voitures de location de loueurs locaux vérifiés. Comparez les prix, consultez les conditions de chaque loueur et réservez en ligne — à Tirana, à l'aéroport international de Tirana et au-delà.",
         sections: [
@@ -30,8 +30,8 @@ export const SEO_COPY_MORE = {
         ],
       },
       tr: {
-        title: "Arnavutluk'ta Araç Kiralama | Fiyatları Karşılaştırın - ERental",
-        description: "Arnavutluk'ta doğrulanmış yerel firmaların kiralık araçlarını karşılaştırın. Tiran'da, Tiran Havalimanı'nda ve Arnavutluk genelinde araçlar: ERental ile online rezervasyon yapın.",
+        title: "Arnavutluk'ta Araç Kiralama ve Rent a Car | ERental",
+        description: "Arnavutluk'ta doğrulanmış yerel firmalardan araç kiralayın. Tiran ve Tiran Havalimanı'ndaki rent a car tekliflerini karşılaştırıp online rezervasyon yapın.",
         h1: "Arnavutluk'ta araç kiralama",
         intro: "ERental, doğrulanmış yerel firmaların kiralık araçlarını tek bir yerde toplar. Fiyatları karşılaştırın, her firmanın koşullarını inceleyin ve online rezervasyon yapın — Tiran'da, Tiran Uluslararası Havalimanı'nda ve ötesinde.",
         sections: [
@@ -43,7 +43,7 @@ export const SEO_COPY_MORE = {
       },
       el: {
         title: "Ενοικίαση αυτοκινήτου στην Αλβανία | Σύγκριση τιμών - ERental",
-        description: "Συγκρίνετε ενοικιαζόμενα αυτοκίνητα στην Αλβανία από επαληθευμένες τοπικές εταιρείες. Αυτοκίνητα στα Τίρανα, στο αεροδρόμιο των Τιράνων και σε όλη την Αλβανία — κάντε κράτηση online με το ERental.",
+        description: "Συγκρίνετε ενοικιαζόμενα αυτοκίνητα από επαληθευμένες τοπικές εταιρείες στην Αλβανία — στα Τίρανα και στο αεροδρόμιο. Κάντε κράτηση online με το ERental.",
         h1: "Ενοικίαση αυτοκινήτου στην Αλβανία",
         intro: "Το ERental συγκεντρώνει σε ένα μέρος ενοικιαζόμενα αυτοκίνητα από επαληθευμένες τοπικές εταιρείες. Συγκρίνετε τιμές, δείτε τους όρους κάθε εταιρείας και κάντε κράτηση online — στα Τίρανα, στο διεθνές αεροδρόμιο των Τιράνων και αλλού.",
         sections: [
@@ -130,7 +130,7 @@ export const SEO_COPY_MORE = {
         ],
       },
       tr: {
-        title: "Tiran Havalimanı Araç Kiralama | Fiyatları Karşılaştırın - ERental",
+        title: "Tiran Havalimanı Rent a Car ve Araç Kiralama | ERental",
         description: "Tiran Uluslararası Havalimanı'nda (Rinas) doğrulanmış yerel firmalardan araç kiralama. Fiyatları karşılaştırın ve inişten önce online rezervasyon yapın.",
         h1: "Tiran Havalimanı'nda araç kiralama",
         intro: "Aracınızı inmeden önce rezerve edin ve Tiran Uluslararası Havalimanı'nda (Rinas) teslim alın. Havalimanına hizmet veren doğrulanmış firmaların tekliflerini karşılaştırın ve yolculuğunuza en uygun olanı seçin.",
@@ -142,7 +142,7 @@ export const SEO_COPY_MORE = {
       },
       el: {
         title: "Ενοικίαση αυτοκινήτου στο αεροδρόμιο των Τιράνων | ERental",
-        description: "Ενοικίαση αυτοκινήτου στο διεθνές αεροδρόμιο των Τιράνων (Ρίνας) από επαληθευμένες τοπικές εταιρείες. Συγκρίνετε τιμές και κάντε κράτηση online πριν προσγειωθείτε.",
+        description: "Ενοικίαση αυτοκινήτου στο αεροδρόμιο των Τιράνων (Ρίνας) από επαληθευμένες τοπικές εταιρείες. Συγκρίνετε τιμές και κλείστε online πριν φτάσετε.",
         h1: "Ενοικίαση αυτοκινήτου στο αεροδρόμιο των Τιράνων",
         intro: "Κλείστε το αυτοκίνητό σας πριν προσγειωθείτε και παραλάβετέ το στο διεθνές αεροδρόμιο των Τιράνων (Ρίνας). Συγκρίνετε τις προσφορές των επαληθευμένων εταιρειών που εξυπηρετούν το αεροδρόμιο και διαλέξτε αυτή που ταιριάζει στο ταξίδι σας.",
         sections: [

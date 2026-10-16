@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as U
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { shrinkImage } from "../imageResize";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
-import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP, amenityLabel, computeRentalQuote, specValue } from "../carData";
+import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP, amenityLabel, computeRentalQuote, specValue, placeName } from "../carData";
 import { useLang } from "../useLang";
 import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
 
@@ -394,7 +394,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           >
             <Building2 size={14} className="text-sky-600 dark:text-emerald-400 shrink-0" />
             <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover:text-sky-600 dark:group-hover:text-emerald-400">{car.company?.emri}</span>
-            <span className="text-xs text-slate-400 flex items-center gap-0.5"><MapPin size={11} /> {car.company?.qyteti}</span>
+            <span className="text-xs text-slate-400 flex items-center gap-0.5"><MapPin size={11} /> {placeName(car.company?.qyteti, lang)}</span>
           </button>
 
           <div className="grid grid-cols-2 gap-2 mt-5">
@@ -583,7 +583,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
             {car.company?.qyteti && (
               <div className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
                 <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 flex items-center gap-1.5"><MapPin size={16} className="text-sky-600 dark:text-teal-400" /> {t("car.pickupTitle")}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{car.company.qyteti}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">{car.company.adresa ? `${car.company.adresa}, ` : ""}{placeName(car.company.qyteti, lang)}</p>
 
                 {mapEmbedUrl && (
                   <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3">
@@ -1112,7 +1112,7 @@ export function CompanyProfile({ company, cars, dataFillimit, dataPerfundimit, o
               <span className="whitespace-nowrap">{t("company.carsCount", { count: company.carCount ?? cars.length })}</span>
               {company.dataRegjistrimit && <span className="whitespace-nowrap">{t("car.memberSince", { date: memberSince(company.dataRegjistrimit, lang) })}</span>}
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1"><MapPin size={13} /> {company.adresa ? `${company.adresa}, ` : ""}{company.qyteti}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1"><MapPin size={13} /> {company.adresa ? `${company.adresa}, ` : ""}{placeName(company.qyteti, lang)}</p>
             <div className="flex items-center gap-3 flex-wrap">
               <p className="text-xs text-slate-400 dark:text-slate-500">{t("company.contactAfterConfirm")}</p>
               <a

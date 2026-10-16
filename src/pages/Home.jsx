@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { ShieldCheck, BadgeCheck, RotateCcw, Calendar, ArrowRight, MapPin, Clock, Lock, Zap, ChevronDown, HelpCircle, Sparkles, Star, Quote } from "lucide-react";
 import { apiFetch } from "../api";
 import { Field, PrimaryButton, CarCard } from "../components";
-import { CITY_SLUGS, CAR_CATEGORIES } from "../carData";
+import { CITY_SLUGS, CAR_CATEGORIES, placeName } from "../carData";
+import { useActiveCities } from "../activeCities";
 import { useLang } from "../useLang";
 import { seoPageByKey, seoMetaFor, localizePath } from "../seo";
 
@@ -59,7 +60,10 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
   // automatically as soon as a business registers there, no code change needed.
   const zones = [...new Set(companies.map((c) => c.qyteti).filter(Boolean))].sort();
   const loop = companies.length > 0 ? [...companies, ...companies] : [];
-  const otherCities = Object.entries(CITY_SLUGS).filter(([city]) => !FEATURED_DESTINATIONS.some((d) => d.city === city));
+  // Only cities that currently have cars: the rest have (empty, noindex) pages that aren't worth
+  // linking to from every page. They show up here by themselves once a business there lists cars.
+  const activeCities = useActiveCities();
+  const otherCities = Object.entries(CITY_SLUGS).filter(([city]) => activeCities?.has(city) && !FEATURED_DESTINATIONS.some((d) => d.city === city));
 
   function changeFrom(value) {
     // The native <input type="date" min=...> attribute isn't reliably enforced on every
@@ -115,7 +119,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
                   >
                     <option className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100" value="">{t("home.allZones")}</option>
                     {zones.map((z) => (
-                      <option key={z} value={z} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">{z}</option>
+                      <option key={z} value={z} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">{placeName(z, lang)}</option>
                     ))}
                   </select>
                 </div>
@@ -164,7 +168,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             onClick={(e) => { e.preventDefault(); goCity(city); }}
             className="text-xs font-semibold text-sky-700 dark:text-emerald-300 bg-sky-50 dark:bg-emerald-900/30 border border-sky-200 dark:border-emerald-800 rounded-full px-3 py-1.5 hover:bg-sky-100 dark:hover:bg-emerald-900/50 transition"
           >
-            {city}
+            {placeName(city, lang)}
           </a>
         ))}
       </div>
@@ -250,7 +254,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
               onClick={(e) => { e.preventDefault(); goCity(city); }}
               className="block text-left border border-slate-200 dark:border-slate-700 rounded-2xl p-5 hover:border-sky-300 dark:hover:border-emerald-600 hover:shadow-sm transition bg-white dark:bg-slate-800"
             >
-              <p className="font-bold text-slate-900 dark:text-slate-100">{city}</p>
+              <p className="font-bold text-slate-900 dark:text-slate-100">{placeName(city, lang)}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t(descKey)}</p>
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 dark:text-emerald-400 mt-3">
                 {t("common.reserve")} <ArrowRight size={12} />
@@ -258,19 +262,23 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
             </a>
           ))}
         </div>
-        <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">{t("home.moreCities")}</p>
-        <div className="flex flex-wrap gap-2">
-          {otherCities.map(([city, slug]) => (
-            <a
-              key={slug}
-              href={cityHref(city)}
-              onClick={(e) => { e.preventDefault(); goCity(city); }}
-              className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-emerald-600 rounded-full px-3 py-1.5 transition"
-            >
-              {city}
-            </a>
-          ))}
-        </div>
+        {otherCities.length > 0 && (
+          <>
+            <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">{t("home.moreCities")}</p>
+            <div className="flex flex-wrap gap-2">
+              {otherCities.map(([city, slug]) => (
+                <a
+                  key={slug}
+                  href={cityHref(city)}
+                  onClick={(e) => { e.preventDefault(); goCity(city); }}
+                  className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-emerald-600 rounded-full px-3 py-1.5 transition"
+                >
+                  {placeName(city, lang)}
+                </a>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {(loadingReviews || reviews.length > 0) && (
@@ -320,7 +328,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
                     <div key={i} className="flex items-center gap-2 border border-sky-100 dark:border-teal-800/50 rounded-xl px-4 py-3 bg-white/90 dark:bg-slate-900/70 backdrop-blur-sm flex-shrink-0 shadow-sm">
                       <ShieldCheck size={14} className="text-sky-600 dark:text-teal-400 flex-shrink-0" />
                       <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">{c.emri}</span>
-                      <span className="text-xs text-slate-400 whitespace-nowrap">· {c.qyteti}</span>
+                      <span className="text-xs text-slate-400 whitespace-nowrap">· {placeName(c.qyteti, lang)}</span>
                     </div>
                   ))}
                 </div>

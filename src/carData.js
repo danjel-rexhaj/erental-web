@@ -278,3 +278,36 @@ export function specValue(t, kind, value) {
   const label = t(key);
   return label === key ? value : label;
 }
+
+// Display names of ALBANIAN_LOCATIONS in each UI language -- for showing only. Filters, URLs, the
+// API and stored data keep using the Albanian value itself. Albanian (and any name missing here)
+// shows the value unchanged; German reads the English-style names.
+const PLACE_NAMES = {
+  "Porti i Durresit": { en: "Port of Durrës", it: "Porto di Durazzo", fr: "Port de Durrës", tr: "Dıraç Limanı", el: "Λιμάνι του Δυρραχίου", de: "Hafen Durrës" },
+  "Porti i Vlores": { en: "Port of Vlorë", it: "Porto di Valona", fr: "Port de Vlorë", tr: "Avlonya Limanı", el: "Λιμάνι της Αυλώνας", de: "Hafen Vlorë" },
+  "Aeroporti Rinas (Tirane)": { en: "Tirana Airport (Rinas)", it: "Aeroporto di Tirana (Rinas)", fr: "Aéroport de Tirana (Rinas)", tr: "Tiran Havalimanı (Rinas)", el: "Αεροδρόμιο Τιράνων (Ρίνας)", de: "Flughafen Tirana (Rinas)" },
+  "Tirane": { en: "Tirana", it: "Tirana", fr: "Tirana", tr: "Tiran", el: "Τίρανα", de: "Tirana" },
+  "Durres": { en: "Durrës", it: "Durazzo", fr: "Durrës", tr: "Dıraç", el: "Δυρράχιο", de: "Durrës" },
+  "Vlore": { en: "Vlorë", it: "Valona", fr: "Vlorë", tr: "Avlonya", el: "Αυλώνα", de: "Vlorë" },
+  "Shkoder": { en: "Shkodër", it: "Scutari", fr: "Shkodër", tr: "İşkodra", el: "Σκόδρα", de: "Shkodër" },
+  "Elbasan": { en: "Elbasan", it: "Elbasan", fr: "Elbasan", tr: "İlbasan", el: "Ελμπασάν", de: "Elbasan" },
+  "Fier": { en: "Fier", it: "Fier", fr: "Fier", tr: "Fier", el: "Φιέρι", de: "Fier" },
+  "Korce": { en: "Korçë", it: "Coriza", fr: "Korçë", tr: "Görice", el: "Κορυτσά", de: "Korçë" },
+  "Berat": { en: "Berat", it: "Berat", fr: "Berat", tr: "Berat", el: "Μπεράτι", de: "Berat" },
+  "Lushnje": { en: "Lushnjë", it: "Lushnjë", fr: "Lushnjë", tr: "Lushnjë", el: "Λούσνια", de: "Lushnjë" },
+  "Kavaje": { en: "Kavajë", it: "Cavaia", fr: "Kavajë", tr: "Kavaja", el: "Καβάγια", de: "Kavajë" },
+  "Pogradec": { en: "Pogradec", it: "Pogradec", fr: "Pogradec", tr: "Pogradeç", el: "Πόγραδετς", de: "Pogradec" },
+  "Gjirokaster": { en: "Gjirokastër", it: "Argirocastro", fr: "Gjirokastër", tr: "Ergiri", el: "Αργυρόκαστρο", de: "Gjirokastër" },
+  "Sarande": { en: "Sarandë", it: "Saranda", fr: "Saranda", tr: "Saranda", el: "Άγιοι Σαράντα", de: "Saranda" },
+  "Lezhe": { en: "Lezhë", it: "Alessio", fr: "Lezhë", tr: "Leş", el: "Λέζα", de: "Lezhë" },
+  "Kukes": { en: "Kukës", it: "Kukës", fr: "Kukës", tr: "Kukës", el: "Κούκες", de: "Kukës" },
+  "Peshkopi": { en: "Peshkopi", it: "Peshkopi", fr: "Peshkopi", tr: "Peshkopi", el: "Πεσκόπι", de: "Peshkopi" },
+  "Kruje": { en: "Krujë", it: "Croia", fr: "Krujë", tr: "Kruja", el: "Κρόια", de: "Krujë" },
+  "Fushe-Kruje": { en: "Fushë-Krujë", it: "Fushë-Krujë", fr: "Fushë-Krujë", tr: "Fushë-Krujë", el: "Φούσε-Κρούια", de: "Fushë-Krujë" },
+  "Patos": { en: "Patos", it: "Patos", fr: "Patos", tr: "Patos", el: "Πάτος", de: "Patos" },
+  "Kucove": { en: "Kuçovë", it: "Kuçovë", fr: "Kuçovë", tr: "Kuçova", el: "Κούτσοβα", de: "Kuçovë" },
+};
+
+export function placeName(name, lang) {
+  return PLACE_NAMES[name]?.[lang] || name;
+}

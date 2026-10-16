@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal, MapPin, X } from "lucide-react";
 import { CarCard } from "../components";
-import { CAR_CATEGORIES, CAR_BRANDS, CITY_SLUGS, specValue } from "../carData";
+import { CAR_CATEGORIES, CAR_BRANDS, CITY_SLUGS, specValue, placeName } from "../carData";
+import { useActiveCities } from "../activeCities";
 import { useLang } from "../useLang";
 import { localizePath } from "../seo";
 
@@ -68,6 +69,9 @@ function freeInLabel(lirohetMe, dataFillimit, t) {
 
 export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters, pageHeading, pageIntro, seoSections, currentCity, goHash }) {
   const { t, lang } = useLang();
+  // Other cities worth linking to: only those that currently have cars.
+  const activeCities = useActiveCities();
+  const linkCities = Object.keys(CITY_SLUGS).filter((city) => city !== currentCity && activeCities?.has(city));
   const shuffledCars = useMemo(() => shuffleArray(cars), [cars]);
 
   const brands = sortByBrandPopularity([...new Set(cars.map((c) => c.marka).filter(Boolean))]);
@@ -133,7 +137,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
       <FilterSection title={t("results.filterBrand")} allLabel={t("results.allBrands")} value={filters.marka} onChange={(v) => setFilters((f) => ({ ...f, marka: v, modeli: "" }))} options={brands.map((b) => ({ value: b, label: b }))} scroll />
       <FilterSection title={t("results.filterModel")} allLabel={t("results.allModels")} value={filters.modeli} onChange={(v) => setFilters((f) => ({ ...f, modeli: v }))} options={models.map((m) => ({ value: m, label: m }))} scroll />
       <FilterSection title={t("results.filterBusiness")} allLabel={t("results.allBusinesses")} value={filters.biznesi} onChange={(v) => setFilters((f) => ({ ...f, biznesi: v }))} options={businesses.map(([id, emri]) => ({ value: String(id), label: emri }))} scroll />
-      <FilterSection title={t("results.filterZone")} allLabel={t("home.allZones")} value={filters.zona} onChange={(v) => setFilters((f) => ({ ...f, zona: v }))} options={zones.map((z) => ({ value: z, label: z }))} scroll />
+      <FilterSection title={t("results.filterZone")} allLabel={t("home.allZones")} value={filters.zona} onChange={(v) => setFilters((f) => ({ ...f, zona: v }))} options={zones.map((z) => ({ value: z, label: placeName(z, lang) }))} scroll />
       <FilterSection title={t("results.filterFuel")} allLabel={t("results.allFuels")} value={filters.karburanti} onChange={(v) => setFilters((f) => ({ ...f, karburanti: v }))} options={[
         ...["diesel", "benzine", "hybrid", "elektrik"].map((v) => ({ value: v, label: specValue(t, "fuel", v) })),
       ]} />
@@ -310,27 +314,31 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
             ) : (
               <>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {currentCity ? t("results.seoTitleCity", { city: currentCity }) : t("results.seoTitleGeneric")}
+                  {currentCity ? t("results.seoTitleCity", { city: placeName(currentCity, lang) }) : t("results.seoTitleGeneric")}
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
-                  {currentCity ? t("results.seoBodyCity", { city: currentCity }) : t("results.seoBodyGeneric")}
+                  {currentCity ? t("results.seoBodyCity", { city: placeName(currentCity, lang) }) : t("results.seoBodyGeneric")}
                 </p>
               </>
             )}
 
-            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mt-6 mb-3">{t("results.citiesTitle")}</h3>
-            <div className="flex flex-wrap gap-2">
-              {Object.keys(CITY_SLUGS).filter((city) => city !== currentCity).map((city) => (
-                <a
-                  key={city}
-                  href={localizePath(`/makina-me-qera-${CITY_SLUGS[city]}`, lang)}
-                  onClick={(e) => { e.preventDefault(); goHash?.(`/makina-me-qera-${CITY_SLUGS[city]}`); }}
-                  className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-full hover:border-sky-300 dark:hover:border-emerald-600 hover:text-sky-600 dark:hover:text-emerald-400 transition"
-                >
-                  <MapPin size={11} /> {city}
-                </a>
-              ))}
-            </div>
+            {linkCities.length > 0 && (
+              <>
+                <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mt-6 mb-3">{t("results.citiesTitle")}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {linkCities.map((city) => (
+                    <a
+                      key={city}
+                      href={localizePath(`/makina-me-qera-${CITY_SLUGS[city]}`, lang)}
+                      onClick={(e) => { e.preventDefault(); goHash?.(`/makina-me-qera-${CITY_SLUGS[city]}`); }}
+                      className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-full hover:border-sky-300 dark:hover:border-emerald-600 hover:text-sky-600 dark:hover:text-emerald-400 transition"
+                    >
+                      <MapPin size={11} /> {placeName(city, lang)}
+                    </a>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

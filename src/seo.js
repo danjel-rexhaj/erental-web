@@ -19,7 +19,7 @@ export const SEO_PAGES = [
     meta: {
       sq: {
         title: "Makina me qera në Shqipëri | Krahaso çmimet - ERental",
-        description: "Krahaso dhe rezervo makina me qera në Shqipëri nga biznese lokale të verifikuara. Makina në Tiranë, në Aeroportin e Rinasit dhe më gjerë — rezervim online me ERental.",
+        description: "Makina me qera dhe rent a car në Shqipëri nga biznese lokale të verifikuara. Krahaso çmimet në Tiranë dhe në Aeroportin e Rinasit, pastaj rezervo online.",
         h1: "Makina me qera në Shqipëri",
         intro: "ERental mbledh në një vend makinat me qera të bizneseve lokale të verifikuara. Krahaso çmimet, shiko kushtet e secilit biznes dhe rezervo online — në Tiranë, në Aeroportin e Rinasit dhe më gjerë.",
         sections: [
@@ -50,7 +50,7 @@ export const SEO_PAGES = [
     meta: {
       sq: {
         title: "Makina me qera në Tiranë | Krahaso çmimet - ERental",
-        description: "Makina me qera në Tiranë nga biznese lokale të verifikuara. Krahaso çmimet dhe kushtet, pastaj rezervo online me ERental.",
+        description: "Rent a car në Tiranë: makina me qera nga biznese lokale të verifikuara. Krahaso çmimet dhe kushtet, pastaj rezervo online me ERental.",
         h1: "Makina me qera në Tiranë",
         intro: "Krahaso makinat me qera që ofrojnë bizneset e verifikuara në Tiranë — nga makina ekonomike për qytetin te SUV për udhëtime më të gjata. Çdo makinë tregon çmimin për ditë, kushtet e biznesit dhe datat e lira.",
         sections: [
@@ -79,7 +79,7 @@ export const SEO_PAGES = [
     meta: {
       sq: {
         title: "Makina me qera në Aeroportin e Rinasit | ERental",
-        description: "Makina me qera në Aeroportin Ndërkombëtar të Tiranës (Rinas) nga biznese lokale të verifikuara. Krahaso çmimet dhe rezervo online para se të mbërrish.",
+        description: "Rent a car në Aeroportin e Rinasit: makina me qera nga biznese të verifikuara. Krahaso çmimet dhe rezervo online para se të mbërrish.",
         h1: "Makina me qera në Aeroportin e Rinasit",
         intro: "Rezervo makinën para se të mbërrish dhe merre në Aeroportin Ndërkombëtar të Tiranës (Rinas). Krahaso ofertat e bizneseve të verifikuara që shërbejnë aeroportin dhe zgjidh atë që të përshtatet.",
         sections: [

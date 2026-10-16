@@ -385,30 +385,38 @@ export function CarPhoto({ car }) {
   return <div className="w-full h-44 rounded-t-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><CarIcon size={32} className="text-slate-300 dark:text-slate-600" /></div>;
 }
 
+// The car's name is a real link to its page, stretched over the whole card (its ::after covers the
+// card), so crawlers and "open in new tab" see /makina/<id> while the card looks and clicks as
+// before. A plain click stays in-app (onSelectCar keeps the dates); Ctrl/Cmd/Shift/middle-click
+// fall through to the browser. The heart, business name and Book button sit above the link.
 export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLabel, showCompany = true, isFavorited, onToggleFavorite }) {
   const { t } = useLang();
+  function openCar(e) {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    onSelectCar(car);
+  }
   return (
     <div
-      onClick={() => onSelectCar(car)}
-      onKeyDown={(e) => { if (e.key === "Enter") onSelectCar(car); }}
-      role="button"
-      tabIndex={0}
-      className={`text-left rounded-2xl border overflow-hidden hover:shadow-md transition bg-white dark:bg-slate-800 cursor-pointer ${nearMiss ? "border-amber-200 dark:border-amber-800/60" : "border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500"}`}
+      className={`relative text-left rounded-2xl border overflow-hidden hover:shadow-md transition bg-white dark:bg-slate-800 cursor-pointer focus-within:ring-2 focus-within:ring-sky-500 dark:focus-within:ring-emerald-500 ${nearMiss ? "border-amber-200 dark:border-amber-800/60" : "border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500"}`}
     >
-      <div className={`relative ${nearMiss ? "opacity-70 grayscale-[30%]" : ""}`}>
-        <CarPhoto car={car} />
-        <span className="absolute top-2 left-2 text-[10px] font-semibold uppercase tracking-wide bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg backdrop-blur-sm">
-          {car.kategoria}
-        </span>
-        {nearMiss && freeInLabel && (
-          <span className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-semibold bg-amber-500 text-white px-2 py-1 rounded-lg">
-            <Clock size={11} /> {freeInLabel}
+      <div className="relative">
+        {/* Dimmed separately: opacity makes its own stacking layer, which would trap the heart below the card link. */}
+        <div className={nearMiss ? "opacity-70 grayscale-[30%]" : ""}>
+          <CarPhoto car={car} />
+          <span className="absolute top-2 left-2 text-[10px] font-semibold uppercase tracking-wide bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg backdrop-blur-sm">
+            {car.kategoria}
           </span>
-        )}
+          {nearMiss && freeInLabel && (
+            <span className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-semibold bg-amber-500 text-white px-2 py-1 rounded-lg">
+              <Clock size={11} /> {freeInLabel}
+            </span>
+          )}
+        </div>
         {onToggleFavorite && (
           <button
             onClick={(e) => { e.stopPropagation(); onToggleFavorite(car); }}
-            className={`absolute right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition ${nearMiss && freeInLabel ? "top-10" : "top-2"}`}
+            className={`absolute z-10 right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center hover:scale-110 active:scale-95 transition ${nearMiss && freeInLabel ? "top-10" : "top-2"}`}
             title={isFavorited ? t("common.favoriteRemove") : t("common.favoriteAdd")}
           >
             <Heart size={15} className={isFavorited ? "text-red-500 fill-red-500" : "text-slate-500 dark:text-slate-300"} />
@@ -417,13 +425,17 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
       </div>
       <div className="p-3">
         <div className="flex items-start justify-between">
-          <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{car.marka} {car.modeli}</p>
+          <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
+            <a href={`/makina/${car.carId}`} onClick={openCar} className="outline-none after:absolute after:inset-0 after:content-['']">
+              {car.marka} {car.modeli}
+            </a>
+          </p>
           <span className="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-lg whitespace-nowrap">{car.cmimiDites + PLATFORM_MARKUP}€{t("common.perDaySuffix")}</span>
         </div>
         {showCompany && (
           <span
             onClick={(e) => { e.stopPropagation(); onSelectCompany(car.companyId); }}
-            className="text-xs text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 hover:underline flex items-center gap-1 mt-1 w-fit cursor-pointer"
+            className="relative z-10 text-xs text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 hover:underline flex items-center gap-1 mt-1 w-fit cursor-pointer"
           >
             <Building2 size={11} /> {car.company?.emri}
             {car.company?.eshteVerifikuar && <ShieldCheck size={11} className="text-emerald-600" />}
@@ -443,7 +455,7 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onSelectCar(car); }}
-            className="text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1.5 rounded-lg transition"
+            className="relative z-10 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1.5 rounded-lg transition"
           >
             {t("common.reserve")}
           </button>
