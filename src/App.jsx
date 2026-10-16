@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { LogOut, Menu, X, Bell, Sun, Moon, Car, Tag, Copy, Check } from "lucide-react";
+import { LogOut, Menu, X, Bell, Sun, Moon, Car, Tag, Copy, Check, Loader2 } from "lucide-react";
 import { apiFetch, decodeJwt, genericErrorText } from "./api";
 import { useNotifications } from "./notifications";
 import { subscribeToPush, unsubscribeFromPush, pushSupported } from "./push";
@@ -270,6 +270,10 @@ export default function App() {
 
   // Browse flow state lives here so it persists across sub-page navigation
   const [stage, setStage] = useState("landing"); // landing | results | carDetail | companyProfile
+  // True while the page for the current URL is still being worked out (first load / refresh, or a
+  // car/business opened without its data in hand). A loader shows meanwhile -- before, the homepage
+  // flashed up first and then jumped to the page you were actually on.
+  const [routeLoading, setRouteLoading] = useState(() => seoPageForPath(window.location.pathname)?.page.key !== "home");
   const [carDetailFrom, setCarDetailFrom] = useState("results"); // results | companyProfile
   const [companyProfileFromCarId, setCompanyProfileFromCarId] = useState(null);
   const [dataFillimit, setDataFillimit] = useState("");
@@ -438,7 +442,7 @@ export default function App() {
   };
   const viewToHash = (v) => VIEW_TO_PATH[v] || "/";
 
-  const applyRoute = useCallback(async (hashStr, hint) => {
+  const applyRouteInner = useCallback(async (hashStr, hint) => {
     const [path = "/", queryStr] = (hashStr || "/").replace(/^#/, "").split("?");
     const params = new URLSearchParams(queryStr || "");
     const segs = path.split("/").filter(Boolean);
@@ -492,6 +496,7 @@ export default function App() {
       if (hint?.car) {
         setSelectedCar(hint.car);
       } else {
+        setRouteLoading(true);
         try { setSelectedCar(await apiFetch(`/Cars/${segs[1]}`, null)); }
         catch { showError(new Error(t("app.carNotFound"))); }
       }
@@ -500,10 +505,17 @@ export default function App() {
     if (segs[0] === "kompania" && segs[1]) {
       // /kompania/<name-slug> (shareable), old /kompania/<id> links still resolve and are
       // rewritten to the slug form. Back-to-car context rides in the hint, not the URL.
+      // The list handed over (search results for some dates, one city, the homepage's featured cars)
+      // often doesn't contain this business at all -- the profile then had nothing to show. Use it
+      // only if it does; otherwise load every car.
       let list = hint?.cars;
-      if (!list) { try { list = await apiFetch("/Cars", null); } catch { list = []; } }
+      let id = list ? companyIdFromSlug(segs[1], list) : null;
+      if (!list || !id || !list.some((c) => c.companyId === id)) {
+        setRouteLoading(true);
+        try { list = await apiFetch("/Cars", null); } catch { list = []; }
+        id = companyIdFromSlug(segs[1], list);
+      }
       setCars(list);
-      const id = companyIdFromSlug(segs[1], list);
       setSelectedCompanyId(id);
       setCompanyProfileFromCarId(hint?.fromCarId ?? (params.get("nga_faqja") === "makina" && params.get("makina") ? Number(params.get("makina")) : null));
       setView("browse");
@@ -576,6 +588,10 @@ export default function App() {
     setSelectedCompanyId(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataFillimit, dataPerfundimit, token]);
+
+  const applyRoute = useCallback(async (hashStr, hint) => {
+    try { await applyRouteInner(hashStr, hint); } finally { setRouteLoading(false); }
+  }, [applyRouteInner]);
 
   function go(hashStr, hint) {
     // Links all over the app point at the Albanian URLs ("/", "/makina-me-qera-tirane"); someone
@@ -762,6 +778,13 @@ export default function App() {
   }, [dataFillimit, dataPerfundimit]);
 
   function renderBrowse() {
+    if (routeLoading) {
+      return (
+        <div className="flex justify-center py-24" role="status" aria-label={t("common.loading")}>
+          <Loader2 size={28} className="animate-spin text-sky-600 dark:text-emerald-400" />
+        </div>
+      );
+    }
     if (stage === "companyProfile" && selectedCompanyId) {
       const companyCars = cars.filter((c) => c.companyId === selectedCompanyId);
       const company = companyCars[0]?.company;
