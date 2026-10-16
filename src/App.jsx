@@ -883,7 +883,7 @@ function PromoBanner({ onDismiss, onRegister }) {
             >
               TETOR {copied ? <Check size={11} /> : <Copy size={11} />}
             </button>
-            {" "}{t("promo.getStatus")} <strong className="text-white">VIP</strong> {t("promo.freeUntil")}
+            {" "}{t("promo.getStatus")} <strong className="text-white">{t("promo.credit")}</strong> {t("promo.freeUntil")}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
