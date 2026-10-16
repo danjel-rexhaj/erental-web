@@ -57,8 +57,11 @@ function bodyFor(page, lang) {
     + `<nav>${langLinks}</nav></div>`;
 }
 
-// Minimal readable styling for the moment before the app's JS takes over.
-const PRERENDER_STYLE = `<style>.seo-prerender{max-width:64rem;margin:0 auto;padding:1.5rem 1rem;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#0f172a;line-height:1.55}.seo-prerender header a{font-weight:700;font-size:1.25rem;color:#0284c7;text-decoration:none}.seo-prerender h1{font-size:1.75rem;margin:1.25rem 0 .5rem}.seo-prerender h2{font-size:1.1rem;margin:1.25rem 0 .25rem}.seo-prerender p{color:#475569;margin:0}.seo-prerender nav{margin-top:1.5rem;font-size:.9rem}.seo-prerender nav a{color:#0284c7}@media (prefers-color-scheme:dark){.seo-prerender{color:#f1f5f9}.seo-prerender p{color:#94a3b8}}</style>`;
+// The text is there for crawlers. People normally never see it: the app replaces #root well
+// within the delay below, so it starts invisible and only fades in if the app hasn't taken over
+// after 2s (no JavaScript, very slow connection) -- then it's a readable page, not a blank one.
+// Colours and background are set explicitly so it reads the same in light and dark mode.
+const PRERENDER_STYLE = `<style>.seo-prerender{max-width:64rem;margin:0 auto;padding:1.5rem 1rem;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;background:#f8fafc;color:#0f172a;opacity:0;animation:seo-reveal .3s ease 2s forwards}@keyframes seo-reveal{to{opacity:1}}.seo-prerender header a{font-weight:700;font-size:1.25rem;color:#0284c7;text-decoration:none}.seo-prerender h1{font-size:1.75rem;margin:1.25rem 0 .5rem;color:#0f172a}.seo-prerender h2{font-size:1.1rem;margin:1.25rem 0 .25rem;color:#0f172a}.seo-prerender p{color:#475569;margin:0}.seo-prerender nav{margin-top:1.5rem;font-size:.9rem}.seo-prerender nav a{color:#0284c7}@media (prefers-color-scheme:dark){.seo-prerender{background:#0f172a;color:#f1f5f9}.seo-prerender h1,.seo-prerender h2{color:#f1f5f9}.seo-prerender p{color:#94a3b8}.seo-prerender header a,.seo-prerender nav a{color:#38bdf8}}@media (prefers-reduced-motion:reduce){.seo-prerender{animation-duration:0s}}</style>`;
 
 function jsonLdFor(page, lang) {
   const m = page.meta[lang];
