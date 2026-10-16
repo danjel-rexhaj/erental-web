@@ -16,7 +16,7 @@ precacheAndRoute(self.__WB_MANIFEST);
 
 // SPA offline fallback -- serve the cached shell for any navigation except API calls (those must
 // hit the network or fail, never get silently answered with index.html).
-registerRoute(new NavigationRoute(createHandlerBoundToURL("/index.html"), { denylist: [/^\/api/] }));
+registerRoute(new NavigationRoute(createHandlerBoundToURL("/app.html"), { denylist: [/^\/api/] }));
 
 self.addEventListener("push", (event) => {
   let data = {};

@@ -1,5 +1,48 @@
 {
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/en",
+      "destination": "/seo/en.html"
+    },
+    {
+      "source": "/en/",
+      "destination": "/seo/en.html"
+    },
+    {
+      "source": "/makina-me-qera-tirane",
+      "destination": "/seo/makina-me-qera-tirane.html"
+    },
+    {
+      "source": "/makina-me-qera-tirane/",
+      "destination": "/seo/makina-me-qera-tirane.html"
+    },
+    {
+      "source": "/en/rent-a-car-tirana",
+      "destination": "/seo/en-rent-a-car-tirana.html"
+    },
+    {
+      "source": "/en/rent-a-car-tirana/",
+      "destination": "/seo/en-rent-a-car-tirana.html"
+    },
+    {
+      "source": "/makina-me-qera-aeroporti-rinas",
+      "destination": "/seo/makina-me-qera-aeroporti-rinas.html"
+    },
+    {
+      "source": "/makina-me-qera-aeroporti-rinas/",
+      "destination": "/seo/makina-me-qera-aeroporti-rinas.html"
+    },
+    {
+      "source": "/en/tirana-airport-car-rental",
+      "destination": "/seo/en-tirana-airport-car-rental.html"
+    },
+    {
+      "source": "/en/tirana-airport-car-rental/",
+      "destination": "/seo/en-tirana-airport-car-rental.html"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/app.html"
+    }
   ]
 }

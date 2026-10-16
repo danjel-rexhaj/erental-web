@@ -3,6 +3,7 @@ import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal, MapPin, X } fro
 import { CarCard } from "../components";
 import { CAR_CATEGORIES, CAR_BRANDS, CITY_SLUGS } from "../carData";
 import { useLang } from "../useLang";
+import { localizePath } from "../seo";
 
 // Cars naturally arrive clustered by business (a business usually adds several cars in one
 // sitting, so their car_ids land close together) -- shuffled here so results don't visually
@@ -65,8 +66,8 @@ function freeInLabel(lirohetMe, dataFillimit, t) {
   return t("results.freeInDays", { days });
 }
 
-export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters, pageHeading, pageIntro, currentCity, goHash }) {
-  const { t } = useLang();
+export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, filters, setFilters, showFilters, setShowFilters, pageHeading, pageIntro, seoSections, currentCity, goHash }) {
+  const { t, lang } = useLang();
   const shuffledCars = useMemo(() => shuffleArray(cars), [cars]);
 
   const brands = sortByBrandPopularity([...new Set(cars.map((c) => c.marka).filter(Boolean))]);
@@ -300,19 +301,32 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
           )}
 
           <div className="mt-10 pt-8 border-t border-slate-100 dark:border-slate-800">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-              {currentCity ? t("results.seoTitleCity", { city: currentCity }) : t("results.seoTitleGeneric")}
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
-              {currentCity ? t("results.seoBodyCity", { city: currentCity }) : t("results.seoBodyGeneric")}
-            </p>
+            {seoSections ? (
+              <div className="flex flex-col gap-5 max-w-3xl">
+                {seoSections.map((s) => (
+                  <section key={s.h2}>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">{s.h2}</h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{s.p}</p>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                  {currentCity ? t("results.seoTitleCity", { city: currentCity }) : t("results.seoTitleGeneric")}
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
+                  {currentCity ? t("results.seoBodyCity", { city: currentCity }) : t("results.seoBodyGeneric")}
+                </p>
+              </>
+            )}
 
             <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mt-6 mb-3">{t("results.citiesTitle")}</h3>
             <div className="flex flex-wrap gap-2">
               {Object.keys(CITY_SLUGS).filter((city) => city !== currentCity).map((city) => (
                 <a
                   key={city}
-                  href={`/makina-me-qera-${CITY_SLUGS[city]}`}
+                  href={localizePath(`/makina-me-qera-${CITY_SLUGS[city]}`, lang)}
                   onClick={(e) => { e.preventDefault(); goHash?.(`/makina-me-qera-${CITY_SLUGS[city]}`); }}
                   className="flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-1.5 rounded-full hover:border-sky-300 dark:hover:border-emerald-600 hover:text-sky-600 dark:hover:text-emerald-400 transition"
                 >

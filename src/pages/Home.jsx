@@ -4,6 +4,7 @@ import { apiFetch } from "../api";
 import { Field, PrimaryButton, CarCard } from "../components";
 import { CITY_SLUGS, CAR_CATEGORIES } from "../carData";
 import { useLang } from "../useLang";
+import { seoPageByKey, localizePath } from "../seo";
 
 const today = () => new Date().toISOString().split("T")[0];
 const dayAfter = (dateStr) => {
@@ -21,7 +22,11 @@ const FEATURED_DESTINATIONS = [
 ];
 
 export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, setDataPerfundimit, zona, setZona, onSearch, loading, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, goHash }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  // The H1 and the "about" copy come from seo.js, the same text the prerendered HTML carries.
+  // Albanian, or English for every other language.
+  const seo = seoPageByKey("home").meta[lang === "sq" ? "sq" : "en"];
+  const cityHref = (city) => localizePath(`/makina-me-qera-${CITY_SLUGS[city]}`, lang);
   const [companies, setCompanies] = useState([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [featuredCars, setFeaturedCars] = useState([]);
@@ -88,12 +93,12 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
         <div className="relative flex flex-col justify-end min-h-[560px] sm:min-h-[520px] p-6 sm:p-12">
-          <span className="inline-flex items-center gap-1.5 text-white text-xs font-semibold tracking-wide uppercase bg-gradient-to-r from-sky-500 to-cyan-500 dark:from-teal-500 dark:to-emerald-600 rounded-full px-3 py-1.5 w-fit mb-4 shadow-lg shadow-sky-900/30 dark:shadow-teal-900/30">
-            {t("home.badge")}
-          </span>
-          <h1 className="text-white text-3xl sm:text-5xl font-bold tracking-tight max-w-xl">
-            {t("home.title")}
+          <h1 className="inline-flex items-center gap-1.5 text-white text-xs font-semibold tracking-wide uppercase bg-gradient-to-r from-sky-500 to-cyan-500 dark:from-teal-500 dark:to-emerald-600 rounded-full px-3 py-1.5 w-fit mb-4 shadow-lg shadow-sky-900/30 dark:shadow-teal-900/30">
+            {seo.h1}
           </h1>
+          <p className="text-white text-3xl sm:text-5xl font-bold tracking-tight max-w-xl">
+            {t("home.title")}
+          </p>
           <p className="text-slate-300 text-sm sm:text-base mt-3 max-w-lg">
             {t("home.subtitle")}
           </p>
@@ -153,13 +158,14 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">{t("home.exploreCities")}:</span>
         {FEATURED_DESTINATIONS.map(({ city }) => (
-          <button
+          <a
             key={city}
-            onClick={() => goCity(city)}
+            href={cityHref(city)}
+            onClick={(e) => { e.preventDefault(); goCity(city); }}
             className="text-xs font-semibold text-sky-700 dark:text-emerald-300 bg-sky-50 dark:bg-emerald-900/30 border border-sky-200 dark:border-emerald-800 rounded-full px-3 py-1.5 hover:bg-sky-100 dark:hover:bg-emerald-900/50 transition"
           >
             {city}
-          </button>
+          </a>
         ))}
       </div>
 
@@ -191,13 +197,14 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">{t("home.categoriesTitle")}</h2>
         <div className="flex flex-wrap gap-2">
           {CAR_CATEGORIES.map(({ key }) => (
-            <button
+            <a
               key={key}
-              onClick={() => goCategory(key)}
+              href={`/rezultate?kategoria=${key}`}
+              onClick={(e) => { e.preventDefault(); goCategory(key); }}
               className="text-sm font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-full px-4 py-2 hover:border-sky-300 dark:hover:border-emerald-600 hover:text-sky-600 dark:hover:text-emerald-400 transition"
             >
               {t(`category.${key}`)}
-            </button>
+            </a>
           ))}
         </div>
       </div>
@@ -237,17 +244,18 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{t("home.destinationsIntro")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           {FEATURED_DESTINATIONS.map(({ city, descKey }) => (
-            <button
+            <a
               key={city}
-              onClick={() => goCity(city)}
-              className="text-left border border-slate-200 dark:border-slate-700 rounded-2xl p-5 hover:border-sky-300 dark:hover:border-emerald-600 hover:shadow-sm transition bg-white dark:bg-slate-800"
+              href={cityHref(city)}
+              onClick={(e) => { e.preventDefault(); goCity(city); }}
+              className="block text-left border border-slate-200 dark:border-slate-700 rounded-2xl p-5 hover:border-sky-300 dark:hover:border-emerald-600 hover:shadow-sm transition bg-white dark:bg-slate-800"
             >
               <p className="font-bold text-slate-900 dark:text-slate-100">{city}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t(descKey)}</p>
               <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 dark:text-emerald-400 mt-3">
                 {t("common.reserve")} <ArrowRight size={12} />
               </span>
-            </button>
+            </a>
           ))}
         </div>
         <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">{t("home.moreCities")}</p>
@@ -255,7 +263,7 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
           {otherCities.map(([city, slug]) => (
             <a
               key={slug}
-              href={`/makina-me-qera-${slug}`}
+              href={cityHref(city)}
               onClick={(e) => { e.preventDefault(); goCity(city); }}
               className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-emerald-400 border border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-emerald-600 rounded-full px-3 py-1.5 transition"
             >
@@ -322,6 +330,15 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
         </div>
       )}
 
+      <div className="mt-10 pt-8 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+        {seo.sections.map((s) => (
+          <section key={s.h2}>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">{s.h2}</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{s.p}</p>
+          </section>
+        ))}
+      </div>
+
       <div className="mt-10" ref={faqRef}>
         <button
           type="button"
@@ -334,8 +351,8 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
           </div>
           <ChevronDown size={18} className={`text-slate-400 shrink-0 transition-transform ${faqSectionOpen ? "rotate-180" : ""}`} />
         </button>
-        {faqSectionOpen && (
-          <div className="flex flex-col gap-2">
+        {/* Always rendered, just hidden while collapsed, so the answers are part of the page. */}
+        <div className="flex flex-col gap-2" hidden={!faqSectionOpen}>
             {[1, 2, 3, 4, 5, 6].map((i) => {
               const open = openFaqs.has(i);
               return (
@@ -352,14 +369,11 @@ export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, s
                     <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t(`home.faq${i}Q`)}</span>
                     <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
                   </button>
-                  {open && (
-                    <p className="px-4 pb-4 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{t(`home.faq${i}A`)}</p>
-                  )}
+                  <p className="px-4 pb-4 text-sm text-slate-500 dark:text-slate-400 leading-relaxed" hidden={!open}>{t(`home.faq${i}A`)}</p>
                 </div>
               );
             })}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

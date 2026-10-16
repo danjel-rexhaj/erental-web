@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { LangContext } from "./langContext";
 
 // Bilingual (sq/en) dictionary, extended page by page -- see the plan doc for the
@@ -3275,12 +3275,23 @@ function resolve(value, vars) {
 }
 
 export function LangProvider({ children }) {
-  const [lang, setLangState] = useState(() => localStorage.getItem("lang") || "sq");
+  // An /en/ URL (the English SEO pages) decides the language itself, so a visitor arriving from
+  // Google sees English straight away -- and it sticks as their choice from then on.
+  const [lang, setLangState] = useState(() => {
+    const p = window.location.pathname;
+    if (p === "/en" || p.startsWith("/en/")) {
+      try { localStorage.setItem("lang", "en"); } catch { /* private mode */ }
+      return "en";
+    }
+    try { return localStorage.getItem("lang") || "sq"; } catch { return "sq"; }
+  });
 
   const setLang = useCallback((next) => {
     setLangState(next);
-    localStorage.setItem("lang", next);
+    try { localStorage.setItem("lang", next); } catch { /* private mode */ }
   }, []);
+
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 
   const t = useCallback(
     (key, vars) => {

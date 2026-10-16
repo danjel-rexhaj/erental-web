@@ -1,11 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import seoPrerender from './seo-prerender.js'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    seoPrerender(),
     VitePWA({
       // Switched from the default generateSW to injectManifest so src/sw.js can hand-write
       // push/notificationclick listeners for real Web Push — generateSW's auto-built worker has

@@ -17,6 +17,7 @@ import Business from "./pages/Business";
 import { AuthGate, BusinessAuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
 import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
+import { SITE, seoPageForPath, seoPageForCity, alternatesFor, localizePath, NOINDEX_PREFIXES } from "./seo";
 import { SLUG_TO_CITY, CITY_SLUGS, mergeApprovedCarSuggestions, mergeApprovedAmenities, companyPath, companyIdFromSlug } from "./carData";
 
 // Real SVG flags via flag-icons (className="fi fi-<country>") -- flag emoji render as plain
@@ -33,15 +34,41 @@ const LANGUAGES = [
 // index.html ships a single hardcoded canonical tag pointing at the homepage -- every other
 // route needs its own, and specifically WITHOUT query params (?nga=&deri=&...), or Google treats
 // every date-range combination on a car/results page as separate duplicate-content URLs.
+// SEO pages (seo.js) also get their hreflang alternates, so the Albanian and English versions
+// point at each other; every other route drops them.
 function updateCanonical(pathname) {
-  const clean = (pathname || "/").split("?")[0] || "/";
+  let clean = (pathname || "/").split("?")[0] || "/";
+  const seo = seoPageForPath(clean);
+  if (seo) clean = seo.page.paths[seo.lang];
   let link = document.querySelector('link[rel="canonical"]');
   if (!link) {
     link = document.createElement("link");
     link.setAttribute("rel", "canonical");
     document.head.appendChild(link);
   }
-  link.setAttribute("href", `https://www.erental.store${clean}`);
+  link.setAttribute("href", `${SITE}${clean}`);
+  setMetaTag("property", "og:url", `${SITE}${clean}`);
+
+  document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((l) => l.remove());
+  if (seo) {
+    for (const { hreflang, href } of alternatesFor(seo.page)) {
+      const alt = document.createElement("link");
+      alt.setAttribute("rel", "alternate");
+      alt.setAttribute("hreflang", hreflang);
+      alt.setAttribute("href", href);
+      document.head.appendChild(alt);
+    }
+  }
+}
+
+function setMetaTag(attr, key, content) {
+  let meta = document.querySelector(`meta[${attr}="${key}"]`);
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute(attr, key);
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", content);
 }
 
 // index.html's <title>/<meta name="description"> are homepage-only and were showing up
@@ -127,8 +154,13 @@ function updateUnreadBadge(count) {
 function updatePageMeta(title, description) {
   currentBaseTitle = title || DEFAULT_TITLE;
   applyTitleBadge();
-  const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc) metaDesc.setAttribute("content", description || DEFAULT_DESCRIPTION);
+  const desc = description || DEFAULT_DESCRIPTION;
+  setMetaTag("name", "description", desc);
+  // Shared links (WhatsApp, Facebook...) preview the page actually being shared.
+  setMetaTag("property", "og:title", currentBaseTitle);
+  setMetaTag("property", "og:description", desc);
+  setMetaTag("name", "twitter:title", currentBaseTitle);
+  setMetaTag("name", "twitter:description", desc);
 }
 
 // Used by the per-city landing pages: a city with zero live listings still needs to exist and
@@ -171,7 +203,10 @@ function SearchLoading() {
 }
 
 export default function App() {
-  const { t } = useLang();
+  const { t, lang, setLang } = useLang();
+  // applyRoute is memoized on other deps; it reads the current language through this ref.
+  const langRef = useRef(lang);
+  useEffect(() => { langRef.current = lang; }, [lang]);
   // Approved brand/model suggestions extend the built-in list; re-render once they arrive.
   const [, setCarListVersion] = useState(0);
   useEffect(() => {
@@ -249,6 +284,11 @@ export default function App() {
   // Set only when arriving via a /makina-me-qera-{qytet} SEO landing URL, so Results.jsx can show
   // a city-specific H1/intro instead of looking like the plain generic results page.
   const [cityLanding, setCityLanding] = useState(null);
+  // Tirana / Rinas have their own copy in seo.js: Albanian, or English for every other language
+  // (de/fr/it readers are better served by English than by Albanian).
+  const cityLandingSeo = cityLanding && seoPageForCity(cityLanding)
+    ? seoPageForCity(cityLanding).meta[lang === "sq" ? "sq" : "en"]
+    : null;
 
   useEffect(() => {
     if (!token) { const t = setTimeout(() => setFavoriteIds(new Set()), 0); return () => clearTimeout(t); }
@@ -401,7 +441,9 @@ export default function App() {
     const params = new URLSearchParams(queryStr || "");
     const segs = path.split("/").filter(Boolean);
     setCityLanding(null);
-    updateRobotsMeta(false);
+    updateRobotsMeta(NOINDEX_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`)));
+    // English SEO URLs (/en/rent-a-car-tirana...) open the same city landing as the Albanian ones.
+    const seoCity = seoPageForPath(path)?.page.city;
 
     if (segs[0] === "paypal-kthim") {
       const orderId = params.get("token");
@@ -468,8 +510,8 @@ export default function App() {
       if (id && pretty !== path) { window.history.replaceState(null, "", pretty); updateCanonical(pretty); }
       return;
     }
-    if (segs[0] && segs[0].startsWith("makina-me-qera-") && SLUG_TO_CITY[segs[0].slice("makina-me-qera-".length)]) {
-      const city = SLUG_TO_CITY[segs[0].slice("makina-me-qera-".length)];
+    if (seoCity || (segs[0] && segs[0].startsWith("makina-me-qera-") && SLUG_TO_CITY[segs[0].slice("makina-me-qera-".length)])) {
+      const city = seoCity || SLUG_TO_CITY[segs[0].slice("makina-me-qera-".length)];
       setView("browse");
       setStage("results");
       setDataFillimit("");
@@ -534,12 +576,26 @@ export default function App() {
   }, [dataFillimit, dataPerfundimit, token]);
 
   function go(hashStr, hint) {
-    const path = hashStr.replace(/^#/, "");
+    // Links all over the app point at the Albanian URLs ("/", "/makina-me-qera-tirane"); someone
+    // browsing in English is sent to the English twin of an SEO page instead.
+    const path = localizePath(hashStr.replace(/^#/, ""), langRef.current);
     window.history.pushState(null, "", path);
     updateCanonical(path);
-    applyRoute(hashStr, hint);
+    applyRoute(path, hint);
     window.scrollTo(0, 0);
   }
+
+  // Switching between Albanian and English on an SEO page moves to that page's twin URL, so the
+  // address always matches the language on screen (de/fr/it use the Albanian URLs).
+  const shownLangRef = useRef(lang);
+  useEffect(() => {
+    if (shownLangRef.current === lang) return;
+    shownLangRef.current = lang;
+    const here = window.location.pathname + window.location.search;
+    const target = localizePath(here, lang);
+    if (target !== here) go(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   const applyRouteRef = useRef(applyRoute);
   useEffect(() => { applyRouteRef.current = applyRoute; }, [applyRoute]);
@@ -559,6 +615,10 @@ export default function App() {
           bizName ? `${bizName} — Makina me qera | ERental` : undefined,
           bizName ? `Shiko makinat me qera nga ${bizName} në ERental.` : undefined
         );
+      } else if (stage === "results" && cityLanding && seoPageForCity(cityLanding)) {
+        // Same title/description as the prerendered HTML (seo.js), in the URL's language.
+        const meta = seoPageForCity(cityLanding).meta[seoPageForPath(window.location.pathname)?.lang || "sq"];
+        updatePageMeta(meta.title, meta.description);
       } else if (stage === "results" && cityLanding) {
         updatePageMeta(
           `Makina me qera në ${cityLanding} — ERental`,
@@ -567,13 +627,15 @@ export default function App() {
       } else if (stage === "results") {
         updatePageMeta("Rezultatet e kërkimit — Makina me qera | ERental", DEFAULT_DESCRIPTION);
       } else {
-        updatePageMeta();
+        const home = seoPageForPath(window.location.pathname);
+        const meta = home?.page.key === "home" ? home.page.meta[home.lang] : null;
+        updatePageMeta(meta?.title, meta?.description);
       }
     } else {
       const meta = PAGE_META[view];
       updatePageMeta(meta?.title, meta?.description);
     }
-  }, [view, stage, selectedCar, selectedCompanyId, cars, cityLanding]);
+  }, [view, stage, selectedCar, selectedCompanyId, cars, cityLanding, lang]);
 
   useEffect(() => {
     // Backward-compat: a link shared/bookmarked before this migration (erental.store/#/makina/42)
@@ -582,9 +644,24 @@ export default function App() {
     if (window.location.hash.startsWith("#/")) {
       window.history.replaceState(null, "", window.location.hash.slice(1));
     }
+    // Arriving on an Albanian SEO page with English already chosen: show the English twin.
+    const entry = window.location.pathname + window.location.search;
+    const localized = localizePath(entry, langRef.current);
+    if (localized !== entry) window.history.replaceState(null, "", localized);
     updateCanonical(window.location.pathname);
     const t = setTimeout(() => applyRoute(window.location.pathname + window.location.search), 0);
-    function onPopState() { updateCanonical(window.location.pathname); applyRouteRef.current(window.location.pathname + window.location.search); }
+    function onPopState() {
+      // Back/forward across a language switch: the URL decides, so Back undoes the switch
+      // instead of bouncing straight back to the twin.
+      const seo = seoPageForPath(window.location.pathname);
+      if (seo) {
+        const urlLang = seo.lang === "en" ? "en" : "sq";
+        const current = langRef.current === "en" ? "en" : "sq";
+        if (urlLang !== current) { shownLangRef.current = urlLang; setLang(urlLang); }
+      }
+      updateCanonical(window.location.pathname);
+      applyRouteRef.current(window.location.pathname + window.location.search);
+    }
     window.addEventListener("popstate", onPopState);
     return () => { clearTimeout(t); window.removeEventListener("popstate", onPopState); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -741,8 +818,9 @@ export default function App() {
           setFilters={setResultFilters}
           showFilters={showResultFilters}
           setShowFilters={setShowResultFilters}
-          pageHeading={cityLanding ? `Makina me qera në ${cityLanding}` : undefined}
-          pageIntro={cityLanding ? `Krahaso çmimet dhe rezervo online makina me qera nga biznese të verifikuara në ${cityLanding}.` : undefined}
+          pageHeading={cityLandingSeo ? cityLandingSeo.h1 : cityLanding ? `Makina me qera në ${cityLanding}` : undefined}
+          pageIntro={cityLandingSeo ? cityLandingSeo.intro : cityLanding ? `Krahaso çmimet dhe rezervo online makina me qera nga biznese të verifikuara në ${cityLanding}.` : undefined}
+          seoSections={cityLandingSeo?.sections}
           currentCity={cityLanding}
           goHash={go}
         />
