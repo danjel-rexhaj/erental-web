@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2, Clock, Bell, Star } from "lucide-react";
+import { Lock, MailCheck, ShieldCheck, Phone, MessageCircle, Calendar, Pencil, KeyRound, Camera, Building2, ArrowRight, ChevronRight, LogOut, AlertTriangle, Upload, HelpCircle, FileText, Car, Trash2, Clock, Bell, Star, Wallet } from "lucide-react";
 import { apiFetch, apiFetchBlob } from "../api";
 import { shrinkImage } from "../imageResize";
 import { subscribeToPush, unsubscribeFromPush, isPushSubscribed, pushSupported } from "../push";
@@ -514,6 +514,19 @@ export function ProfileView({ user, token, isAdmin, onLogout, showError, showOk,
             <p className="text-sm font-bold text-amber-900 dark:text-amber-200">{t("auth.promoVipLabel")} · {user.kodPromocional}</p>
             <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">{t("auth.promoVipDesc")}</p>
           </div>
+        </div>
+      )}
+
+      {user?.role !== "business" && !isAdmin && (
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-sky-600 dark:bg-sky-700 flex items-center justify-center shrink-0">
+            <Wallet size={18} className="text-white" />
+          </div>
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{t("auth.creditLabel")}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{Number(user?.kredi) > 0 ? t("auth.creditDesc") : t("auth.creditDescEmpty")}</p>
+          </div>
+          <p className="text-xl font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">{(Number(user?.kredi) || 0).toFixed(2)}€</p>
         </div>
       )}
 

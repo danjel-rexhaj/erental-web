@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock, Infinity as InfinityIcon, UserPlus, Baby, Globe, CreditCard, Plane, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as UsersIcon, Snowflake, Building2, ShieldCheck, Cog, Disc, Star, Check, Lock, Loader2, Info, X, Calendar, AlertTriangle, Heart, SlidersHorizontal, Truck, Tag, ArrowRight, Clock, Infinity as InfinityIcon, UserPlus, Baby, Globe, CreditCard, Plane, Upload, Wallet } from "lucide-react";
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { shrinkImage } from "../imageResize";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
@@ -138,6 +138,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   const [bookedRanges, setBookedRanges] = useState([]);
   const [hasLicense, setHasLicense] = useState(null);
   const [isDemo, setIsDemo] = useState(false);
+  const [kredi, setKredi] = useState(0);
   const [selFrom, setSelFrom] = useState(dataFillimit);
   const [selTo, setSelTo] = useState(dataPerfundimit);
   const [oraMarrjes, setOraMarrjes] = useState(car.oraDefault ?? "10:00");
@@ -208,7 +209,7 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
   useEffect(() => {
     if (!token) return;
     apiFetch("/Users/me", token)
-      .then((u) => { setIsDemo(!!u.isDemo); setHasLicense(!!u.hasLicensePara && !!u.hasLicenseMbrapa); })
+      .then((u) => { setIsDemo(!!u.isDemo); setHasLicense(!!u.hasLicensePara && !!u.hasLicenseMbrapa); setKredi(Number(u.kredi) || 0); })
       .catch(() => {});
   }, [token]);
 
@@ -531,6 +532,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
                 goToProfile={goToProfile}
                 hasLicense={hasLicense}
                 isDemo={isDemo}
+                kredi={kredi}
+                onCreditUsed={(used) => setKredi((k) => Math.max(0, k - used))}
                 showError={showError}
                 showOk={showOk}
                 onBooked={onBack}
@@ -657,13 +660,21 @@ function memberSince(raw, lang) {
   return `${monthName(d.getMonth(), lang)} ${d.getFullYear()}`;
 }
 
-function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, customerTotal, depositAmount, token, needAuth, goToProfile, hasLicense, isDemo, showError, showOk, onBooked }) {
+function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, total, customerTotal, depositAmount, token, needAuth, goToProfile, hasLicense, isDemo, kredi = 0, onCreditUsed, showError, showOk, onBooked }) {
   const { t } = useLang();
   // Some businesses require the whole rental paid online for a given car (no deposit).
   const [method, setMethod] = useState(car.vetemPagesePlote ? "paypal_full" : "paypal_deposit");
   useEffect(() => { if (car.vetemPagesePlote) setMethod("paypal_full"); }, [car.vetemPagesePlote]);
   const [doSigurim, setDoSigurim] = useState(false);
   const insurancePrice = car.company?.cmimiSigurimit;
+  // Credit comes off the online payment automatically -- same rule as the backend's
+  // PaymentsController.CreditApplied (at least 1€ always left for PayPal to charge).
+  const onlineAmount = method === "paypal_deposit"
+    ? Number(depositAmount)
+    : Number(customerTotal) + (doSigurim && insurancePrice != null ? Number(insurancePrice) : 0);
+  const creditApplied = kredi > 0 ? Math.min(kredi, Math.max(0, onlineAmount - 1)) : 0;
+  const creditRef = useRef(creditApplied);
+  useEffect(() => { creditRef.current = creditApplied; }, [creditApplied]);
   const [loading, setLoading] = useState(false);
   const [sdkError, setSdkError] = useState(null);
   const [successInfo, setSuccessInfo] = useState(null);
@@ -750,6 +761,7 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
           method: "POST",
           body: JSON.stringify({ carId, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit, paymentMethod: method, paypalCaptureId: cap.captureId, doSigurim, biletaKey }),
         });
+        if (creditRef.current > 0) onCreditUsed?.(creditRef.current);
         setSuccessInfo({ bookingId: booking.bookingId, amountPaid: cap.amountPaid, method, cardLast4: cap.cardLast4, captureId: cap.captureId, insuranceFee: doSigurim ? insurancePrice : 0 });
       } catch (e) { showError(e); } finally { setLoading(false); }
     }
@@ -862,6 +874,17 @@ function BookingBox({ car, dataFillimit, dataPerfundimit, oraMarrjes, oraKthimit
           </label>
           {doSigurim && method === "paypal_deposit" && insurancePrice != null && (
             <p className="text-[11px] text-slate-400">{t("booking.insuranceCashNote", { amount: insurancePrice })}</p>
+          )}
+          {creditApplied > 0 && (
+            <div className="flex items-center gap-2 border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 rounded-xl px-3 py-2 mt-1">
+              <Wallet size={14} className="text-sky-600 dark:text-sky-400 shrink-0" />
+              <p className="flex-1 text-xs text-sky-800 dark:text-sky-200">
+                {t("booking.creditApplied", { amount: creditApplied.toFixed(2) })}
+              </p>
+              <p className="text-xs font-bold text-sky-900 dark:text-sky-100 whitespace-nowrap">
+                {t("booking.payNow", { amount: (onlineAmount - creditApplied).toFixed(2) })}
+              </p>
+            </div>
           )}
           <button
             type="button"
