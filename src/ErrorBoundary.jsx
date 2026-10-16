@@ -3,6 +3,8 @@ import { Component } from "react";
 const TEXT = {
   sq: { title: "Dicka shkoi keq", body: "Faqja hasi nje problem te papritur. Rifreskoje per te vazhduar.", action: "Rifresko faqen" },
   en: { title: "Something went wrong", body: "The page ran into an unexpected problem. Reload to continue.", action: "Reload the page" },
+  tr: { title: "Bir şeyler ters gitti", body: "Sayfada beklenmeyen bir sorun oluştu. Devam etmek için sayfayı yenileyin.", action: "Sayfayı yenile" },
+  el: { title: "Κάτι πήγε στραβά", body: "Η σελίδα αντιμετώπισε ένα απρόσμενο πρόβλημα. Ανανεώστε τη για να συνεχίσετε.", action: "Ανανέωση σελίδας" },
   de: { title: "Etwas ist schiefgelaufen", body: "Auf der Seite ist ein unerwartetes Problem aufgetreten. Lade sie neu, um fortzufahren.", action: "Seite neu laden" },
   fr: { title: "Un problème est survenu", body: "La page a rencontré un problème inattendu. Recharge-la pour continuer.", action: "Recharger la page" },
   it: { title: "Qualcosa è andato storto", body: "La pagina ha riscontrato un problema imprevisto. Ricaricala per continuare.", action: "Ricarica la pagina" },
@@ -26,7 +28,7 @@ export default class ErrorBoundary extends Component {
     if (!this.state.failed) return this.props.children;
     let lang = "sq";
     try { lang = localStorage.getItem("lang") || "sq"; } catch { /* storage blocked -- keep sq */ }
-    const text = TEXT[lang] || TEXT.sq;
+    const text = TEXT[lang] || (lang === "sq" ? TEXT.sq : TEXT.en);
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900 px-6 text-center">
         <div className="max-w-xs">

@@ -53,7 +53,10 @@ export function loadImageDataUrl(url) {
 // the payment moment, not just in a modal that's gone once closed.
 export async function generateInvoicePdf({ bookingId, carMakeModel, dataFillimit, dataPerfundimit, cmimiPerDite, dite, totalPrice, amountPaid, eshtePagesePlote, clientLabel, company, cardLast4, transactionId, lang = "sq", serviceFee = 0, insuranceFee = 0 }) {
   const { jsPDF } = await import("jspdf");
-  const L = INVOICE_TEXT[lang] || INVOICE_TEXT.sq;
+  // jsPDF's built-in font only covers Latin-1 (no Greek, no Turkish ğ/ş/ı), so every language
+  // without its own text here gets the English invoice -- dates included.
+  if (!INVOICE_TEXT[lang]) lang = "en";
+  const L = INVOICE_TEXT[lang];
 
   const confirmim = `ER-${String(bookingId).padStart(6, "0")}`;
   // Insurance rides along with a full online payment but not a deposit (paid cash at pickup

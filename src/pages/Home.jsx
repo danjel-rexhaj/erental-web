@@ -4,7 +4,7 @@ import { apiFetch } from "../api";
 import { Field, PrimaryButton, CarCard } from "../components";
 import { CITY_SLUGS, CAR_CATEGORIES } from "../carData";
 import { useLang } from "../useLang";
-import { seoPageByKey, localizePath } from "../seo";
+import { seoPageByKey, seoMetaFor, localizePath } from "../seo";
 
 const today = () => new Date().toISOString().split("T")[0];
 const dayAfter = (dateStr) => {
@@ -24,8 +24,8 @@ const FEATURED_DESTINATIONS = [
 export default function Home({ dataFillimit, setDataFillimit, dataPerfundimit, setDataPerfundimit, zona, setZona, onSearch, loading, onSelectCar, onSelectCompany, favoriteIds, onToggleFavorite, goHash }) {
   const { t, lang } = useLang();
   // The H1 and the "about" copy come from seo.js, the same text the prerendered HTML carries.
-  // Albanian, or English for every other language.
-  const seo = seoPageByKey("home").meta[lang === "sq" ? "sq" : "en"];
+  // In the reader's language (German readers get English).
+  const seo = seoMetaFor(seoPageByKey("home"), lang);
   const cityHref = (city) => localizePath(`/makina-me-qera-${CITY_SLUGS[city]}`, lang);
   const [companies, setCompanies] = useState([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);

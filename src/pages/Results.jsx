@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { ChevronLeft, Search, Car as CarIcon, SlidersHorizontal, MapPin, X } from "lucide-react";
 import { CarCard } from "../components";
-import { CAR_CATEGORIES, CAR_BRANDS, CITY_SLUGS } from "../carData";
+import { CAR_CATEGORIES, CAR_BRANDS, CITY_SLUGS, specValue } from "../carData";
 import { useLang } from "../useLang";
 import { localizePath } from "../seo";
 
@@ -135,10 +135,7 @@ export default function Results({ cars, dataFillimit, dataPerfundimit, onBack, o
       <FilterSection title={t("results.filterBusiness")} allLabel={t("results.allBusinesses")} value={filters.biznesi} onChange={(v) => setFilters((f) => ({ ...f, biznesi: v }))} options={businesses.map(([id, emri]) => ({ value: String(id), label: emri }))} scroll />
       <FilterSection title={t("results.filterZone")} allLabel={t("home.allZones")} value={filters.zona} onChange={(v) => setFilters((f) => ({ ...f, zona: v }))} options={zones.map((z) => ({ value: z, label: z }))} scroll />
       <FilterSection title={t("results.filterFuel")} allLabel={t("results.allFuels")} value={filters.karburanti} onChange={(v) => setFilters((f) => ({ ...f, karburanti: v }))} options={[
-        { value: "diesel", label: "Diesel" },
-        { value: "benzine", label: "Benzine" },
-        { value: "hybrid", label: "Hybrid" },
-        { value: "elektrik", label: "Elektrik" },
+        ...["diesel", "benzine", "hybrid", "elektrik"].map((v) => ({ value: v, label: specValue(t, "fuel", v) })),
       ]} />
 
       <div className="py-3 border-b border-slate-100 dark:border-slate-800">

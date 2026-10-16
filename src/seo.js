@@ -4,8 +4,11 @@
 // file per page from this, so crawlers get the right metadata and text without running JS).
 // Plain JS on purpose -- no React/JSX -- so the build can import it directly.
 //
-// Albanian lives at the root (the URLs Google already indexed); English under /en/. Only pages
+// Albanian lives at the root (the URLs Google already indexed); every other SEO language under its
+// own prefix (/en/, /it/, /fr/, /tr/, /el/) -- their copy is in seoCopy.js except English. Only pages
 // with real inventory get a landing page -- every live listing today is in Tirana or at Rinas.
+
+import { SEO_COPY_MORE } from "./seoCopy.js";
 
 export const SITE = "https://www.erental.store";
 
@@ -100,12 +103,38 @@ export const SEO_PAGES = [
   },
 ];
 
-export const SEO_LANGS = ["sq", "en"];
+for (const page of SEO_PAGES) {
+  const more = SEO_COPY_MORE[page.key];
+  Object.assign(page.paths, more.paths);
+  Object.assign(page.meta, more.meta);
+}
+
+// Languages with their own indexable URLs. German is a UI language only (it reads the Albanian
+// URLs with English copy), so it has no SEO pages and no hreflang entry.
+export const SEO_LANGS = ["sq", "en", "it", "fr", "tr", "el"];
+const PREFIXED = SEO_LANGS.filter((l) => l !== "sq");
+
+// The language a URL belongs to by its prefix (/it/..., /el) -- null for Albanian/unprefixed.
+export function langFromPath(path) {
+  const seg = (path || "/").split("?")[0].split("/")[1];
+  return PREFIXED.includes(seg) ? seg : null;
+}
 
 function normalize(path) {
   const clean = (path || "/").split("?")[0].split("#")[0];
-  if (clean === "/en") return "/en/";
-  return clean.length > 1 && clean.endsWith("/") && clean !== "/en/" ? clean.slice(0, -1) : clean;
+  const home = PREFIXED.find((l) => clean === `/${l}` || clean === `/${l}/`);
+  if (home) return `/${home}/`;
+  return clean.length > 1 && clean.endsWith("/") ? clean.slice(0, -1) : clean;
+}
+
+// Which SEO language a UI language reads: its own when it has pages, Albanian otherwise (de).
+export function seoLangFor(lang) {
+  return SEO_LANGS.includes(lang) ? lang : "sq";
+}
+
+// Copy for a page in a UI language: its own, or English for a language without SEO copy (de).
+export function seoMetaFor(page, lang) {
+  return page.meta[lang] || page.meta.en;
 }
 
 // { page, lang } for an SEO page URL, or null for every other route.
@@ -127,12 +156,13 @@ export function seoPageForCity(city) {
 }
 
 // The URL to show for `pathWithQuery` in `lang`: an SEO page maps to its twin in that language
-// (English → /en/..., anything else → the Albanian URL); every other route is returned as is.
+// (/it/... for Italian and so on; German and Albanian → the Albanian URL); every other route is
+// returned as is.
 export function localizePath(pathWithQuery, lang) {
   const [path, query] = (pathWithQuery || "/").split("?");
   const seo = seoPageForPath(path);
   if (!seo) return pathWithQuery;
-  const target = seo.page.paths[lang === "en" ? "en" : "sq"];
+  const target = seo.page.paths[seoLangFor(lang)];
   return target + (query ? `?${query}` : "");
 }
 

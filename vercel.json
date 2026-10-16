@@ -9,6 +9,38 @@
       "destination": "/seo/en.html"
     },
     {
+      "source": "/it",
+      "destination": "/seo/it.html"
+    },
+    {
+      "source": "/it/",
+      "destination": "/seo/it.html"
+    },
+    {
+      "source": "/fr",
+      "destination": "/seo/fr.html"
+    },
+    {
+      "source": "/fr/",
+      "destination": "/seo/fr.html"
+    },
+    {
+      "source": "/tr",
+      "destination": "/seo/tr.html"
+    },
+    {
+      "source": "/tr/",
+      "destination": "/seo/tr.html"
+    },
+    {
+      "source": "/el",
+      "destination": "/seo/el.html"
+    },
+    {
+      "source": "/el/",
+      "destination": "/seo/el.html"
+    },
+    {
       "source": "/makina-me-qera-tirane",
       "destination": "/seo/makina-me-qera-tirane.html"
     },
@@ -25,6 +57,38 @@
       "destination": "/seo/en-rent-a-car-tirana.html"
     },
     {
+      "source": "/it/noleggio-auto-tirana",
+      "destination": "/seo/it-noleggio-auto-tirana.html"
+    },
+    {
+      "source": "/it/noleggio-auto-tirana/",
+      "destination": "/seo/it-noleggio-auto-tirana.html"
+    },
+    {
+      "source": "/fr/location-voiture-tirana",
+      "destination": "/seo/fr-location-voiture-tirana.html"
+    },
+    {
+      "source": "/fr/location-voiture-tirana/",
+      "destination": "/seo/fr-location-voiture-tirana.html"
+    },
+    {
+      "source": "/tr/tiran-arac-kiralama",
+      "destination": "/seo/tr-tiran-arac-kiralama.html"
+    },
+    {
+      "source": "/tr/tiran-arac-kiralama/",
+      "destination": "/seo/tr-tiran-arac-kiralama.html"
+    },
+    {
+      "source": "/el/enoikiasi-aftokinitou-tirana",
+      "destination": "/seo/el-enoikiasi-aftokinitou-tirana.html"
+    },
+    {
+      "source": "/el/enoikiasi-aftokinitou-tirana/",
+      "destination": "/seo/el-enoikiasi-aftokinitou-tirana.html"
+    },
+    {
       "source": "/makina-me-qera-aeroporti-rinas",
       "destination": "/seo/makina-me-qera-aeroporti-rinas.html"
     },
@@ -39,6 +103,38 @@
     {
       "source": "/en/tirana-airport-car-rental/",
       "destination": "/seo/en-tirana-airport-car-rental.html"
+    },
+    {
+      "source": "/it/noleggio-auto-aeroporto-tirana",
+      "destination": "/seo/it-noleggio-auto-aeroporto-tirana.html"
+    },
+    {
+      "source": "/it/noleggio-auto-aeroporto-tirana/",
+      "destination": "/seo/it-noleggio-auto-aeroporto-tirana.html"
+    },
+    {
+      "source": "/fr/location-voiture-aeroport-tirana",
+      "destination": "/seo/fr-location-voiture-aeroport-tirana.html"
+    },
+    {
+      "source": "/fr/location-voiture-aeroport-tirana/",
+      "destination": "/seo/fr-location-voiture-aeroport-tirana.html"
+    },
+    {
+      "source": "/tr/tiran-havalimani-arac-kiralama",
+      "destination": "/seo/tr-tiran-havalimani-arac-kiralama.html"
+    },
+    {
+      "source": "/tr/tiran-havalimani-arac-kiralama/",
+      "destination": "/seo/tr-tiran-havalimani-arac-kiralama.html"
+    },
+    {
+      "source": "/el/enoikiasi-aftokinitou-aerodromio-tiranon",
+      "destination": "/seo/el-enoikiasi-aftokinitou-aerodromio-tiranon.html"
+    },
+    {
+      "source": "/el/enoikiasi-aftokinitou-aerodromio-tiranon/",
+      "destination": "/seo/el-enoikiasi-aftokinitou-aerodromio-tiranon.html"
     },
     {
       "source": "/((?!api/).*)",

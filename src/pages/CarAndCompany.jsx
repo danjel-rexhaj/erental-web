@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Fuel, Gauge, Users as U
 import { apiFetch, mapEmbedUrl as getMapEmbedUrl } from "../api";
 import { shrinkImage } from "../imageResize";
 import { PrimaryButton, Spec, CarCard, DateRangeCalendar, PaymentSuccessModal, AmenityPicker, CroppedPhoto } from "../components";
-import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP, amenityLabel, computeRentalQuote } from "../carData";
+import { PHOTO_SLOTS, AMENITIES, CAR_CATEGORIES, CAR_BRANDS, PLATFORM_MARKUP, amenityLabel, computeRentalQuote, specValue } from "../carData";
 import { useLang } from "../useLang";
 import { monthShort, monthName, formatLocaleDate } from "../dateFormat";
 
@@ -398,8 +398,8 @@ export function CarDetail({ car, dataFillimit, dataPerfundimit, onBack, onSelect
           </button>
 
           <div className="grid grid-cols-2 gap-2 mt-5">
-            <Spec icon={Fuel} label={t("car.spec.fuel")} value={car.karburanti} />
-            <Spec icon={Gauge} label={t("car.spec.transmission")} value={car.transmisioni} />
+            <Spec icon={Fuel} label={t("car.spec.fuel")} value={specValue(t, "fuel", car.karburanti)} />
+            <Spec icon={Gauge} label={t("car.spec.transmission")} value={specValue(t, "gear", car.transmisioni)} />
             <Spec icon={UsersIcon} label={t("car.spec.seats")} value={car.numriVendeve} />
             <Spec icon={Snowflake} label={t("car.spec.aircon")} value={car.klimatizimi ? t("common.yes") : t("common.no")} />
             {car.kubatura != null && <Spec icon={Cog} label={t("car.spec.engineSize")} value={`${car.kubatura}cc`} />}
@@ -1169,10 +1169,7 @@ export function CompanyProfile({ company, cars, dataFillimit, dataPerfundimit, o
               </select>
               <select value={filters.karburanti} onChange={(e) => setFilters((f) => ({ ...f, karburanti: e.target.value }))} className={`${companySelectClass} capitalize`}>
                 <option value="">{t("results.allFuels")}</option>
-                <option value="diesel">Diesel</option>
-                <option value="benzine">Benzine</option>
-                <option value="hybrid">Hybrid</option>
-                <option value="elektrik">Elektrik</option>
+                {["diesel", "benzine", "hybrid", "elektrik"].map((v) => <option key={v} value={v}>{specValue(t, "fuel", v)}</option>)}
               </select>
               <select value={filters.kategoria} onChange={(e) => setFilters((f) => ({ ...f, kategoria: e.target.value }))} className={companySelectClass}>
                 <option value="">{t("results.allCategories")}</option>

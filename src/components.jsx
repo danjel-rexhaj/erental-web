@@ -5,7 +5,7 @@ import { generateInvoicePdf } from "./invoicePdf";
 import { resizedPhotoUrl, markResizeUnavailable } from "./imageResize";
 import { useLang } from "./useLang";
 import { monthName, weekdayInitials } from "./dateFormat";
-import { AMENITY_CATEGORIES, PLATFORM_MARKUP, amenityLabel, computeRentalQuote } from "./carData";
+import { AMENITY_CATEGORIES, PLATFORM_MARKUP, amenityLabel, computeRentalQuote, specValue } from "./carData";
 
 export function AvailabilityCalendar({ ranges = [] }) {
   const { t, lang } = useLang();
@@ -437,8 +437,8 @@ export function CarCard({ car, onSelectCar, onSelectCompany, nearMiss, freeInLab
         )}
         <div className="flex items-center justify-between mt-2">
           <div className="flex gap-3 text-[11px] text-slate-400">
-            <span className="flex items-center gap-1"><Fuel size={12} />{car.karburanti}</span>
-            <span className="flex items-center gap-1"><Gauge size={12} />{car.transmisioni}</span>
+            <span className="flex items-center gap-1"><Fuel size={12} />{specValue(t, "fuel", car.karburanti)}</span>
+            <span className="flex items-center gap-1"><Gauge size={12} />{specValue(t, "gear", car.transmisioni)}</span>
             <span className="flex items-center gap-1"><UsersIcon size={12} />{car.numriVendeve}</span>
           </div>
           <button

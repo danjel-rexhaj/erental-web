@@ -270,3 +270,11 @@ export function companyIdFromSlug(segment, cars) {
   const m = segment.match(/-(\d+)$/);
   return m && companies.has(Number(m[1])) ? Number(m[1]) : null;
 }
+
+// Cars store fuel/transmission as fixed Albanian values ("benzine", "automatik"); this shows them
+// in the reader's language, falling back to the stored value for anything unexpected.
+export function specValue(t, kind, value) {
+  const key = `${kind}.${String(value || "").toLowerCase()}`;
+  const label = t(key);
+  return label === key ? value : label;
+}

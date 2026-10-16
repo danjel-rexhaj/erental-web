@@ -17,7 +17,7 @@ import Business from "./pages/Business";
 import { AuthGate, BusinessAuthGate, AuthView, ProfileView, VerifyView } from "./pages/Auth";
 import BusinessSignup from "./pages/BusinessSignup";
 import { Privacy, Terms, Careers, About, Contact } from "./pages/Legal";
-import { SITE, seoPageForPath, seoPageForCity, alternatesFor, localizePath, NOINDEX_PREFIXES } from "./seo";
+import { SITE, seoPageForPath, seoPageForCity, alternatesFor, localizePath, seoLangFor, seoMetaFor, NOINDEX_PREFIXES } from "./seo";
 import { SLUG_TO_CITY, CITY_SLUGS, mergeApprovedCarSuggestions, mergeApprovedAmenities, companyPath, companyIdFromSlug } from "./carData";
 
 // Real SVG flags via flag-icons (className="fi fi-<country>") -- flag emoji render as plain
@@ -29,6 +29,8 @@ const LANGUAGES = [
   { code: "de", country: "de", label: "Deutsch" },
   { code: "fr", country: "fr", label: "Français" },
   { code: "it", country: "it", label: "Italiano" },
+  { code: "tr", country: "tr", label: "Türkçe" },
+  { code: "el", country: "gr", label: "Ελληνικά" },
 ];
 
 // index.html ships a single hardcoded canonical tag pointing at the homepage -- every other
@@ -284,10 +286,10 @@ export default function App() {
   // Set only when arriving via a /makina-me-qera-{qytet} SEO landing URL, so Results.jsx can show
   // a city-specific H1/intro instead of looking like the plain generic results page.
   const [cityLanding, setCityLanding] = useState(null);
-  // Tirana / Rinas have their own copy in seo.js: Albanian, or English for every other language
-  // (de/fr/it readers are better served by English than by Albanian).
+  // Tirana / Rinas have their own copy in seo.js / seoCopy.js, in the reader's language (German
+  // readers get English, which serves them better than Albanian).
   const cityLandingSeo = cityLanding && seoPageForCity(cityLanding)
-    ? seoPageForCity(cityLanding).meta[lang === "sq" ? "sq" : "en"]
+    ? seoMetaFor(seoPageForCity(cityLanding), lang)
     : null;
 
   useEffect(() => {
@@ -577,7 +579,7 @@ export default function App() {
 
   function go(hashStr, hint) {
     // Links all over the app point at the Albanian URLs ("/", "/makina-me-qera-tirane"); someone
-    // browsing in English is sent to the English twin of an SEO page instead.
+    // browsing in another language is sent to that language's twin of an SEO page instead.
     const path = localizePath(hashStr.replace(/^#/, ""), langRef.current);
     window.history.pushState(null, "", path);
     updateCanonical(path);
@@ -585,8 +587,8 @@ export default function App() {
     window.scrollTo(0, 0);
   }
 
-  // Switching between Albanian and English on an SEO page moves to that page's twin URL, so the
-  // address always matches the language on screen (de/fr/it use the Albanian URLs).
+  // Switching language on an SEO page moves to that page's twin URL, so the address always matches
+  // the language on screen (German, which has no SEO pages, uses the Albanian URLs).
   const shownLangRef = useRef(lang);
   useEffect(() => {
     if (shownLangRef.current === lang) return;
@@ -644,7 +646,7 @@ export default function App() {
     if (window.location.hash.startsWith("#/")) {
       window.history.replaceState(null, "", window.location.hash.slice(1));
     }
-    // Arriving on an Albanian SEO page with English already chosen: show the English twin.
+    // Arriving on an Albanian SEO page with another language already chosen: show that twin.
     const entry = window.location.pathname + window.location.search;
     const localized = localizePath(entry, langRef.current);
     if (localized !== entry) window.history.replaceState(null, "", localized);
@@ -655,9 +657,7 @@ export default function App() {
       // instead of bouncing straight back to the twin.
       const seo = seoPageForPath(window.location.pathname);
       if (seo) {
-        const urlLang = seo.lang === "en" ? "en" : "sq";
-        const current = langRef.current === "en" ? "en" : "sq";
-        if (urlLang !== current) { shownLangRef.current = urlLang; setLang(urlLang); }
+        if (seo.lang !== seoLangFor(langRef.current)) { shownLangRef.current = seo.lang; setLang(seo.lang); }
       }
       updateCanonical(window.location.pathname);
       applyRouteRef.current(window.location.pathname + window.location.search);

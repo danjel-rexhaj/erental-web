@@ -3,7 +3,7 @@
 // crawlers that don't run JavaScript would see no text at all. From the built index.html it makes:
 //
 //   * index.html            -> the Albanian homepage, with its own <head> and core text
-//   * seo/*.html            -> one file per other SEO page (Albanian + English), served for its
+//   * seo/*.html            -> one file per other SEO page (every SEO language), served for its
 //                              URL by the rewrites in vercel.json
 //   * app.html              -> the plain SPA shell (no canonical, no page text) that every other
 //                              route falls back to; the app sets the right <head> once it runs
@@ -12,7 +12,7 @@
 //
 // The text placed in #root is the same copy the React page renders (both read src/seo.js); React
 // replaces it as soon as it mounts.
-import { SEO_PAGES, SITE, alternatesFor } from "./src/seo.js";
+import { SEO_PAGES, SEO_LANGS, SITE, alternatesFor } from "./src/seo.js";
 import { companyPath } from "./src/carData.js";
 
 /* global process */ // runs in Node at build time
@@ -27,26 +27,34 @@ export function seoFileFor(page, lang) {
 }
 
 const LABELS = {
-  sq: { home: "Kryefaqja", all: "Të gjitha makinat", about: "Rreth nesh", contact: "Kontakt", business: "Regjistro biznesin", other: "English" },
-  en: { home: "Home", all: "All cars", about: "About us", contact: "Contact", business: "List your rental company", other: "Shqip" },
+  sq: { all: "Të gjitha makinat", about: "Rreth nesh", contact: "Kontakt", business: "Regjistro biznesin" },
+  en: { all: "All cars", about: "About us", contact: "Contact", business: "List your rental company" },
+  it: { all: "Tutte le auto", about: "Chi siamo", contact: "Contatti", business: "Registra la tua azienda" },
+  fr: { all: "Toutes les voitures", about: "À propos", contact: "Contact", business: "Inscrire votre agence" },
+  tr: { all: "Tüm araçlar", about: "Hakkımızda", contact: "İletişim", business: "Firmanızı kaydedin" },
+  el: { all: "Όλα τα αυτοκίνητα", about: "Σχετικά με εμάς", contact: "Επικοινωνία", business: "Καταχωρίστε την εταιρεία σας" },
 };
+// Each language version links to the others under its own name.
+const LANG_NAMES = { sq: "Shqip", en: "English", it: "Italiano", fr: "Français", tr: "Türkçe", el: "Ελληνικά" };
+const OG_LOCALES = { sq: "sq_AL", en: "en_GB", it: "it_IT", fr: "fr_FR", tr: "tr_TR", el: "el_GR" };
+const homePath = (lang) => SEO_PAGES.find((p) => p.key === "home").paths[lang];
 
 function bodyFor(page, lang) {
   const m = page.meta[lang];
   const L = LABELS[lang];
-  const otherLang = lang === "en" ? "sq" : "en";
   const links = [
     ...SEO_PAGES.filter((p) => p !== page).map((p) => [p.paths[lang], p.meta[lang].h1]),
     ["/rezultate", L.all],
     ["/rreth-nesh", L.about],
     ["/kontakt", L.contact],
     ["/regjistrohu-biznes", L.business],
-    [page.paths[otherLang], L.other],
   ];
+  const langLinks = SEO_LANGS.filter((l) => l !== lang).map((l) => `<a href="${esc(page.paths[l])}" hreflang="${l}" lang="${l}">${esc(LANG_NAMES[l])}</a>`).join(" · ");
   const sections = m.sections.map((s) => `<section><h2>${esc(s.h2)}</h2><p>${esc(s.p)}</p></section>`).join("");
-  return `<div class="seo-prerender"><header><a href="${lang === "en" ? "/en/" : "/"}">ERental</a></header>`
+  return `<div class="seo-prerender"><header><a href="${homePath(lang)}">ERental</a></header>`
     + `<main><h1>${esc(m.h1)}</h1><p>${esc(m.intro)}</p>${sections}</main>`
-    + `<nav>${links.map(([href, label]) => `<a href="${esc(href)}">${esc(label)}</a>`).join(" · ")}</nav></div>`;
+    + `<nav>${links.map(([href, label]) => `<a href="${esc(href)}">${esc(label)}</a>`).join(" · ")}</nav>`
+    + `<nav>${langLinks}</nav></div>`;
 }
 
 // Minimal readable styling for the moment before the app's JS takes over.
@@ -61,7 +69,7 @@ function jsonLdFor(page, lang) {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "ERental", item: SITE + (lang === "en" ? "/en/" : "/") },
+          { "@type": "ListItem", position: 1, name: "ERental", item: SITE + homePath(lang) },
           { "@type": "ListItem", position: 2, name: m.h1, item: url },
         ],
       };
@@ -84,7 +92,7 @@ export function renderSeoPage(shell, page, lang) {
   html = setAttrContent(html, "property", "og:title", m.title);
   html = setAttrContent(html, "property", "og:description", m.description);
   html = setAttrContent(html, "property", "og:url", url);
-  html = setAttrContent(html, "property", "og:locale", lang === "en" ? "en_GB" : "sq_AL");
+  html = setAttrContent(html, "property", "og:locale", OG_LOCALES[lang]);
   html = setAttrContent(html, "name", "twitter:title", m.title);
   html = setAttrContent(html, "name", "twitter:description", m.description);
   const alternates = alternatesFor(page).map((a) => `    <link rel="alternate" hreflang="${a.hreflang}" href="${a.href}" />`).join("\n");
@@ -117,7 +125,7 @@ async function sitemapXml() {
   const urls = [];
   for (const page of SEO_PAGES) {
     const alts = alternatesFor(page).map((a) => `\n    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${esc(a.href)}" />`).join("");
-    for (const lang of ["sq", "en"]) urls.push(entry(SITE + page.paths[lang], alts));
+    for (const lang of SEO_LANGS) urls.push(entry(SITE + page.paths[lang], alts));
   }
   for (const p of ["/rezultate", "/rreth-nesh", "/kontakt", "/regjistrohu-biznes"]) urls.push(entry(SITE + p));
 
@@ -143,7 +151,7 @@ export default function seoPrerender() {
       const shell = String(index.source);
       this.emitFile({ type: "asset", fileName: "app.html", source: appShell(shell) });
       for (const page of SEO_PAGES) {
-        for (const lang of ["sq", "en"]) {
+        for (const lang of SEO_LANGS) {
           const fileName = seoFileFor(page, lang);
           const html = renderSeoPage(shell, page, lang);
           if (fileName === "index.html") index.source = html;
